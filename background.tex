@@ -1,8 +1,35 @@
 \chapter{Background}
 
+This chapter explores what \emph{formal systems} are and what they are useful for. It looks at a number of related formal systems and their relation to computation. It outlines context ontop of which the rest of this project is built.
+
 \section{Formal Systems}
 
 \section{\lam-Calculus}
+
+\begin{figure}[!h]
+\definition{ 
+  \textsc{(Grammar for untyped \lam-calculus)}
+  \item $`l$-variables are denoted by $x, y,\dots$ \\
+  \[
+  \begin{array}{rcl}
+  M,N & ::= & x\ |\ `lx.M\ |\ M\ N
+  \end{array}
+  \]
+}
+\end{figure}
+
+\begin{figure}[!h]
+\definition{ 
+  \textsc{(Reduction rules for \lam-calculus)}
+  \[
+  \begin{array}{rcl}
+  x & \rightarrow & x \\
+  `lx.M & \rightarrow & `lx.M \\
+  (`lx.M) N & \rightarrow & M[N/x]
+  \end{array}
+  \]
+}
+\end{figure}
 
 \section{Logic, Types, and their Computation Interpretation}
 \subsection{Continuations}
@@ -15,6 +42,35 @@
 
 \section{\lmu-Calculus}
 
+\begin{figure}[!h]
+\definition{ 
+  \textsc{(Grammar for \lmu-calculus)}
+  \item $`l$-variables are denoted by $x, y,\dots$ and $`m$-variables are denoted by $`a, `b,\dots$ \\
+  \[
+  \begin{array}{rcl}
+  M,N & ::= & x\ |\ `lx.M\ |\ M\ N\ |\ `m`a.[`b]M
+  \end{array}
+  \]
+}
+\end{figure}
+
+\begin{figure}[!h]
+\definition{ 
+  \textsc{(Reduction rules for \lmu-calculus)}
+  \[
+  \begin{array}{rcl}
+  x & \rightarrow & x \\
+  `lx.M & \rightarrow & `lx.M \\
+  `m`a.[`b]M & \rightarrow & `m`a.[`b]M \\
+  (`lx.M) N & \rightarrow & M[N/x] \\
+  (`m`a.[`b]M) N & \rightarrow & (`m`a.[`b]M[[`g]M^\prime N/[`a]M^\prime]) \\
+  \end{array}
+  \]
+}
+\end{figure}
+
+The terse reduction rule at the end simple states that the application of a \lmu-abstraction $`m`a.M$ to a term $N$ applies all the sub-terms of $M$ labelled $[`a]$ to $N$ and relabels them with a fresh $`m$ variable.
+
 \section{\ltry-Calculus}
 
 \section{Delimited-Continuation Calculus}
@@ -25,7 +81,7 @@ The grammar of DCC is an extension of the standard \lam-calculus:
 
 \begin{figure}[!h]
 \definition{ 
-  \textsc{(Grammar rules for DCC)}
+  \textsc{(Grammar for DCC)}
   \[
   \begin{array}{lrcl}
   \textrm{(Variables)} & x, y, \dots \\
@@ -36,6 +92,37 @@ The grammar of DCC is an extension of the standard \lam-calculus:
   \]
 }
 \end{figure}
+
+The operational semantics can be understood through an abstract machine that transforms tuple of the form $\langle e,\ D,\ E\, q \rangle$:
+
+\begin{figure}[!h]
+\relscale{0.9}
+\definition{ 
+  \textsc{(Operational semantics for DCC)}
+  \[
+  \begin{array}{lrcl}
+    \langle e\ e^\prime, D, E, q \rangle &\Rightarrow &\langle e, D[\square\ e^\prime], E, q \rangle &\text{e non-value} \\
+    \langle v\ e, D, E, q \rangle &\Rightarrow &\langle e, D[v\ \square], E, q \rangle &\text{e non-value} \\
+    \langle pushPrompt\ e\ e^\prime, D, E, q \rangle &\Rightarrow &\langle e, D[pushPrompt\ \square\ e^\prime], E, q \rangle &\text{e non-value} \\
+    \langle withSubCont\ e\ e^\prime, D, E, q \rangle &\Rightarrow &\langle e, D[withSubCont\ \square\ e^\prime], E, q \rangle &\text{e non-value} \\
+    \langle withSubCont\ p\ e, D, E, q \rangle &\Rightarrow &\langle e, D[withSubCont\ p\ \square], E, q \rangle &\text{e non-value} \\
+    \langle pushSubCont\ e\ e^\prime, D, E, q \rangle &\Rightarrow &\langle e, D[pushSubCont\ \square\ e^\prime], E, q \rangle &\text{e non-value} \\
+  \\
+    \langle (`lx.e)\ v, D, E, q \rangle &\Rightarrow &\langle e[v/x], D, E, q \rangle \\
+    \langle newPrompt, D, E, q \rangle &\Rightarrow &\langle q, D, E, q+1 \rangle \\
+    \langle pushPrompt\ p\ e, D, E, q \rangle &\Rightarrow &\langle e, \square, p : D : E, q \rangle \\
+    \langle withSubCont \ p\ v, D, E, q \rangle &\Rightarrow &\langle v (D : E\textsmaller[1]{\overset{p}{\uparrow}}, \square, E\textsmaller[1]{\overset{p}{\downarrow}}, q \rangle \\
+    \langle pushSubCont E^\prime\ e, D, E, q \rangle &\Rightarrow &\langle e, \square, E^\prime +{+} (D : E), q \rangle \\
+  \\
+    \langle v, D, E, q \rangle &\Rightarrow &\langle D[v], \square, E, q \rangle \\
+    \langle v, \square, p : E, q \rangle &\Rightarrow &\langle v, \square, E, q \rangle \\
+    \langle v, \square, D : E, q \rangle &\Rightarrow &\langle v, D, E, q \rangle
+  \end{array}
+  \]
+}
+\end{figure}
+
+
 
 % TODO: ensure prompts and continuation stack has been explained before reaching this point
 The additional terms behave as follows:
