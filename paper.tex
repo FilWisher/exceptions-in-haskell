@@ -1,5 +1,8 @@
-\documentclass[11pt,a4paper,draft]{report}
+\documentclass[11pt,a4paper,twoside,draft]{amsbook}
+%\documentclass[11pt,a4paper,draft]{report}
 
+\usepackage{graphicx}
+\usepackage{amsthm}
 \usepackage{qsymbols}
 \usepackage{listings}
 \usepackage{amsmath}
@@ -13,12 +16,15 @@
 
 \usepackage{macros}
 
-\title{Exception Handling in Haskell}
-\author{William S. Fisher}
+\newcommand{\reporttitle}{Exception Handling in Haskell}
+\newcommand{\name}{William S. Fisher}
+\newcommand{\supervisor}{Steffen van Bakel}
+\newcommand{\course}{Computing Science}
 
 \begin{document}
 
-\maketitle
+\include{titlepage}
+
 \begin{abstract}
 Implementing exception handling in Haskell. Unlike other libraries, use named exception handlers. Use the \ltry-calculus to formalize and explore a series of translations between multiple calculi to arrive at a translation into Haskell. Explore properties of this translation including soundness and completeness. Publish useable Haskell library.
 \end{abstract}
