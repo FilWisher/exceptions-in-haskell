@@ -1,12 +1,16 @@
 \chapter{DCC Interpreter}
 
+This chapter explores the implementation of an interpreter for DCC. Portions of source code are examined in detail although the full source can be found in the appendix.
+
 \section{Interpreter}
 
-Whereas the original grammar for the DCC abstract machine presents sequences as values, it has an implicit semantics that is unpacked in the implementation details. Here, we present sequences as expressions and define their semantics explicitly as:
+Although Peyton-Jones \emph{et al.} implement a language-level module for DCC, we are interested in the intermediate term transformations. Examining transformation steps in full allows us to derive proofs of soundness and completeness for the translations from the \lam\ and \lmu\ calculi into DCC. For this reason, the interpreter was implemented as a term-rewriting program.
+
+Whereas the original grammar for the DCC abstract machine presents sequences as values, the original exposition leaves the semantics for transforming sequences into useable expressions implicit. These semantics are unpacked in the implementation details. To capture the correct behaviour in this interpreter, we must formalize these semantics as a syntax-transformation. Sequences are therefore presented as expressions with the following explicit reduction rule:
 
 \begin{figure}[!h]
 \begin{definition}[Semantics of a sequence of continuations]
-\item Let $D_i$ denote some term with a hole and $D_i[v]$ denote the term $D_i$ with the hole filled by $v4$:
+\item Let $D_i$ denote some term with a hole and $D_i[v]$ denote the term $D_i$ with the hole filled by $v$:
 \[
 \begin{array}{rclr}
   \langle 
@@ -25,8 +29,122 @@ Whereas the original grammar for the DCC abstract machine presents sequences as 
 \end{array}
 \]
 \end{definition}
-
 \end{figure}
+
+A sequence of contexts evaluates to an abstraction that, when applied to a value $v$, returns $v$ to the first context which returns its value to the second context and so on through the whole sequence.
+ 
+\section{Implementation}
+
+There are two data types for representing DCC terms, \mono{Value} and \mono{Expr}:
+
+\begin{comment}
+data Value = Var Char
+  | Abs Char Expr
+  | Prompt Int
   
+data Expr = Val Value 
+  | App Expr Expr
+  | Hole
+  | PushPrompt Expr Expr
+  | PushSubCont Expr Expr
+  | WithSubCont Expr Expr
+  | NewPrompt
+  | Seq [Expr]
+  | Sub Expr Expr Char
+\end{comment}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{data} \DataTypeTok{Value} \FunctionTok{=} \DataTypeTok{Var} \DataTypeTok{Char}
+  \FunctionTok{|} \DataTypeTok{Abs} \DataTypeTok{Char} \DataTypeTok{Expr}
+  \FunctionTok{|} \DataTypeTok{Prompt} \DataTypeTok{Int}
+  
+\KeywordTok{data} \DataTypeTok{Expr} \FunctionTok{=} \DataTypeTok{Val} \DataTypeTok{Value} 
+  \FunctionTok{|} \DataTypeTok{App} \DataTypeTok{Expr} \DataTypeTok{Expr}
+  \FunctionTok{|} \DataTypeTok{Hole}
+  \FunctionTok{|} \DataTypeTok{PushPrompt} \DataTypeTok{Expr} \DataTypeTok{Expr}
+  \FunctionTok{|} \DataTypeTok{PushSubCont} \DataTypeTok{Expr} \DataTypeTok{Expr}
+  \FunctionTok{|} \DataTypeTok{WithSubCont} \DataTypeTok{Expr} \DataTypeTok{Expr}
+  \FunctionTok{|} \DataTypeTok{NewPrompt}
+  \FunctionTok{|} \DataTypeTok{Seq} \NormalTok{[}\DataTypeTok{Expr}\NormalTok{]}
+  \FunctionTok{|} \DataTypeTok{Sub} \DataTypeTok{Expr} \DataTypeTok{Expr} \DataTypeTok{Char}
+\end{Highlighting}
+\end{Shaded}
+
+The core of the abstract machine is a function from one state to the next. A state is its own data type:
+
+\begin{comment}
+data State = State Expr Expr [Expr] Value
+\end{comment}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{data} \DataTypeTok{State} \FunctionTok{=} \DataTypeTok{State} \DataTypeTok{Expr} \DataTypeTok{Expr} \NormalTok{[}\DataTypeTok{Expr}\NormalTok{] }\DataTypeTok{Value}
+\end{Highlighting}
+\end{Shaded}
+
+Some utility functions are defined to help readability:
+
+\begin{itemize}
+
+\item A function \mono{prettify} with the type signature \mono{Expr -> String} is defined inductively for pretty-printing terms.
+
+\item \mono{ret :: Expr -> Expr -> Expr} returns the first expression with any holes filled in by the second expression.
+  
+  \begin{comment}
+  ret d e = case d of
+    Hole -> e
+    App m n -> App (ret m e) (ret n e)
+    Val (Abs x m) -> Val $ Abs x (ret m e)
+    PushPrompt m n -> PushPrompt (ret m e) (ret n e)
+    WithSubCont m n -> WithSubCont (ret m e) (ret n e)
+    PushSubCont m n -> PushSubCont (ret m e) (ret n e)
+    otherwise -> d
+  \end{comment}
+
+  \begin{Shaded}
+  \begin{Highlighting}[]
+  \NormalTok{ret d e }\FunctionTok{=} \KeywordTok{case} \NormalTok{d }\KeywordTok{of}
+    \DataTypeTok{Hole} \OtherTok{->} \NormalTok{e}
+    \DataTypeTok{App} \NormalTok{m n }\OtherTok{->} \DataTypeTok{App} \NormalTok{(ret m e) (ret n e)}
+    \DataTypeTok{Val} \NormalTok{(}\DataTypeTok{Abs} \NormalTok{x m) }\OtherTok{->} \DataTypeTok{Val} \FunctionTok{$} \DataTypeTok{Abs} \NormalTok{x (ret m e)}
+    \DataTypeTok{PushPrompt} \NormalTok{m n }\OtherTok{->} \DataTypeTok{PushPrompt} \NormalTok{(ret m e) (ret n e)}
+    \DataTypeTok{WithSubCont} \NormalTok{m n }\OtherTok{->} \DataTypeTok{WithSubCont} \NormalTok{(ret m e) (ret n e)}
+    \DataTypeTok{PushSubCont} \NormalTok{m n }\OtherTok{->} \DataTypeTok{PushSubCont} \NormalTok{(ret m e) (ret n e)}
+    \NormalTok{otherwise }\OtherTok{->} \NormalTok{d}
+  \end{Highlighting}
+  \end{Shaded}
+
+\item \mono{contextToAbs :: Expr -> Expr} takes a term with a hole and returns an abstraction that fills the hole with an expression when applied to it.
+  \begin{comment}
+    contextToAbs e = (Val (Abs fresh body))
+      where fresh = 'x'  -- TODO: generate truly fresh var
+            body = ret e (Val (Var fresh))
+  \end{comment}
+  \begin{Shaded}
+  \begin{Highlighting}[]
+  \NormalTok{contextToAbs e }\FunctionTok{=} \NormalTok{(}\DataTypeTok{Val} \NormalTok{(}\DataTypeTok{Abs} \NormalTok{fresh body))}
+    \KeywordTok{where} \NormalTok{fresh }\FunctionTok{=} \CharTok{'x'}  \CommentTok{-- TODO: generate truly fresh var}
+          \NormalTok{body }\FunctionTok{=} \NormalTok{ret e (}\DataTypeTok{Val} \NormalTok{(}\DataTypeTok{Var} \NormalTok{fresh))}
+  \end{Highlighting}
+  \end{Shaded}
+
+\item \mono{seqToAbs :: [Expr] -> Expr} takes a sequence of expressions and, starting from the end, fills the hole of each expression with the previous expression. This in effect joins the output of each context with the input of the next context. It then turns this large context into an abstraction using \mono{contextToAbs}.
+
+  \begin{comment}
+  seqToAbs es = contextToAbs $ foldr ret Hole $ reverse es
+  \end{comment}
+  \begin{Shaded}
+  \begin{Highlighting}[]
+  \NormalTok{seqToAbs es }\FunctionTok{=} \NormalTok{contextToAbs }\FunctionTok{$} \NormalTok{foldr ret }\DataTypeTok{Hole} \FunctionTok{$} \NormalTok{reverse es}
+  \end{Highlighting}
+  \end{Shaded}
+
+
+
+\end{itemize}
+
+The heavy lifting is done by the function \mono{eval} with the type \mono{State -> State}. \mono{eval} is defined inductively on the structure of the current expression.
+
 
 %TODO: add figure of semantics 
