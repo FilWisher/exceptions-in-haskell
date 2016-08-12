@@ -24,16 +24,17 @@ Simon Peyton-Jones \textit{et al.}\ extended the \lam-calculus with additional o
 The grammar of DCC is an extension of the standard \lam-calculus:
 
 \begin{figure}[!h]
-\begin{definition}[Grammar rules for DCC]
-\[
-\begin{array}{lrcl}
-\textrm{(Variables)} & x, y, \dots \\
-\textrm{(Expressions)} & e & ::= & x\ |\ `lx.e\ |\ e\ e^\prime \\
-                       &   &  |  &  newPrompt\ |\ pushPrompt\ e\ e \\
-                       &   &  |  &  withSubCont\ e\ e\ |\ pushSubCont\ e\ e
-\end{array}
-\]
-\end{definition}
+\definition{ 
+  \textsc{(Grammar rules for DCC)}
+  \[
+  \begin{array}{lrcl}
+  \textrm{(Variables)} & x, y, \dots \\
+  \textrm{(Expressions)} & e & ::= & x\ |\ `lx.e\ |\ e\ e^\prime \\
+                         &   &  |  &  newPrompt\ |\ pushPrompt\ e\ e \\
+                         &   &  |  &  withSubCont\ e\ e\ |\ pushSubCont\ e\ e
+  \end{array}
+  \]
+}
 \end{figure}
 
 % TODO: ensure prompts and continuation stack has been explained before reaching this point

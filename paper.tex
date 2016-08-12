@@ -22,17 +22,20 @@
 \newcommand{\course}{Computing Science}
 
 \begin{document}
+\frontmatter
 
 \include{titlepage}
-
 \begin{abstract}
 Implementing exception handling in Haskell. Unlike other libraries, use named exception handlers. Use the \ltry-calculus to formalize and explore a series of translations between multiple calculi to arrive at a translation into Haskell. Explore properties of this translation including soundness and completeness. Publish useable Haskell library.
 \end{abstract}
 
+
 \include{acknowledge}
 
 \tableofcontents
+\pagenumbering{arabic}
 
+\mainmatter
 \include{introduction}
 \include{background}
 \include{interpreter}
