@@ -1,5 +1,5 @@
-\documentclass[11pt,a4paper,twoside,draft]{amsbook}
-%\documentclass[11pt,a4paper,draft]{report}
+%\documentclass[11pt,a4paper,twoside,draft]{amsbook}
+\documentclass[11pt,a4paper,twoside,draft]{report}
 
 \usepackage{graphicx}
 \usepackage{amsthm}
@@ -10,8 +10,9 @@
 \usepackage{derivation}
 \usepackage{theorems}
 \usepackage{relsize}
-\usepackage{float}
+\usepackage{fancyvrb}
 \usepackage{verbatim}
+\usepackage{float}
 \floatstyle{boxed}
 \restylefloat{figure}
 
@@ -23,20 +24,21 @@
 \newcommand{\course}{Computing Science}
 
 \begin{document}
-\frontmatter
 
 \include{titlepage}
 \begin{abstract}
 Implementing exception handling in Haskell. Unlike other libraries, use named exception handlers. Use the \ltry-calculus to formalize and explore a series of translations between multiple calculi to arrive at a translation into Haskell. Explore properties of this translation including soundness and completeness. Publish useable Haskell library.
 \end{abstract}
 
+\pagenumbering{gobble}
 
 \include{acknowledge}
 
 \tableofcontents
-\pagenumbering{arabic}
+\clearpage{\pagestyle{empty}\cleardoublepage}
 
-\mainmatter
+\pagenumbering{arabic}
+\setcounter{page}{1}
 
 \include{introduction}
 \include{background}

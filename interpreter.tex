@@ -39,12 +39,14 @@ A sequence of contexts evaluates to an abstraction that, when applied to a value
 \subsection{Data structures}
 There are two data types for representing DCC terms, \mono{Value} and \mono{Expr}:
 
-\begin{comment}
-data Value = Var Char
+\Verbatimcode
+data Value 
+  = Var Char
   | Abs Char Expr
   | Prompt Int
   
-data Expr = Val Value 
+data Expr 
+  = Val Value 
   | App Expr Expr
   | Hole
   | PushPrompt Expr Expr
@@ -53,37 +55,14 @@ data Expr = Val Value
   | NewPrompt
   | Seq [Expr]
   | Sub Expr Expr Char
-\end{comment}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\KeywordTok{data} \DataTypeTok{Value} \FunctionTok{=} \DataTypeTok{Var} \DataTypeTok{Char}
-  \FunctionTok{|} \DataTypeTok{Abs} \DataTypeTok{Char} \DataTypeTok{Expr}
-  \FunctionTok{|} \DataTypeTok{Prompt} \DataTypeTok{Int}
-  
-\KeywordTok{data} \DataTypeTok{Expr} \FunctionTok{=} \DataTypeTok{Val} \DataTypeTok{Value} 
-  \FunctionTok{|} \DataTypeTok{App} \DataTypeTok{Expr} \DataTypeTok{Expr}
-  \FunctionTok{|} \DataTypeTok{Hole}
-  \FunctionTok{|} \DataTypeTok{PushPrompt} \DataTypeTok{Expr} \DataTypeTok{Expr}
-  \FunctionTok{|} \DataTypeTok{PushSubCont} \DataTypeTok{Expr} \DataTypeTok{Expr}
-  \FunctionTok{|} \DataTypeTok{WithSubCont} \DataTypeTok{Expr} \DataTypeTok{Expr}
-  \FunctionTok{|} \DataTypeTok{NewPrompt}
-  \FunctionTok{|} \DataTypeTok{Seq} \NormalTok{[}\DataTypeTok{Expr}\NormalTok{]}
-  \FunctionTok{|} \DataTypeTok{Sub} \DataTypeTok{Expr} \DataTypeTok{Expr} \DataTypeTok{Char}
-\end{Highlighting}
-\end{Shaded}
+\end{Verbatim}
 
 The core of the abstract machine is a function from one state to the next. A state is its own data type which corresponds to the tuple from the specification of the semantics of the abstract machine $\langle e,\ D,\ E,\ q\rangle$:
 
-\begin{comment}
-data State = State Expr Expr [Expr] Value
-\end{comment}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\KeywordTok{data} \DataTypeTok{State} \FunctionTok{=} \DataTypeTok{State} \DataTypeTok{Expr} \DataTypeTok{Expr} \NormalTok{[}\DataTypeTok{Expr}\NormalTok{] }\DataTypeTok{Value}
-\end{Highlighting}
-\end{Shaded}
+\Verbatimcode
+data State 
+  = State Expr Expr [Expr] Value
+\end{Verbatim}
 
 \subsection{Utility Functions}
 Some utility functions are defined to help readability. See Figure ~\ref{fig:dcc-helper-functions} for implementations:
@@ -106,7 +85,8 @@ Some utility functions are defined to help readability. See Figure ~\ref{fig:dcc
 
 \end{itemize}
 
-\begin{comment}
+\begin{figure}[!h]\label{fig:dcc-helper-functions}
+\Verbatimcode
   contextToAbs e = (Val (Abs fresh body))
     where fresh = 'x'  -- TODO: generate truly fresh var
           body = ret e (Val (Var fresh))
@@ -142,49 +122,7 @@ Some utility functions are defined to help readability. See Figure ~\ref{fig:dcc
     0 -> []
     otherwise -> tail list
     where list = dropWhile (not . promptMatch p) es
-
-\end{comment}
-
-\begin{figure}[!h]\label{fig:dcc-helper-functions}
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{contextToAbs e }\FunctionTok{=} \NormalTok{(}\DataTypeTok{Val} \NormalTok{(}\DataTypeTok{Abs} \NormalTok{fresh body))}
-  \KeywordTok{where} \NormalTok{fresh }\FunctionTok{=} \CharTok{'x'}  \CommentTok{-- TODO: generate truly fresh var}
-        \NormalTok{body }\FunctionTok{=} \NormalTok{ret e (}\DataTypeTok{Val} \NormalTok{(}\DataTypeTok{Var} \NormalTok{fresh))}
-        
-\NormalTok{ret d e }\FunctionTok{=} \KeywordTok{case} \NormalTok{d }\KeywordTok{of}
-  \DataTypeTok{Hole} \OtherTok{->} \NormalTok{e}
-  \DataTypeTok{App} \NormalTok{m n }\OtherTok{->} \DataTypeTok{App} \NormalTok{(ret m e) (ret n e)}
-  \DataTypeTok{Val} \NormalTok{(}\DataTypeTok{Abs} \NormalTok{x m) }\OtherTok{->} \DataTypeTok{Val} \FunctionTok{$} \DataTypeTok{Abs} \NormalTok{x (ret m e)}
-  \DataTypeTok{PushPrompt} \NormalTok{m n }\OtherTok{->} \DataTypeTok{PushPrompt} \NormalTok{(ret m e) (ret n e)}
-  \DataTypeTok{WithSubCont} \NormalTok{m n }\OtherTok{->} \DataTypeTok{WithSubCont} \NormalTok{(ret m e) (ret n e)}
-  \DataTypeTok{PushSubCont} \NormalTok{m n }\OtherTok{->} \DataTypeTok{PushSubCont} \NormalTok{(ret m e) (ret n e)}
-  \NormalTok{otherwise }\OtherTok{->} \NormalTok{d}
-
-\NormalTok{seqToAbs es }\FunctionTok{=} \NormalTok{contextToAbs }\FunctionTok{$} \NormalTok{foldr ret }\DataTypeTok{Hole} \FunctionTok{$} \NormalTok{reverse es}
-
-\NormalTok{sub m v x }\FunctionTok{=} \KeywordTok{case} \NormalTok{m }\KeywordTok{of}
-  \DataTypeTok{Val} \NormalTok{(}\DataTypeTok{Var} \NormalTok{n) }\OtherTok{->} \KeywordTok{if} \NormalTok{n }\FunctionTok{==} \NormalTok{x }\KeywordTok{then} \NormalTok{v }\KeywordTok{else} \NormalTok{m}
-  \DataTypeTok{Val} \NormalTok{(}\DataTypeTok{Abs} \NormalTok{y e) }\OtherTok{->} \DataTypeTok{Val} \NormalTok{(}\DataTypeTok{Abs} \NormalTok{y }\FunctionTok{$} \NormalTok{sub e v x)}
-  \DataTypeTok{Val} \NormalTok{(}\DataTypeTok{Prompt} \NormalTok{p) }\OtherTok{->} \DataTypeTok{Val} \NormalTok{(}\DataTypeTok{Prompt} \NormalTok{p)}
-  \DataTypeTok{App} \NormalTok{e e' }\OtherTok{->} \DataTypeTok{App} \NormalTok{(sub e v x) (sub e' v x)}
-  \DataTypeTok{NewPrompt} \OtherTok{->} \DataTypeTok{NewPrompt}
-  \DataTypeTok{PushPrompt} \NormalTok{e e' }\OtherTok{->} \DataTypeTok{PushPrompt} \NormalTok{(sub e v x) (sub e' v x)}
-  \DataTypeTok{WithSubCont} \NormalTok{e e' }\OtherTok{->} \DataTypeTok{WithSubCont} \NormalTok{(sub e v x) (sub e' v x)}
-  \DataTypeTok{PushSubCont} \NormalTok{e e' }\OtherTok{->} \DataTypeTok{PushSubCont} \NormalTok{(sub e v x) (sub e' v x)}
-
-\NormalTok{promptMatch i p }\FunctionTok{=} \KeywordTok{case} \NormalTok{p }\KeywordTok{of}
-  \NormalTok{(}\DataTypeTok{Val} \NormalTok{(}\DataTypeTok{Prompt} \NormalTok{p')) }\OtherTok{->} \NormalTok{i }\FunctionTok{==} \NormalTok{p'}
-  \NormalTok{otherwise }\OtherTok{->} \DataTypeTok{False}
-  
-\NormalTok{splitBefore p es }\FunctionTok{=} \NormalTok{takeWhile (not }\FunctionTok{.} \NormalTok{promptMatch p) es}
-
-\NormalTok{splitAfter  p es }\FunctionTok{=} \KeywordTok{case} \NormalTok{length es }\KeywordTok{of}
-  \DecValTok{0} \OtherTok{->} \NormalTok{[]}
-  \NormalTok{otherwise }\OtherTok{->} \NormalTok{tail list}
-  \KeywordTok{where} \NormalTok{list }\FunctionTok{=} \NormalTok{dropWhile (not }\FunctionTok{.} \NormalTok{promptMatch p) es}
-\end{Highlighting}
-\end{Shaded}
+\end{Verbatim}
 \caption{Utility functions for DCC interpreter}
 \end{figure}
 
@@ -193,22 +131,13 @@ Some utility functions are defined to help readability. See Figure ~\ref{fig:dcc
 The heavy lifting is done by the function \mono{eval :: State -> State}. \mono{eval} is defined inductively on the structure of the current expression. Each case of \mono{eval} corresponds directly to at least one of the reduction rules of the DCC operational semantics. The full source can be found in the appendix: % which?
 
 The first case deals with applications of the form \mono{e e'}. If both terms are values and the first term is an abstraction of the form \mono{$`l$x.m}, the dominant term becomes a substitution of \mono{e'} for \mono{x} in \mono{m}. Otherwise, the term that is a redex is made the dominant term and the remainder of the application is added to the current context. If both terms are redexes, the left-most is made the dominant first. In effect, an application first ensures the left-hand term has been evaluated fully before evaluating the right-hand term.  
-\begin{comment}
+\Verbatimcode
 eval (State (App e e') d es q) = case e of
   Val v -> case e' of 
     Val _ -> case v of (Abs x m) -> State (Sub m e' x) d es q
     otherwise -> State e' (ret d (App e Hole)) es q
   otherwise -> State e (ret d (App Hole e')) es q
-\end{comment}
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{eval (}\DataTypeTok{State} \NormalTok{(}\DataTypeTok{App} \NormalTok{e e') d es q) }\FunctionTok{=} \KeywordTok{case} \NormalTok{e }\KeywordTok{of}
-  \DataTypeTok{Val} \NormalTok{v }\OtherTok{->} \KeywordTok{case} \NormalTok{e' }\KeywordTok{of} 
-    \DataTypeTok{Val} \NormalTok{_ }\OtherTok{->} \KeywordTok{case} \NormalTok{v }\KeywordTok{of} \NormalTok{(}\DataTypeTok{Abs} \NormalTok{x e) }\OtherTok{->} \DataTypeTok{State} \NormalTok{(}\DataTypeTok{Sub} \NormalTok{e e' x) d es q}
-    \NormalTok{otherwise }\OtherTok{->} \DataTypeTok{State} \NormalTok{e' (ret d (}\DataTypeTok{App} \NormalTok{e }\DataTypeTok{Hole}\NormalTok{)) es q}
-  \NormalTok{otherwise }\OtherTok{->} \DataTypeTok{State} \NormalTok{e (ret d (}\DataTypeTok{App} \DataTypeTok{Hole} \NormalTok{e')) es q}
-\end{Highlighting}
-\end{Shaded}
+\end{Verbatim}
 This implements the following three reduction rules:
 \[
 \begin{array}{lrcl}
@@ -225,22 +154,13 @@ The following reduction rules for pushPrompt are implemented to ensure the first
     \langle pushPrompt\ p\ e, D, E, q \rangle &\Rightarrow &\langle e, \square, p : D : E, q \rangle \\
   \end{array}
 \]
-\begin{comment}
+\Verbatimcode
 eval (State (PushPrompt e e') d es q) = case e of
   Val _ -> State e' Hole (e:d:es) q
   otherwise -> case d of
     Hole -> State e (PushPrompt Hole e') es q
     otherwise -> State e (ret d (PushPrompt Hole e')) es q
-\end{comment}
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{eval (}\DataTypeTok{State} \NormalTok{(}\DataTypeTok{PushPrompt} \NormalTok{e e') d es q) }\FunctionTok{=} \KeywordTok{case} \NormalTok{e }\KeywordTok{of}
-  \DataTypeTok{Val} \NormalTok{_ }\OtherTok{->} \DataTypeTok{State} \NormalTok{e' }\DataTypeTok{Hole} \NormalTok{(e}\FunctionTok{:}\NormalTok{d}\FunctionTok{:}\NormalTok{es) q}
-  \NormalTok{otherwise }\OtherTok{->} \KeywordTok{case} \NormalTok{d }\KeywordTok{of}
-    \DataTypeTok{Hole} \OtherTok{->} \DataTypeTok{State} \NormalTok{e (}\DataTypeTok{PushPrompt} \DataTypeTok{Hole} \NormalTok{e') es q}
-    \NormalTok{otherwise }\OtherTok{->} \DataTypeTok{State} \NormalTok{e (ret d (}\DataTypeTok{PushPrompt} \DataTypeTok{Hole} \NormalTok{e')) es q}
-\end{Highlighting}
-\end{Shaded}
+\end{Verbatim}
 
 The reduction rules for \mono{WithSubCont} ensure that the first argument has been evaluated to a prompt \mono{p} and then that the second argument has been evaluated to an abstraction. Finally, it appends the current continuation to the sequence yielded by splitting the continuation stack at \mono{p}, and creates an application of the second argument to this sequence.
 \[
@@ -250,47 +170,29 @@ The reduction rules for \mono{WithSubCont} ensure that the first argument has be
 \langle withSubCont \ p\ v, D, E, q \rangle &\Rightarrow &\langle v (D : E\textsmaller[1]{\overset{p}{\uparrow}}, \square, E\textsmaller[1]{\overset{p}{\downarrow}}, q \rangle \\
   \end{array}
 \]
-\begin{comment}
+\Verbatimcode
 eval (State (WithSubCont e e') d es q) = case e of
   Val v -> case e' of
-    Val _ -> case v of (Prompt p) -> State (App e' (Seq (d:beforeP))) 
-                                            Hole afterP q
-                                     where beforeP = splitBefore p es
-                                           afterP = splitAfter p es
+    Val _ -> case v of 
+      (Prompt p) -> State (App e' (Seq (d:beforeP))) Hole afterP q
+                    where beforeP = splitBefore p es
+                          afterP = splitAfter p es
     otherwise -> State e' (ret d (WithSubCont e Hole)) es q 
   otherwise -> State e (ret d (WithSubCont Hole e')) es q 
-\end{comment}
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{eval (}\DataTypeTok{State} \NormalTok{(}\DataTypeTok{WithSubCont} \NormalTok{e e') d es q) }\FunctionTok{=} \KeywordTok{case} \NormalTok{e }\KeywordTok{of}
-  \DataTypeTok{Val} \NormalTok{v }\OtherTok{->} \KeywordTok{case} \NormalTok{e' }\KeywordTok{of}
-    \DataTypeTok{Val} \NormalTok{_ }\OtherTok{->} \KeywordTok{case} \NormalTok{v }\KeywordTok{of} \NormalTok{(}\DataTypeTok{Prompt} \NormalTok{p) }\OtherTok{->} \DataTypeTok{State} \NormalTok{(}\DataTypeTok{App} \NormalTok{e' (}\DataTypeTok{Seq} \NormalTok{(d}\FunctionTok{:}\NormalTok{beforeP))) }
-                                            \DataTypeTok{Hole} \NormalTok{afterP q}
-                                     \KeywordTok{where} \NormalTok{beforeP }\FunctionTok{=} \NormalTok{splitBefore p es}
-                                           \NormalTok{afterP }\FunctionTok{=} \NormalTok{splitAfter p es}
-    \NormalTok{otherwise }\OtherTok{->} \DataTypeTok{State} \NormalTok{e' (ret d (}\DataTypeTok{WithSubCont} \NormalTok{e }\DataTypeTok{Hole}\NormalTok{)) es q }
-  \NormalTok{otherwise }\OtherTok{->} \DataTypeTok{State} \NormalTok{e (ret d (}\DataTypeTok{WithSubCont} \DataTypeTok{Hole} \NormalTok{e')) es q }
-\end{Highlighting}
-\end{Shaded}
+\end{Verbatim}
 
 % TODO: here relevant to explain that sequence is forced into abstraction
 Reducing \mono{PushSubCont} ensures that the first argument is a sequence, pushes the current continuation onto the stack, and then pushes the abstraction that represents the sequence onto the stack. The abstraction is first applied to a Hole. This is a hack to reverse the conversion of context-sequences into abstractions. This is necessary because context-sequences need to be abstractions when being applied but need to be sequences when being composed with other sequences of contexts.
-\begin{comment}
+\Verbatimcode
 eval (State (PushSubCont e e') d es q) = case e of
   Val v -> State e' Hole ([App (Val v) Hole]++(d:es)) q
   otherwise -> State e (ret d (PushSubCont Hole e')) es q
-\end{comment}
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{eval (}\DataTypeTok{State} \NormalTok{(}\DataTypeTok{PushSubCont} \NormalTok{e e') d es q) }\FunctionTok{=} \KeywordTok{case} \NormalTok{e }\KeywordTok{of}
-  \DataTypeTok{Val} \NormalTok{v }\OtherTok{->} \DataTypeTok{State} \NormalTok{e' }\DataTypeTok{Hole} \NormalTok{([}\DataTypeTok{App} \NormalTok{(}\DataTypeTok{Val} \NormalTok{v) }\DataTypeTok{Hole}\NormalTok{]}\FunctionTok{++}\NormalTok{(d}\FunctionTok{:}\NormalTok{es)) q}
-  \NormalTok{otherwise }\OtherTok{->} \DataTypeTok{State} \NormalTok{e (ret d (}\DataTypeTok{PushSubCont} \DataTypeTok{Hole} \NormalTok{e')) es q}
-\end{Highlighting}
-\end{Shaded}
+\end{Verbatim}
 
 The reduction of \mono{Sub} states is defined inductively on the structure of the first argument of dominant term. The base case replaces matching variables with the second term. The other cases ensure that substitution is propogated to the subterms. 
-\begin{comment}
-eval (State (Sub e y x) d es q) = State e' d es q
+\Verbatimcode
+eval (State (Sub e y x) d es q) = 
+  State e' d es q
   where e' = case e of
           Val (Var m) -> if m == x then y else (Val (Var m))
           Val (Abs h m) -> Val (Abs h (sub m y x))
@@ -300,35 +202,16 @@ eval (State (Sub e y x) d es q) = State e' d es q
           PushPrompt e1 e2 -> PushPrompt (sub e1 y x) (sub e2 y x)
           WithSubCont e1 e2 -> WithSubCont (sub e1 y x) (sub e2 y x)
           PushSubCont e1 e2 -> PushSubCont (sub e1 y x) (sub e2 y x)
-\end{comment}
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{eval (}\DataTypeTok{State} \NormalTok{(}\DataTypeTok{Sub} \NormalTok{e y x) d es q) }\FunctionTok{=} \DataTypeTok{State} \NormalTok{e' d es q}
-  \KeywordTok{where} \NormalTok{e' }\FunctionTok{=} \KeywordTok{case} \NormalTok{e }\KeywordTok{of}
-          \DataTypeTok{Val} \NormalTok{(}\DataTypeTok{Var} \NormalTok{m) }\OtherTok{->} \KeywordTok{if} \NormalTok{m }\FunctionTok{==} \NormalTok{x }\KeywordTok{then} \NormalTok{y }\KeywordTok{else} \NormalTok{(}\DataTypeTok{Val} \NormalTok{(}\DataTypeTok{Var} \NormalTok{m))}
-          \DataTypeTok{Val} \NormalTok{(}\DataTypeTok{Abs} \NormalTok{h m) }\OtherTok{->} \DataTypeTok{Val} \NormalTok{(}\DataTypeTok{Abs} \NormalTok{h (sub m y x))}
-          \DataTypeTok{App} \NormalTok{m n }\OtherTok{->} \DataTypeTok{App} \NormalTok{(sub m y x) (sub n y x)}
-          \DataTypeTok{Val} \NormalTok{(}\DataTypeTok{Prompt} \NormalTok{p) }\OtherTok{->} \DataTypeTok{Val} \NormalTok{(}\DataTypeTok{Prompt} \NormalTok{p)}
-          \DataTypeTok{NewPrompt} \OtherTok{->} \DataTypeTok{NewPrompt}
-          \DataTypeTok{PushPrompt} \NormalTok{e1 e2 }\OtherTok{->} \DataTypeTok{PushPrompt} \NormalTok{(sub e1 y x) (sub e2 y x)}
-          \DataTypeTok{WithSubCont} \NormalTok{e1 e2 }\OtherTok{->} \DataTypeTok{WithSubCont} \NormalTok{(sub e1 y x) (sub e2 y x)}
-          \DataTypeTok{PushSubCont} \NormalTok{e1 e2 }\OtherTok{->} \DataTypeTok{PushSubCont} \NormalTok{(sub e1 y x) (sub e2 y x)}
-\end{Highlighting}
-\end{Shaded}
+\end{Verbatim}
 
 Evaluating a \mono{Seq} transforms the sequence into an abstraction using \mono{seqToAbs}. This corresponds to the reduction rule we introduced in Figure \ref{fig:sequence-to-abstraction}:
-\begin{comment}
-eval (State (Seq s) d es q) = State (seqToAbs s) d es q
-\end{comment}
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{eval (}\DataTypeTok{State} \NormalTok{(}\DataTypeTok{Seq} \NormalTok{s) d es q) }\FunctionTok{=} \DataTypeTok{State} \NormalTok{(seqToAbs s) d es q}
-\end{Highlighting}
-\end{Shaded}
-
+\Verbatimcode
+eval (State (Seq s) d es q) = 
+  State (seqToAbs s) d es q
+\end{Verbatim}
 
 Evaluated a value returns the value to the current continuation if there is one or pulls a continuation off the stack if there is not. If the stack is empty, nothing happens.
-\begin{comment}
+\Verbatimcode
 eval (State (Val v) d es q) = case d of
   Hole -> case es of
     (e:es') -> case e of
@@ -336,30 +219,12 @@ eval (State (Val v) d es q) = case d of
       otherwise -> State (Val v) e es' q
     otherwise -> State (Val v) d es q
   otherwise -> State (ret d (Val v)) Hole es q
-\end{comment}
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{eval (}\DataTypeTok{State} \NormalTok{(}\DataTypeTok{Val} \NormalTok{v) d es q) }\FunctionTok{=} \KeywordTok{case} \NormalTok{d }\KeywordTok{of}
-  \DataTypeTok{Hole} \OtherTok{->} \KeywordTok{case} \NormalTok{es }\KeywordTok{of}
-    \NormalTok{(e}\FunctionTok{:}\NormalTok{es') }\OtherTok{->} \KeywordTok{case} \NormalTok{e }\KeywordTok{of}
-      \NormalTok{(}\DataTypeTok{Val} \NormalTok{(}\DataTypeTok{Prompt} \NormalTok{p)) }\OtherTok{->} \DataTypeTok{State} \NormalTok{(}\DataTypeTok{Val} \NormalTok{v) }\DataTypeTok{Hole} \NormalTok{es' q}
-      \NormalTok{otherwise }\OtherTok{->} \DataTypeTok{State} \NormalTok{(}\DataTypeTok{Val} \NormalTok{v) e es' q}
-    \NormalTok{otherwise }\OtherTok{->} \DataTypeTok{State} \NormalTok{(}\DataTypeTok{Val} \NormalTok{v) d es q}
-  \NormalTok{otherwise }\OtherTok{->} \DataTypeTok{State} \NormalTok{(ret d (}\DataTypeTok{Val} \NormalTok{v)) }\DataTypeTok{Hole} \NormalTok{es q}
-\end{Highlighting}
-\end{Shaded}
+\end{Verbatim}
 
 Evaluating \mono{NewPrompt} places the value of the current prompt as the dominant term and increments the global prompt counter:
-\begin{comment}
-eval (State NewPrompt d es (Prompt p)) = State (Val (Prompt p)) 
-                                               d es (Prompt $ p+1)
-\end{comment}
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{eval (}\DataTypeTok{State} \DataTypeTok{NewPrompt} \NormalTok{d es (}\DataTypeTok{Prompt} \NormalTok{p)) }\FunctionTok{=} \DataTypeTok{State} \NormalTok{(}\DataTypeTok{Val} \NormalTok{(}\DataTypeTok{Prompt} \NormalTok{p)) }
-                                               \NormalTok{d es (}\DataTypeTok{Prompt} \FunctionTok{$} \NormalTok{p}\FunctionTok{+}\DecValTok{1}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
-
+\Verbatimcode
+eval (State NewPrompt d es (Prompt p)) = 
+  State (Val (Prompt p)) d es (Prompt $ p+1)
+\end{Verbatim}
 
 %TODO: add figure of semantics 
