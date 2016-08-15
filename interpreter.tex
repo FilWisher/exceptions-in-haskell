@@ -8,6 +8,7 @@ Although Peyton-Jones \emph{et al.} implement a language-level module for DCC, w
 
 Whereas the original grammar for the DCC abstract machine presents sequences as values, the original exposition leaves the semantics for transforming sequences into useable expressions implicit. These semantics are unpacked in the implementation details. To capture the correct behaviour in this interpreter, we must formalize these semantics as a syntax-transformation. Sequences are therefore presented as expressions with the following explicit reduction rule:
 
+% TODO: add explicit substitution reduction rule and explain
 % TODO: describe that this happens implicitly during the $v (D:E^p)$ step
 \begin{figure}[!h]\label{fig:sequence-to-abstraction}
 \begin{definition}[Semantics of a sequence of continuations]

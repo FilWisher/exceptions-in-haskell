@@ -2,15 +2,30 @@
 
 This chapter explores what \emph{formal systems} are and what they are useful for. It looks at a number of related formal systems and their relation to computation. It outlines context ontop of which the rest of this project is built.
 
-\section{Formal Systems}
+% TODO: explain that ideas will become clearer as they are
+%       used and we see how they interact with other concepts
+%       introduced later. it's ok to leave concepts not entirely
+%       developed
 
-\subsection{Domain Modelling}
-\subsection{Derivation Rules}
-\subsection{Derivation Strategies}
+%\section{Formal Systems}
+%
+%\subsection{Domain Modelling}
+%
+%\subsubsection{Syntax and Grammars}
+%
+%\subsection{Derivation Rules}
+%\subsection{Derivation Strategies}
 
 \section{\lam-Calculus}
 
+Description of \lam-calculus: what why and who?
+
 \subsection{Syntax}
+  
+  \lam-variables are represented by $x,y,z,x^\prime,y^\prime,\&c$. Variables 
+  denote an arbitrary value: they do not describe what the value is but that 
+  any two occurrences of the same variable represent the same value. The 
+  grammar for constructing well-formed \lam-terms is:
 
   \begin{figure}[!h]
   \definition{ 
@@ -18,49 +33,196 @@ This chapter explores what \emph{formal systems} are and what they are useful fo
     \item $`l$-variables are denoted by $x, y,\dots$ \\
     \[
     \begin{array}{rcl}
-    M,N & ::= & x\ |\ `lx.M\ |\ M\ N
+    M,N & ::= & x\ \mid\ `lx.M\ \mid\ M\ N
     \end{array}
     \]
   }
   \end{figure}
+
+  \lam-abstractions are represented by $`lx.M$ where $x$ is a parameter and 
+  $M$ is the body of the abstraction. The same idea is expressed by more
+  conventional notation as a mathematical function $f(x) = M$. The $`l$ 
+  annotates the beginning of an abstraction and the $.$ separates the parameter 
+  from the body of the abstraction. This syntax is inductive meaning the body 
+  is just another term constructed using the same rules. Some examples of 
+  abstractions are:
+  \begin{figure}[!h]
+    \[
+      \begin{array}{l}
+      `lx.x \\
+      `lx.y \\
+      `lx.(`ly.xy)
+      \end{array}
+    \]
+  \caption{Examples of valid \lam-abstractions}
+  \end{figure}
+  
+  Applications are represented by any two terms, constructed according to
+  the grammar, placed alongside one another. Application gives highest
+  precedence to the leftmost terms. Bracketing can be introduced to enforce 
+  alternative application order for example $xyz$ is implicitly read as 
+  $(xy)z$ but an be written as $x(yz)$ to describe that the application of 
+  $yz$ should come first. Examples of applications are:
+    \begin{figure}[!h]
+      \[
+        \begin{array}{l}
+        xy \\
+        xyz \\
+        x(yz) \\
+        (`lx.x)y
+        \end{array}
+      \]
+    \caption{Examples of valid applications}
+    \end{figure}
 
 \subsection{Reduction Rules}
 
-  \begin{figure}[!h]
+  First we will introduce the substitution notation $M[N/x]$. This denotes 
+  the term M with all occurrences of x replaced by N. The substitution 
+  notation is defined inductively as:
+   
+    \begin{figure}[!h]
+    \definition{ 
+      \textsc{(Substitution notation for \lam-terms)}
+      \[
+      \begin{array}{rclr}
+      x[y/x] & \rightarrow & y \\
+      z[y/x] & \rightarrow & z & (z \neq x) \\
+      (`lz.M)[y/x] & \rightarrow & `lz.(M[y/x]) \\
+      (M N)[y/x] & \rightarrow & M[y/x] N[y/x]
+      \end{array}
+      \]
+    }
+    \end{figure}
+
+  The main derivation rule of the \lam-calculus is \bta-reduction. If term
+  $M$ \bta-reduces to term $N$, we write $M \rightarrow_{`b} N$ although 
+  the \bta\ subscript can be omitted if it is clear from context. \bta-reduction
+  is defined for all \lam-terms:
+  \begin{figure}[!h]\label{def:beta-reduction}
   \definition{ 
-    \textsc{(Reduction rules for \lam-calculus)}
+    \textsc{($`b$-reduction rules for \lam-calculus)}
     \[
     \begin{array}{rcl}
-    x & \rightarrow & x \\
-    `lx.M & \rightarrow & `lx.M \\
-    (`lx.M) N & \rightarrow & M[N/x]
+    x & \rightarrow_{`b} & x \\
+    `lx.M & \rightarrow_{`b} & `lx.M \\
+    (`lx.M) N & \rightarrow_{`b} & M[N/x]
     \end{array}
     \]
   }
   \end{figure}
+  It is evident from the rules in Definition \ref{def:beta-reduction} that 
+  variables and abstractions \bta-reduce to themselves. Only applications 
+  reduce to other terms. This means that an application is a reducible 
+  expression or a \emph{redex}. 
+  
+  Reducing a \emph{redex} models the running of a function. It is 
+  \bta-reduction that provides the \lam-calculus with the ability to
+  model computation. 
 
-\subsection{Reduction Strategies}
+  %TODO: add alpha reduction(?)
+  \subsection{Reduction Strategies}
 
-  \section{Logic and Types}
-  \subsection{Logic Systems}
-  \subsubsection{Intuitionistic}
-  \subsubsection{Classical}
-  \subsubsection{Sequent}
-
-  \subsection{Type Assignment}
-
-  \subsection{Curry-Howard Isomophism}
-
-\section{Haskell}
-  % TODO: purity and laziness
-  \subsection{Data Types}
-  \subsection{Type Level/Value Level}
-  \subsection{Term Rewriting}
-  % explain monads as generalizations of cps-terms
-  % what they encode and why they are useful
+%\section{Logic and Types}
+%  \subsection{Logic Systems}
+%  \subsubsection{Intuitionistic}
+%  \subsubsection{Classical}
+%  \subsubsection{Sequent}
+%
+%  \subsection{Type Assignment}
+%
+%  \subsection{Curry-Howard Isomophism}
+%
+%\section{Haskell}
+%  % TODO: purity and laziness
+%  \subsection{Data Types}
+%  \subsection{Type Level/Value Level}
+%  \subsection{Term Rewriting}
+%  % explain monads as generalizations of cps-terms
+%  % what they encode and why they are useful
 
 \section{Continuations}
+  
+  Compound terms can be decomposed into two seperate parts: a dominant 
+  term and a context. The dominant term is the term currently being 
+  evaluated. The context is a term with a hole that will be filled with 
+  the value the dominant term reduces to.
+  
+  \begin{figure}[!h]
+    \hspace{1cm}Assume that $M \rightarrow_{`b} M^\prime$
+    \[
+    \begin{array}{lrcl}
+    \textit{(Compound term)}&& MN \\
+    \textit{(Decompose)}&M && \square N \\
+    \textit{(Beta-reduce dominant term)}& M^\prime && \square N \\
+    \textit{(Refill hole of context)}&& M^\prime N \\
+    \end{array}
+    \]
+  \caption{Decomposing a term into a dominant term and a context}
+  \end{figure}
+  
+  When $M$ has \bta-reduced to $M^\prime$ then the hole of the context
+  $\square N$ is filled to form $M^\prime N$. What the dominant term and
+  context are for a given term depends on the reduction rules and strategy. 
+  The context is what remains to be reduced at given moment of reduction.
+  Thus a context is also called a \emph{continuation}.
+ 
+  \subsection{Undelimited Continuations} 
+ 
+  For more complex terms, the waiting context will grow as the dominant
+  term gets further decomposed:
+  
+  \begin{figure}[!h]
+    \[
+    \begin{array}{ll}
+      (MM^\prime) M^{\prime\prime} \\
+      (MM^\prime) & \square M^{\prime\prime} \\
+      M & (\square M^\prime) M^{\prime\prime} \\
+    \end{array}
+    \]
+  \caption{Decomposing a term into multiple contexts}
+  \end{figure}
+
+  By amalgamating continuatinos into one, big continuation we only have
+  two components at point during the reduction: the current dominant term
+  and the \emph{current continuation}. 
+  
+  Assume we have some control operations defined for manipulating
+  continuations. With this model, these operations would only be able to 
+  control the entire remaining continuation. That is to say we can only 
+  return values to the entire continuation and not to arbitrary parts of 
+  it. For this reason, continuations that can only be manipulated in their 
+  entirety are \textbf{undelimited continuations}.
+
   \subsection{Delimited-Continuations}
+ 
+  For complex terms, we can instead maintain continuations of continuations:
+  
+  \begin{figure}[!h]
+    \[
+    \begin{array}{lll}
+      (MM^\prime) M^{\prime\prime} \\
+      (MM^\prime) & \square M^{\prime\prime} \\
+      M & \square M^\prime & \square M^{\prime\prime} \\
+    \end{array}
+    \]
+  \caption{Decomposing a term into multiple contexts}
+  \end{figure}
+
+  Here, we have a stack of remaining continuations. When a dominant term
+  has been reduced, the reduct is returned to its corresponding continuation. 
+  This newly joined term then becomes the dominant redex. After this new 
+  dominant term has been reduced, it will be returned to the next waiting 
+  continuation, and so on. Throughout this process, we maintain each 
+  continuation separately.
+  
+  Assume again that we have operations defined for manipulating continuations.
+  This model would allow use to control different combinations of continuations.
+  The increased granularity of control means we can control not just the
+  entire remaining context but parts of it. Thus, continuations of this kind
+  are called \textbf{delimited continuations}.
+
+  
   \subsection{Continuation-Passing Style}
   \subsection{Monads}
 
