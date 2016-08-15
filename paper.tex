@@ -1,6 +1,6 @@
-%\documentclass[11pt,a4paper,twoside,draft]{amsbook}
 \documentclass[11pt,a4paper,twoside,draft]{report}
 
+\usepackage{titlesec}
 \usepackage{graphicx}
 \usepackage{amsthm}
 \usepackage{qsymbols}
@@ -22,6 +22,10 @@
 \newcommand{\name}{William S. Fisher}
 \newcommand{\supervisor}{Steffen van Bakel}
 \newcommand{\course}{Computing Science}
+
+\definecolor{pale-gray}{gray}{0.75}
+\newcommand{\hsp}{\hspace{15pt}}
+\titleformat{\chapter}[hang]{\Huge\bfseries}{\thechapter\hsp\color{pale-gray}{|}\hsp}{0pt}{\Huge\bfseries}
 
 \begin{document}
 
