@@ -1,5 +1,60 @@
 \chapter{Translations}
 
-\section{\ltry-to-\lmu}
-\section{\lmu-to-DCC}
+%\section{\ltry-to-\lmu}
+%
+%\section{\lmu-to-DCC}
+
+
+\begin{figure}[!h]
+\definition{
+  \textsc{(Interpretation of \lmu\ into DCC)}
+  \[
+  \begin{array}{lcl}
+    \dbr{x}        & \triangleq & x \\
+    \dbr{`lx.M}    & \triangleq & `lx.\dbr{M} \\
+    \dbr{M N}      & \triangleq & \dbr{M} \dbr{N} \\
+    \dbr{`m`a.M}   & \triangleq & (`lp.\pp\ p\ \\
+    &&                 \hspace{1cm} ((\wsc\ p\ (`l`a.\dbr{M})) \\ 
+    &&                 \hspace{1cm} \dbr{N}) \\
+    &&               )\ \np \\
+    \dbr{[`b]M} & \triangleq & \psc\ `b\ \dbr{M}
+  \end{array}
+  \]
+}
+\end{figure}
+
+\begin{theorem}[Soundness of $\dbr{\bullet}$]
+If $M \rightarrow_{`m} N$ then $\dbr{M} \rightarrow_{DCC} \dbr{N}$
+\end{theorem}
+
+\begin{proof}{By induction on the definition of $\rightarrow_{`m}$}
+\[
+\begin{array}{rllrr}
+  (`m`a.[`b]M) N: \\
+  & \dbr{(`m`a.[`b]M) N} \\
+  \triangleq & \dbr{(`m`a.[`b]M)} \dbr{N} \\
+  \triangleq & (`lp.\pp\ p\ ((\wsc\ p\ (`l`a.\dbr{M})) \dbr{N}))\ \np & [] & 0 \\
+  \rightarrow_{`b} & (`lp.\pp\ p\ ((\wsc\ p\ (`l`a.\dbr{M})) \dbr{N}))\ 0 & [] & 1 \\
+  \rightarrow_{`b} & (\pp\ p\ ((\wsc\ p\ (`l`a.\dbr{M})) \dbr{N}))[0/p] & [] & 1 \\
+  \rightarrow_{`b} & \pp\ 0\ ((\wsc\ 0\ (`l`a.\dbr{M})) \dbr{N}) & [] & 1\\
+  \rightarrow_{`b} & (\wsc\ 0\ (`l`a.\dbr{M})) \dbr{N} & 0:[] & 1\\
+  \rightarrow_{`b} & (\wsc\ 0\ (`l`a.\dbr{M})) & \square \dbr{N}:0:[] & 1\\
+  \rightarrow_{`b} & (`l`a.\dbr{M})(\square \dbr{N}) & [] & 1\\
+  \rightarrow_{`b} & \square \dbr{N} & `l`a.\dbr{M}\square:[] & 1\\
+  \rightarrow_{`b} & `lx.x\dbr{N} & `l`a.\dbr{M}\square:[] & 1\\
+  \rightarrow_{`b} & (`l`a.\dbr{M})(`lx.x\dbr{N}) & [] & 1\\
+  \rightarrow_{`b} & \dbr{M}[(`lx.x\dbr{N})/`a] & [] & 1\\
+
+\end{array}
+\]
+\end{proof}
+
+\begin{figure}[!h]
+\[
+\begin{array}{lll}
+  `lx.M
+\end{array}
+\]
+\end{figure}
+
 \section{\ltry-to-DCC}
