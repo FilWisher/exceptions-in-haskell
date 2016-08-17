@@ -228,38 +228,90 @@ Description of \lam-calculus: what why and who?
 
 \section{\lmu-Calculus}
   \subsection{Syntax}
+  \begin{figure}[!h]
+  \definition{ 
+    \textsc{(Grammar for \lmu-calculus)}
+    \item $`l$-variables are denoted by $x, y,\dots$ and $`m$-variables are denoted by $`a, `b,\dots$ \\
+    \[
+    \begin{array}{lrcl}
+    
+    \text{(Unnamed term)} & M,N & ::= & x\ |\ `lx.M\ |\ M\ N\ |\ `m`a.C \\
+    \text{(Named term)} & C & ::= & [`a]M
+    \end{array}
+    \]
+  }
+  \end{figure}
+  
+  Just as \lam\ introduces a new \lam-abstraction, \lmu\ introduces a new 
+  \lmu-abstraction. The body of a \lmu-abstraction must be a named term. 
+  A named term consists of a name of the form $[`a]$ followed by an unnamed 
+  term. 
+
   \subsection{Reduction Rules}
-  \subsection{Reduction Strategies}
+  \begin{figure}[!h]
+  \definition{ 
+    \textsc{(Reduction rules for \lmu-calculus)}
+    \[
+    \begin{array}{rcl}
+    x & \rightarrow & x \\
+    `lx.M & \rightarrow & `lx.M \\
+    `m`a.[`b]M & \rightarrow & `m`a.[`b]M \\
+    (`lx.M) N & \rightarrow & M[N/x] \\
+    (`m`a.[`b]M) N & \rightarrow & (`m`a.[`b]M[[`g]M^\prime N/[`a]M^\prime]) \\
+    \end{array}
+    \]
+  }
+  \end{figure}
+
+  The terse reduction rule at the end simple states that the application
+  of a \lmu-abstraction $`m`a.M$ to a term $N$ applies all the sub-terms 
+  of $M$ labelled $[`a]$ to $N$ and relabels them with a fresh $`m$ 
+  variable.
+  
+  \subsection{Computational Significance}
+
+  The additional \lmu\ reduction rules model context manipulation. 
+  \lmu-variables map to contexts. When an unnamed term is labelled with a 
+  \lmu-variable, it is evaluated in that context. For instance the named 
+  term $['a]M$ has the effect of evaluating $M$ in the context pointed to 
+  by $`a$.
+  
+  To make this more concrete, consider the compound term $(`m`a.[`b]M)\ N$. 
+  First we decompose the term into a dominant term $(`m`a.[`b]M)$ and a 
+  context $\square N$. Informally, we can imagine that the \lmu-variable 
+  $`a$ now maps to this context $\{`a \Rightarrow \square N\}$
+  
+  % TODO: reform to get rid of context mapping:
+  %   keep mu abstraction in dominant and consult context for
+  %   what to apply named-terms to
+  \begin{example}[]
+    \[
+    \begin{array}{lcr}
+    \textbf{Dominant} & \textbf{Context} & \textbf{Context mapping} \\
+    (`m`a.[`b]M) N \\
+    `m`a.[`b]M & \square N    & \{ \} \\
+    {[`b]M}    & `m`a.\square & \{ `a \Rightarrow \square N \} \\
+    \end{array}
+    \]
+  \end{example}
+
+  Any subterms of $M$ labelled $`a$ will now be evaluated in the context 
+  $\square N$. For example, lets substitute $`m\circ.[`a](`ls.fs)$ for
+  $M$:
+  
+  \begin{example}
+    \[
+    \begin{array}{lcr}
+    \textbf{Dominant} & \textbf{Context} & \textbf{Context mapping} \\
+    {[`b]`m\circ.[`a](`ls.fs)}    & `m`a.\square & \{ `a \Rightarrow \square N \} \\
+    {[`b]`m\circ.[`a](`ls.fs)N}   & `m`a.\square & \{ `a \Rightarrow \square N \} \\
+    {`m`a.[`b]`m\circ.[`a](`ls.fs)N} &              & \{ \} \\
+    \end{array}
+    \]
+  \end{example}
+  
+  % \subsection{Reduction Strategies}
   \subsection{Isomorphism \& Computational Interpretation}
-
-\begin{figure}[!h]
-\definition{ 
-  \textsc{(Grammar for \lmu-calculus)}
-  \item $`l$-variables are denoted by $x, y,\dots$ and $`m$-variables are denoted by $`a, `b,\dots$ \\
-  \[
-  \begin{array}{rcl}
-  M,N & ::= & x\ |\ `lx.M\ |\ M\ N\ |\ `m`a.[`b]M
-  \end{array}
-  \]
-}
-\end{figure}
-
-\begin{figure}[!h]
-\definition{ 
-  \textsc{(Reduction rules for \lmu-calculus)}
-  \[
-  \begin{array}{rcl}
-  x & \rightarrow & x \\
-  `lx.M & \rightarrow & `lx.M \\
-  `m`a.[`b]M & \rightarrow & `m`a.[`b]M \\
-  (`lx.M) N & \rightarrow & M[N/x] \\
-  (`m`a.[`b]M) N & \rightarrow & (`m`a.[`b]M[[`g]M^\prime N/[`a]M^\prime]) \\
-  \end{array}
-  \]
-}
-\end{figure}
-
-The terse reduction rule at the end simple states that the application of a \lmu-abstraction $`m`a.M$ to a term $N$ applies all the sub-terms of $M$ labelled $[`a]$ to $N$ and relabels them with a fresh $`m$ variable.
 
 \section{\ltry-Calculus}
 
