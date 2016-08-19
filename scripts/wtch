@@ -1,0 +1,22 @@
+#!/bin/bash
+
+file=$1
+
+hashold=""
+echo "watching " $file
+
+while [ 1 ]; do
+
+  hashnew=`md5sum ${file}`
+ 
+  if [[ $hashold != $hashnew ]]; then
+    hashold=$hashnew
+    changed=true
+  else
+    changed=false
+  fi
+
+  if [ $changed == true ]; then
+    pdflatex paper.tex
+  fi
+done

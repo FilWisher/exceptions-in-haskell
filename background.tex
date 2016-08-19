@@ -222,9 +222,73 @@ Description of \lam-calculus: what why and who?
   entire remaining context but parts of it. Thus, continuations of this kind
   are called \textbf{delimited continuations}.
 
-  
   \subsection{Continuation-Passing Style}
+ 
+  Continuations are what is left of the computation. By rewriting 
+  \lam-terms, continuations can be made explicit. All terms must
+  be turned into \lam-abstractions of $k$ where $k$ is the continuation
+  of a term. $k$ is then called on the result of the term, triggering
+  the continuation to take control. This style of writing \lam-terms
+  is called continuation-passing style or CPS.
+  
+  \definition{
+    \textsc{(Semantics for continuation-passing style)} 
+    \[
+    \begin{array}{lrcl}
+      x     & = & `lk.kx      \\
+      `lx.\tr{M} & = & `lk.k(`lx.\tr{M}) \\
+      \tr{M N} & = & `lk.M(`lm.m\tr{N}k)
+    \end{array}
+    \]
+  }
+  
+  The term that a CPS program terminates on will be of the form
+  $`lk.kM$. In order to extract the value, a \emph{final continuation}
+  must be provided. Depending on the context, this is likely to be an
+  identity function $`lx.x$ or a display operation $`lx.display x$ to
+  display the results of the program.
+ 
+  % TODO: explain how order-of-evaluation can be enforced using 
+  cps.
+ 
   \subsection{Monads}
+  
+  % TODO: intuitively, that mu-terms are expressed easily by continuation 
+  %       passing style gives us some idea that they are about control flow
+  %       and that they will be easily expressed by monads
+ 
+  Haskell has an infix operator for function application called \mono{\$}.
+  The operator has the type signature \mono{(a -> b) -> a -> b}. This
+  is the operator for function application. For instance we can take a
+  function \mono{addOne :: Int -> Int} and write:
+  
+  \Verbatimcode
+  ($) :: (a -> b) -> a -> b
+  intToString :: Int -> String
+  ($) intToString :: Int -> String
+  ($) intToString 4 :: String
+  \end{Verbatim}
+  
+  If we preapply \mono{\$} to an argument \mono{x :: a} then the resulting
+  term will be \mono{(\$ x) :: (a -> b) -> b}. We can read \mono{(\$ x)} as
+  a function that takes an argument $f$ and applies $f$ to $x$. It is a term
+  waiting for a function. This is the same type as CPS terms:
+  
+  \[
+  \begin{array}{l}
+    M : B \\
+    `lk.kM : (A \rightarrow B) \rightarrow B
+  \end{array}
+  \]
+ 
+  A term with type $(A \rightarrow B) \rightarrow B$ represents a suspended
+  computation. When the computation is passed a function with which to
+  continue, the computation will return a value of type $B$. We will call
+  this a $B$-computation or $Comp\ B$ for short. If we have a term of type
+  $Comp\ B$, we have a term that requires a function. 
+  
+  % TODO: finish explanation of linking suspended-computations and CPS
+  %       to monads
 
 \section{\lmu-Calculus}
   \subsection{Syntax}
@@ -279,33 +343,53 @@ Description of \lam-calculus: what why and who?
   To make this more concrete, consider the compound term $(`m`a.[`b]M)\ N$. 
   First we decompose the term into a dominant term $(`m`a.[`b]M)$ and a 
   context $\square N$. Informally, we can imagine that the \lmu-variable 
-  $`a$ now maps to this context $\{`a \Rightarrow \square N\}$
+  $`a$ now maps to this context $\{`a \Rightarrow \square N\}$:
   
   % TODO: reform to get rid of context mapping:
   %   keep mu abstraction in dominant and consult context for
   %   what to apply named-terms to
   \begin{example}[]
     \[
-    \begin{array}{lcr}
-    \textbf{Dominant} & \textbf{Context} & \textbf{Context mapping} \\
+    \begin{array}{lc}
+    \textbf{Dominant} & \textbf{Context} \\
     (`m`a.[`b]M) N \\
-    `m`a.[`b]M & \square N    & \{ \} \\
-    {[`b]M}    & `m`a.\square & \{ `a \Rightarrow \square N \} \\
+    `m`a.[`b]M & \square N \\
     \end{array}
     \]
   \end{example}
 
-  Any subterms of $M$ labelled $`a$ will now be evaluated in the context 
-  $\square N$. For example, lets substitute $`m\circ.[`a](`ls.fs)$ for
-  $M$:
+  All subterms of $M$ labelled $`a$ will now be evaluated in the context 
+  $\square N$ and the context will destroyed. For example, let us replace 
+  $M$ with \mbox{$`m\circ.[`a](`ls.fs)$}:
   
   \begin{example}
     \[
     \begin{array}{lcr}
-    \textbf{Dominant} & \textbf{Context} & \textbf{Context mapping} \\
-    {[`b]`m\circ.[`a](`ls.fs)}    & `m`a.\square & \{ `a \Rightarrow \square N \} \\
-    {[`b]`m\circ.[`a](`ls.fs)N}   & `m`a.\square & \{ `a \Rightarrow \square N \} \\
-    {`m`a.[`b]`m\circ.[`a](`ls.fs)N} &              & \{ \} \\
+    \textbf{Dominant} & \textbf{Context} \\
+    `m`a.[`b]`m\circ.[`a](`ls.fs)    & \square N \\
+    `m`a.[`a](`ls.fs)    & \square N \\
+    `m`g.[`g](`ls.fs)N   & & (`g\ \text{fresh})  \\
+    \end{array}
+    \]
+  \end{example}
+
+  % TODO: explain applicative contexts
+  After applying the term $[`a](`ls.fs)$ to $N$, the context $\square N$
+  is consumed and every occurrence of $`a$ is replaced with a fresh 
+  variable -- in this case a $`g$ -- to clarify that the new 
+  \lmu-abstraction points to a new context. This means that 
+  \lmu-abstractions will pass all of the applicative contexts to the
+  named subterms:
+  
+  \begin{example}
+    \[
+    \begin{array}{lcr}
+    \textbf{Dominant} & \textbf{Context} \\
+    (`m`a.[`a](`ls.`lt.st)) M N \\
+    (`m`a.[`a](`ls.`lt.st))M & \square N \\
+    `m`a.[`a](`ls.`lt.st) & \square M:\square N \\
+    `m`g.[`g](`ls.`lt.st)M & \square N & (`g\ \text{fresh}) \\
+    `m`d.[`d](`ls.`lt.st)MN & \square N & (`d\ \text{fresh}) \\
     \end{array}
     \]
   \end{example}

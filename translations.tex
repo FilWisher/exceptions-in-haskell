@@ -2,10 +2,41 @@
 
 %\section{\ltry-to-\lmu}
 %
-%\section{\lmu-to-DCC}
+\section{\lmu-to-DCC}
 
+% TODO: explain initial attempt and explain why it was simple and intuitive
+%       and follow up with why it went wrong and what we had to change.
+%       surprisingly did not work. replacing alpha in wsc terms to distribute
+%       context throughout is why new one works
 
-\begin{figure}[!h]
+%\begin{figure}[!h]
+%\definition{
+%  \textsc{(Interpretation of \lmu\ into DCC)}
+%  \[
+%  \begin{array}{lcl}
+%    \dbr{x}        & \triangleq & x \\
+%    \dbr{`lx.M}    & \triangleq & `lx.\dbr{M} \\
+%    \dbr{M N}      & \triangleq & \dbr{M} \dbr{N} \\
+%    \dbr{`m`a.M}   & \triangleq & (`lp.\pp\ p\ \\
+%    &&                 \hspace{1cm} ((\wsc\ p\ (`l`a.\dbr{M})) \\ 
+%    &&                 \hspace{1cm} \dbr{N}) \\
+%    &&               )\ \np \\
+%    \dbr{[`b]M} & \triangleq & \psc\ `b\ \dbr{M}
+%  \end{array}
+%  \]
+%}
+%\end{figure}
+
+The translation of a full program $M$ in the \lmu-calculus to DCC is
+defined as $\dbr{M}_{p}$ where the subscript $p$ denotes the 
+translation is initialized with prompt $p$. Formally, this means that
+$\dbr{M}_{p} \triangleq (`lp.\pp\ p\ \dbr{M})\np$
+
+\definition{
+  \textsc{(Initialization of a translation of $M$ into DCC)}
+  \[ \dbr{M}_{p} \triangleq (`lp.\pp\ p\ \dbr{M})\np \]
+}
+
 \definition{
   \textsc{(Interpretation of \lmu\ into DCC)}
   \[
@@ -13,15 +44,11 @@
     \dbr{x}        & \triangleq & x \\
     \dbr{`lx.M}    & \triangleq & `lx.\dbr{M} \\
     \dbr{M N}      & \triangleq & \dbr{M} \dbr{N} \\
-    \dbr{`m`a.M}   & \triangleq & (`lp.\pp\ p\ \\
-    &&                 \hspace{1cm} ((\wsc\ p\ (`l`a.\dbr{M})) \\ 
-    &&                 \hspace{1cm} \dbr{N}) \\
-    &&               )\ \np \\
+    \dbr{`m`a.M}   & \triangleq & \wsc\ p\ `l`a.\pp\ p\ \dbr{M} \\
     \dbr{[`b]M} & \triangleq & \psc\ `b\ \dbr{M}
   \end{array}
   \]
 }
-\end{figure}
 
 \begin{theorem}[Soundness of $\dbr{\bullet}$]
 If $M \rightarrow_{`m} N$ then $\dbr{M} \rightarrow_{DCC} \dbr{N}$
@@ -29,21 +56,42 @@ If $M \rightarrow_{`m} N$ then $\dbr{M} \rightarrow_{DCC} \dbr{N}$
 
 \begin{proof}{By induction on the definition of $\rightarrow_{`m}$}
 \[
-\begin{array}{rllrr}
-  (`m`a.[`b]M) N: \\
-  & \dbr{(`m`a.[`b]M) N} \\
-  \triangleq & \dbr{(`m`a.[`b]M)} \dbr{N} \\
-  \triangleq & (`lp.\pp\ p\ ((\wsc\ p\ (`l`a.\dbr{M})) \dbr{N}))\ \np & [] & 0 \\
-  \rightarrow_{`b} & (`lp.\pp\ p\ ((\wsc\ p\ (`l`a.\dbr{M})) \dbr{N}))\ 0 & [] & 1 \\
-  \rightarrow_{`b} & (\pp\ p\ ((\wsc\ p\ (`l`a.\dbr{M})) \dbr{N}))[0/p] & [] & 1 \\
-  \rightarrow_{`b} & \pp\ 0\ ((\wsc\ 0\ (`l`a.\dbr{M})) \dbr{N}) & [] & 1\\
-  \rightarrow_{`b} & (\wsc\ 0\ (`l`a.\dbr{M})) \dbr{N} & 0:[] & 1\\
-  \rightarrow_{`b} & (\wsc\ 0\ (`l`a.\dbr{M})) & \square \dbr{N}:0:[] & 1\\
-  \rightarrow_{`b} & (`l`a.\dbr{M})(\square \dbr{N}) & [] & 1\\
-  \rightarrow_{`b} & \square \dbr{N} & `l`a.\dbr{M}\square:[] & 1\\
-  \rightarrow_{`b} & `lx.x\dbr{N} & `l`a.\dbr{M}\square:[] & 1\\
-  \rightarrow_{`b} & (`l`a.\dbr{M})(`lx.x\dbr{N}) & [] & 1\\
-  \rightarrow_{`b} & \dbr{M}[(`lx.x\dbr{N})/`a] & [] & 1\\
+\begin{array}{rlrr}
+  (`m`a.[`b]M) N:  & & (`a \neq `b) \\
+  & \dbr{(`m`a.[`b]M) N}_{p} \\
+  \triangleq & \dbr{(`m`a.[`b]M)} \dbr{N} & p \\
+  \triangleq & (\wsc\ p\ `l`a.\pp\ p\ \dbr{[`b]M}) \dbr{N} & p \\
+  \rightarrow_{`b} & (\wsc\ p\ `l`a.\pp\ p\ \dbr{[`b]M}) & \square\dbr{N}:p \\
+  \rightarrow_{`b} & (`l`a.\pp\ p\ \dbr{[`b]M})(\square\dbr{N}) & \emptyset \\
+  \rightarrow_{`b} & (\pp\ p\ \dbr{[`b]M})\{\square\dbr{N}/`a\} & \emptyset \\
+  \rightarrow_{`b} & \pp\ p\ \dbr{[`b]M}\{\square\dbr{N}/`a\} & \emptyset \\
+  \rightarrow_{`b} & \pp\ p\ (\psc\ `b\ \dbr{M})\{\square\dbr{N}/`a\} & \emptyset \\
+  \rightarrow_{`b} & \pp\ p\ (\psc\ `b\ \dbr{M}\{\square\dbr{N}/`a\}) & \emptyset \\
+  \rightarrow_{`b} & \psc\ `b\ \dbr{M}\{\square\dbr{N}/`a\} & p \\
+  \\ 
+  %\rightarrow_{`b} & (`lp.\pp\ p\ ((\wsc\ p\ (`l`a.\dbr{M})) \dbr{N}))\ 0 & [] & 1 \\
+  %\rightarrow_{`b} & (\pp\ p\ ((\wsc\ p\ (`l`a.\dbr{M})) \dbr{N}))[0/p] & [] & 1 \\
+  %\rightarrow_{`b} & \pp\ 0\ ((\wsc\ 0\ (`l`a.\dbr{M})) \dbr{N}) & [] & 1\\
+  %\rightarrow_{`b} & (\wsc\ 0\ (`l`a.\dbr{M})) \dbr{N} & 0:[] & 1\\
+  %\rightarrow_{`b} & (\wsc\ 0\ (`l`a.\dbr{M})) & \square \dbr{N}:0:[] & 1\\
+  %\rightarrow_{`b} & (`l`a.\dbr{M})(\square \dbr{N}) & [] & 1\\
+  %\rightarrow_{`b} & \square \dbr{N} & `l`a.\dbr{M}\square:[] & 1\\
+  %\rightarrow_{`b} & `lx.x\dbr{N} & `l`a.\dbr{M}\square:[] & 1\\
+  %\rightarrow_{`b} & (`l`a.\dbr{M})(`lx.x\dbr{N}) & [] & 1\\
+  %\rightarrow_{`b} & \dbr{M}[(`lx.x\dbr{N})/`a] & [] & 1\\
+  (`m`a.[`a]M) N: \\
+  & \dbr{(`m`a.[`a]M) N}_{p} \\
+  \triangleq & \dbr{(`m`a.[`a]M)} \dbr{N} & p \\
+  \triangleq & (\wsc\ p\ `l`a.\pp\ p\ \dbr{[`a]M}) \dbr{N} & p \\
+  \rightarrow_{`b} & (\wsc\ p\ `l`a.\pp\ p\ \dbr{[`a]M}) & \square\dbr{N}:p \\
+  \rightarrow_{`b} & (`l`a.\pp\ p\ \dbr{[`a]M})(\square\dbr{N}) & \emptyset \\
+  \rightarrow_{`b} & (\pp\ p\ \dbr{[`a]M})\{\square\dbr{N}/`a\} & \emptyset \\
+  \rightarrow_{`b} & \pp\ p\ \dbr{[`a]M}\{\square\dbr{N}/`a\} & \emptyset \\
+  \rightarrow_{`b} & \pp\ p\ (\psc\ `a\ \dbr{M})\{\square\dbr{N}/`a\} & \emptyset \\
+  \rightarrow_{`b} & \pp\ p\ (\psc\ \square\dbr{N}\ \dbr{M}\{\square\dbr{N}/`a\}) & \emptyset \\
+  \rightarrow_{`b} & \psc\ \square\dbr{N}\ \dbr{M}\{\square\dbr{N}/`a\} & p \\
+  \rightarrow_{`b} & \dbr{M}\{\square\dbr{N}/`a\} & \square\dbr{N}:p \\
+  \rightarrow_{`b} & \dbr{M}\{\square\dbr{N}/`a\}\dbr{N} & p \\
 
 \end{array}
 \]
