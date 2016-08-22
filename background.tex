@@ -261,28 +261,175 @@ can use it to model computer programs.
   %TODO: add alpha reduction(?)
   % \subsection{Reduction Strategies}
 
-%\section{Logic and Types}
+\section{Logic and Types}
 %  \subsection{Logic Systems}
-%  \subsubsection{Intuitionistic}
+  \subsection{Implicative Intuitionistic Logic}
+  A formal system based on Gerhard Gentzen's natural deduction.
+  Restricted only to $\rightarrow \mathcal{I}$ and $\rightarrow 
+  \mathcal{E}$.
+  Following Brouwer, also leaves out law of excluded middle.
+  
+  \[
+  \begin{array}{rl@{\quad\quad}rl}
+    ( \to \mathcal{I} ) &
+    \Inf { A \to B \hspace{0.5cm} A }
+        {B}
+    &
+    ( \to \mathcal{E} ) &
+    \Inf { [A] \vdash B }
+        { A \to B}
+  \end{array}
+  \]
+  
 %  \subsubsection{Classical}
 %  \subsubsection{Sequent}
 %
-%  \subsection{Type Assignment}
-%
-%  \subsection{Curry-Howard Isomophism}
-%
-%\section{Haskell}
-%  % TODO: purity and laziness
-%  \subsection{Data Types}
-%  \subsection{Type Level/Value Level}
-%  \subsection{Type Classes}
-%  \subsection{Term Rewriting}
-%  % explain ($) operator
-%  % explain monads as generalizations of cps-terms
-%  % what they encode and why they are useful
+  \subsection{Type Assignment}
+  
+  Type assignment introduces additional grammar and restrictions on
+  the reduction rules of a system. These extensions prevent logically
+  inconsistent terms from being constructed. A type assignment has the
+  form:
+  
+  \[
+    M : `a 
+  \]
+  
+  which states that term $M$ has the type $`a$. Like variables, type 
+  variables are abstract: they do not describe anything more about a 
+  type than its identity. That is to say $x: A$ and $y : A$ have the
+  same type but we cannot say any more about what that type is.
+ 
+  A type is either some uppercase Latin letter or it is two valid types
+  connected by a $\rightarrow$. This is described by the following
+  BNF grammar:
+  
+  \[
+    A,B ::= `v \mid A \rightarrow B 
+  \]
+  
+  Typing rules have their own form that resembles Gentzen's sequent 
+  calculus:
+  
+  \[
+    `G \vdash T 
+  \]
+    
+  This describes that $`G$ is a set of typed \lam-terms and $T$ is a
+  typed \lam-term that is derivable from $`G$.
+
+  \subsection{Curry-Howard Isomophism}
+  
+  Curry-Howard isomorphism states that their is an isomorphism between
+  the typed of a term and a logical proposition. The term itself is
+  the proof of the proposition.
+  
+  % TODO: add more - examples and demonstration
+
+\section{Haskell}
+  % TODO: describe purity and laziness
+  
+  \subsection{Data Types}
+  New data types can be introduced into Haskell in 3 distinct ways. First,
+  using the \mono{data} keyword:
+  
+  \Verbatimcode
+    data Animal a = Dog a
+      | Cat
+  \end{Verbatim}
+  
+  The \mono{data} keyword begins the definition of a new data type. The
+  word immediately following determines the type constructor for the new
+  type. Following this is a type parameter for the type constructor. There
+  can be any number of type parameters, including zero. The right-hand
+  side of the \mono{=} introduces a \mono{|}-separated list of data 
+  constructors.
+  
+  \Verbatimcode
+    > let hector = Cat
+    > :t hector
+    hector :: Animal a
+    
+    > let topaz = Dog "foo"
+    > :t topaz
+    topaz :: Animal String
+  \end{Verbatim}
+  
+  The type parameter is constrained by the type of the value the data
+  constructor was initialized with. In the example above, calling the
+  \mono{Dog} data constructor with a string makes the type \mono{Animal
+  String} rather than the more general \mono{Animal a}.
+  
+  The second method for introducing new data types is the \mono{newtype}
+  keyword. The key difference between \mono{data} and \mono{newtype} is
+  that \mono{newtype} can only have one data constructor. Informally,
+  this implies a kind of isomorphism:
+
+  \Verbatimcode
+    newtype Foo a = Foo (a -> Integer)
+  \end{Verbatim}
+  
+  The type constructor can take type parameters which will be constrained
+  by the inhabitants of the data constructor. This data type expresses
+  an isomorphism between \mono{Foo a} and functions from \mono{a} to
+  \mono{Integer}s.
+  
+  Finally, we can introduce type aliases using the \mono{type} keyword:
+  \Verbatimcode
+    type Name = String 
+  \end{Verbatim}
+  
+  Again, we introduce a type constructor \mono{Name} but this time we
+  name another type, in this case \mono{String}, as its inhabitant. This
+  means that the type \mono{Name} is a type alias for \mono{String} and
+  will share the same data constructors. 
+ 
+  \subsection{Type Level/Value Level}
+  Haskell distinguishes between terms on the type level and terms on the
+  value level. Type level terms are descriptions of the types of a value.
+  They provide restrictions on the construction of invalid terms. For
+  instance if we have a function of type \mono{String -> Integer}, we cannot
+  apply it to a term of type \mono{Boolean}. The type-checker will throw
+  an error before any value-level computation is initiated.
+ 
+  % TODO: better description needed
+  The value level is the level on which data is constructed and manipulated.
+  The operation \mono{1+1} occurs on the value level. The value level is
+  where computation takes place and the type level is where static analysis
+  of the program type takes place.
+  
+  \subsection{Type Classes}
+  Haskell adds type classes to the type level. Types can have instances of
+  type classes. The most similar concept from Object-Oriented programming
+  is \emph{interfaces}.
+  
+  \Verbatimcode
+    class Addable a where
+      (add) :: a -> a -> a
+  \end{Verbatim}
+  
+  Type classes are introduced using the \mono{class} keyword. Beneath that
+  are the function names and corresponding type-signatures of the functions
+  that an instance of a class must implement.
+  
+  For example, we can create instances of the \mono{Addable} class:
+  
+  \Verbatimcode
+    data Number = One | Two | ThreeOrMore
+    
+    instance Addable Number where
+      add One One = Two 
+      add One Two = ThreeOrMore 
+      add Two One = ThreeOrMore 
+  \end{Verbatim}    
+  
+  %\subsection{Term Rewriting}
+  % explain ($) operator
+  % explain monads as generalizations of cps-terms
+  % what they encode and why they are useful
 
 % TODO: these explanations of continuations (diff between delim and 
-%       undelim) are incorrect
+%       undelim) are incorrect 
 \section{Continuations}
   
   Compound terms can be decomposed into two seperate parts: a dominant 
