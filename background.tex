@@ -1,30 +1,126 @@
 \chapter{Background}
 
-This chapter explores what \emph{formal systems} are and what they are useful for. It looks at a number of related formal systems and their relation to computation. It outlines context ontop of which the rest of this project is built.
+This chapter explores what \emph{formal systems} are and what they are useful for. It looks at a number of related formal systems and their relation to computation. It outlines the context ontop of which the rest of this project is built.
 
 % TODO: explain that ideas will become clearer as they are
 %       used and we see how they interact with other concepts
 %       introduced later. it's ok to leave concepts not entirely
 %       developed
 
-%\section{Formal Systems}
-%
-%\subsection{Domain Modelling}
-%
-%\subsubsection{Syntax and Grammars}
-%
-%\subsection{Derivation Rules}
+\section{Formal Systems}
+
+Formal systems are a set of rules for writing and manipulating
+formulae. Formulae are constructed from a set of characters called the
+\emph{alphabet} by following a some formula-construction rules called
+the \emph{grammar}. The only formulae considered \emph{well-formed} in
+a system are those constructed according to the grammar of a system.
+Formal systems are used to model domains of knowledge to help better
+and more formally understand those domains.
+
+\subsection{Syntax and Grammars}
+
+The grammar of a formal system describes the system's syntax. Grammars are 
+rules for constructing formulae that are well-formed. Formulae
+produced according to the grammar of a system are well-formed according to 
+the syntax of that system.
+
+We defined grammars using Backus-Naur Form or BNF:
+
+\[
+  M ::= t\ \mid\ f
+\]
+
+This grammar describes that syntactically-valid constructs are either
+the letter $t$ or the letter $f$. Grammars can be recursive
+which allows much more expressive construction rules:
+
+\begin{figure}[!h]\label{fig:tf-grammar}
+\[
+  \begin{array}{lclr}
+    M,N&::=&t&\textcolor{pale-gray}{(1)} \\
+      &|&f&\textcolor{pale-gray}{(2)} \\
+      &|&M\ a\ N&\textcolor{pale-gray}{(3)} \\
+      &|&M\ o\ N&\textcolor{pale-gray}{(4)}
+  \end{array}
+\]
+\caption{Grammar for producing the letters $t$ or $f$ connected by the letters $a$ or $o$}
+\end{figure}
+
+This grammar describes formulae containing the any number of occurrences of
+the letters $t$ or $f$ separated by either an $a$ or an $o$.
+
+\[
+\begin{array}{lr}
+  \by{t}{1} \\
+  \by{t\ o\ f}{2 \& 4} \\
+  \by{t\ o\ f\ a\ t}{1 \& 3}
+\end{array}
+\]
+
+\subsection{Derivation Rules}
+Whereas a grammar describes the rules for producing well-formed formulae,
+the derivation rules describe rules for transforming formulae of a
+particular form into a new formula. Using the grammar from Figure 
+\ref{fig:tf-grammar}, we add derivation rules:
+
+\[
+\begin{array}{lcl}
+  t\ a\ M &\to& M \\ 
+  M\ a\ t &\to& M \\
+  f\ a\ f &\to& f \\
+  \\
+  M\ o\ t &\to& t \\ 
+  t\ o\ M &\to& t \\
+  f\ o\ f &\to& f \\
+\end{array}
+\]
+
+These rules describe that if a formula matches the pattern on the 
+left-hand side, where $M$ represents a well-formed formula, it can be
+replaced by the formula on the right-hand side.
+
+\subsection{Domain Modelling}
+
+The syntax and derivation rules of a formal system are defined to model 
+some domain. This isomorphism between the domain and the formal system
+means we can attempt to discover truths about the domain through studying
+the formal system.
+
+For example, take the $tf$-system described above. Without
+understanding the domain, we are able to manipulate formulae of the
+system to create new formulae. The $tf$-system is isomorphic to
+Boolean algebra:
+
+\[
+\begin{array}{cc}
+\text{$tf$-system} & \text{Boolean algebra} \\
+t & 1 \\
+t & 0 \\
+a & \wedge \\
+o & \vee 
+\end{array}
+\]
+
+Using formal systems allows us to understand the domains they model from
+different perspectives and thereby learn novel truths about them.
+
 %\subsection{Derivation Strategies}
+% TODO: explain that when you can make more than one decision,
+%       you can have a strategy for which decision you take
 
 \section{\lam-Calculus}
 
-Description of \lam-calculus: what why and who?
+The \lam-calculus is a formal system described by Alonzo Church. The system
+models the execution of computer programs. As a Turing-complete system,
+it is capable of expressing the solutions to all problems that can
+be solved by a computer. It is of interest for this project because we
+can use it to model computer programs.
 
 \subsection{Syntax}
   
-  \lam-variables are represented by $x,y,z,x^\prime,y^\prime,\&c$. Variables 
-  denote an arbitrary value: they do not describe what the value is but that 
-  any two occurrences of the same variable represent the same value. The 
+  \lam-variables are represented by $x,y,z,\&c$. Variables denote an
+  arbitrary value: they do not describe what the value is but that any
+  two occurrences of the same variable represent the same value. The
   grammar for constructing well-formed \lam-terms is:
 
   \begin{figure}[!h]
@@ -39,18 +135,20 @@ Description of \lam-calculus: what why and who?
   }
   \end{figure}
 
-  \lam-abstractions are represented by $`lx.M$ where $x$ is a parameter and 
-  $M$ is the body of the abstraction. The same idea is expressed by more
-  conventional notation as a mathematical function $f(x) = M$. The $`l$ 
-  annotates the beginning of an abstraction and the $.$ separates the parameter 
-  from the body of the abstraction. This syntax is inductive meaning the body 
-  is just another term constructed using the same rules. Some examples of 
+  \lam-abstractions are represented by $`lx.M$ where $x$ is a
+  parameter and $M$ is the body of the abstraction. The same idea is
+  expressed by more conventional notation as a mathematical function
+  $f(x) = M$. The $`l$ annotates the beginning of an abstraction and
+  the $.$ separates the parameter from the body of the abstraction.
+  This grammar is recursive meaning the body of an abstraction is just
+  another term constructed according to the grammar. Some examples of
   abstractions are:
+  
   \begin{figure}[!h]
     \[
       \begin{array}{l}
       `lx.x \\
-      `lx.y \\
+      `lx.xy \\
       `lx.(`ly.xy)
       \end{array}
     \]
@@ -59,7 +157,7 @@ Description of \lam-calculus: what why and who?
   
   Applications are represented by any two terms, constructed according to
   the grammar, placed alongside one another. Application gives highest
-  precedence to the leftmost terms. Bracketing can be introduced to enforce 
+  precedence to the left-most terms. Bracketing can be introduced to enforce 
   alternative application order for example $xyz$ is implicitly read as 
   $(xy)z$ but an be written as $x(yz)$ to describe that the application of 
   $yz$ should come first. Examples of applications are:
@@ -95,33 +193,73 @@ Description of \lam-calculus: what why and who?
     }
     \end{figure}
 
+\subsubsection{\bta-reduction}
   The main derivation rule of the \lam-calculus is \bta-reduction. If term
   $M$ \bta-reduces to term $N$, we write $M \rightarrow_{`b} N$ although 
   the \bta\ subscript can be omitted if it is clear from context. \bta-reduction
-  is defined for all \lam-terms:
+  is defined for the application of two terms:
   \begin{figure}[!h]\label{def:beta-reduction}
   \definition{ 
-    \textsc{($`b$-reduction rules for \lam-calculus)}
+    \textsc{($`b$-reduction for \lam-calculus)}
     \[
     \begin{array}{rcl}
-    x & \rightarrow_{`b} & x \\
-    `lx.M & \rightarrow_{`b} & `lx.M \\
     (`lx.M) N & \rightarrow_{`b} & M[N/x]
     \end{array}
     \]
   }
   \end{figure}
-  It is evident from the rules in Definition \ref{def:beta-reduction} that 
-  variables and abstractions \bta-reduce to themselves. Only applications 
-  reduce to other terms. This means that an application is a reducible 
-  expression or a \emph{redex}. 
-  
-  Reducing a \emph{redex} models the running of a function. It is 
-  \bta-reduction that provides the \lam-calculus with the ability to
-  model computation. 
+ 
+  \lam-variables and \lam-abstactions are \emph{values}: they do not reduce
+  to other terms. If a formula is a value, the reduction terminates on that 
+  value. Only applications reduce to other terms. This means that an 
+  application is a reducible expression or a \emph{redex}. Reducing a 
+  redex models the computing of a function. 
 
+% TODO: define free variables and bound variables
+\subsubsection{$\alpha$-reduction}
+  
+  The \lam-calculus defines a reduction rule for renaming variables.
+  Variable names are arbitrary and chosen just to denote identity:
+  all occurrences of $x$ are the same. This can become a problem
+  in the following case:
+  
+  \[
+    (`ly.`lx.xy)(`lx.x)
+  \]
+ 
+  After the application is reduced, we have the term:
+  
+  \[
+    `lx.x(`lx.x) 
+  \]
+  
+  In this case, it is ambiguous which \lam-abstraction the right-most $x$
+  is bound by. When this term is applied to another, will the substitution
+  occur to all occurrences of $x$? From the initial term, it is clear that
+  this would be incorrect. The \lam-calculus introduces $`a$-reduction to
+  solve this:
+  
+  \begin{figure}[!h]\label{def:alpha-reduction}
+  \definition{ 
+    \textsc{($`a$-reduction for \lam-calculus)}
+  \[
+    \begin{array}{rl}
+    `lx.M \rightarrow_{`a} `ly.M[y/x] & (y \notin fv(M))
+    \end{array}
+  \]
+  }
+  \end{figure}
+  
+  This means we can rename the lead variable of an abstraction $M$ on the 
+  conditions that: 
+  \begin{enumerate}
+    \item All variables bound by that abstraction are renamed the same 
+    \item The variable it is changed to is not currently in use in $M$ 
+  \end{enumerate}
+  
+  
   %TODO: add alpha reduction(?)
-  \subsection{Reduction Strategies}
+  % \subsection{Reduction Strategies}
 
 %\section{Logic and Types}
 %  \subsection{Logic Systems}
@@ -139,6 +277,7 @@ Description of \lam-calculus: what why and who?
 %  \subsection{Type Level/Value Level}
 %  \subsection{Type Classes}
 %  \subsection{Term Rewriting}
+%  % explain ($) operator
 %  % explain monads as generalizations of cps-terms
 %  % what they encode and why they are useful
 
@@ -164,11 +303,12 @@ Description of \lam-calculus: what why and who?
   \caption{Decomposing a term into a dominant term and a context}
   \end{figure}
   
-  When $M$ has \bta-reduced to $M^\prime$ then the hole of the context
-  $\square N$ is filled to form $M^\prime N$. What the dominant term and
-  context are for a given term depends on the reduction rules and strategy. 
-  The context is what remains to be reduced at given moment of reduction.
-  Thus a context is also called a \emph{continuation}.
+  When $M$ has \bta-reduced to a value -- $M^\prime$ -- then the hole
+  of the context $\square N$ is filled to form $M^\prime N$. What the
+  dominant term and context are for a given term depends on the
+  reduction rules and strategy. The context is what remains to be
+  reduced at given moment of reduction. Thus a context is also called
+  a \emph{continuation}.
  
   \subsection{Undelimited Continuations} 
  
@@ -186,20 +326,21 @@ Description of \lam-calculus: what why and who?
   \caption{Decomposing a term into multiple contexts}
   \end{figure}
 
-  By amalgamating continuatinos into one, big continuation we only have
+  By amalgamating continuatinos into one big continuation we only have
   two components at point during the reduction: the current dominant term
   and the \emph{current continuation}. 
   
-  Assume we have some control operations defined for manipulating
-  continuations. With this model, these operations would only be able to 
-  control the entire remaining continuation. That is to say we can only 
-  return values to the entire continuation and not to arbitrary parts of 
-  it. For this reason, continuations that can only be manipulated in their 
-  entirety are \textbf{undelimited continuations}.
+  Assume we have some reduction rules defined for manipulating
+  continuations. This model keeps continuations grouped together which
+  means these hypothetical reduction rules could manipulate only this
+  entire remaining continuation. For this reason, continuations that
+  can only be manipulated in their entirety are \textbf{undelimited
+  continuations}.
 
   \subsection{Delimited-Continuations}
 
-  For complex terms, we can instead maintain continuations of continuations:
+  Instead, if we maintain a stack of continuations when
+  decomposing complex terms, we can keep continuations separated:
   
   \begin{figure}[!h]
     \[
@@ -212,32 +353,34 @@ Description of \lam-calculus: what why and who?
   \caption{Decomposing a term into multiple contexts}
   \end{figure}
 
-  Here, we have a stack of remaining continuations. When a dominant term
-  has been reduced, the reduct is returned to its corresponding continuation. 
-  This newly joined term then becomes the dominant redex. After this new 
-  dominant term has been reduced, it will be returned to the next waiting 
-  continuation, and so on. Throughout this process, we maintain each 
-  continuation separately.
+  Here, when a dominant term has been reduced, the reduct is returned
+  to its corresponding continuation. This newly joined term then
+  becomes the dominant redex. After this new dominant term has been
+  reduced, it will be returned to the next waiting continuation, and
+  so on. Throughout this process, we maintain each continuation
+  separately.
   
-  Assume again that we have operations defined for manipulating continuations.
-  This model would allow use to control different combinations of continuations.
-  The increased granularity of control means we can control not just the
-  entire remaining context but parts of it. Thus, continuations of this kind
-  are called \textbf{delimited continuations}.
+  Assume again that we have reduction rules defined for manipulating
+  continuations. By keeping continuations separate, this model would 
+  allow use to use parts of the stack selectively for instance placing
+  delimiters between portions of interest. The increased granularity of 
+  control means we can manipulate not just the entire remaining continuation 
+  but sections of it. Thus, continuations of this kind are called 
+  \textbf{delimited continuations}.
 
   \subsection{Continuation-Passing Style}
  
-  Continuations are what is left of the computation. By rewriting 
-  \lam-terms, continuations can be made explicit. All terms must
-  be turned into \lam-abstractions of $k$ where $k$ is the continuation
-  of a term. $k$ is then called on the result of the term, triggering
-  the continuation to take control. This style of writing \lam-terms
-  is called continuation-passing style or CPS.
+  By rewriting \lam-terms, the continuations can be made explicit. All
+  terms must be turned into \lam-abstractions of some variable $k$
+  where $k$ is the continuation of a term. $k$ is then called on the
+  result of the term, triggering the continuation to take control.
+  This style of writing \lam-terms is called continuation-passing
+  style or CPS.
   
   \definition{
-    \textsc{(Semantics for continuation-passing style)} 
+    \textsc{(Translation of standard \lam-terms into CPS)} 
     \[
-    \begin{array}{lrcl}
+    \begin{array}{lcl}
       \tr{x}     & = & `lk.kx      \\
       \tr{`lx.M} & = & `lk.k(`lx.\tr{M}) \\
       \tr{M N} & = & `lk.M(`lm.m\tr{N}(`ln.mnk)
@@ -247,9 +390,20 @@ Description of \lam-calculus: what why and who?
   
   The term that a CPS program terminates on will be of the form
   $`lk.kM$. In order to extract the value, a \emph{final continuation}
-  must be provided. Depending on the context, this is likely to be an
-  identity function $`lx.x$ or a display operation $`lx.\text{display }x$ to
+  must be provided. Depending on the context, this could be an identity 
+  function $`lx.x$ or a display operation $`lx.\text{display }x$ to
   display the results of the program.
+
+  \begin{figure}[!h]
+  \caption{Extracting the final value from a terminated CPS program}
+  \[
+  \begin{array}{ll}
+                & (`lk.kM)(`lx.x) \\
+    \rightarrow & (`lx.x)M \\
+    \rightarrow & M
+  \end{array}
+  \]
+  \end{figure}
  
   The translation of standard \lam-terms into CPS similarly transforms the 
   \emph{types} of \lam-terms. For example, a term $x : A$ becomes 
@@ -261,25 +415,25 @@ Description of \lam-calculus: what why and who?
   As an example, take the term M where
   
   \[
-    M = `lk.k(`ly.fy)
+    M = `lk.kx
   \]
 
-  To apply the abstraction contained in $M$, we have to apply $M$ to a
+  To access the value $x$ contained in $M$, we have to apply $M$ to a
   continuation function $`lm.N$:
   
   \[
   \begin{array}{l}
-      (`lk.k(`ly.fy))(`lm.N) \\
-      (`lm.N)(`ly.fy) \\
-      N[`y.fy/m]
+      (`lk.kx)(`lm.N) \\
+      (`lm.N)x \\
+      N[x/m]
   \end{array}
   \]
   
   Within the body of $N$, $m$ is bound to the value contained by $M$.
   So we can think about $M$ as a suspended computation that, when applied
-  to a continuation, applies the continuation to $`l.fy$. Looking at
+  to a continuation, applies the continuation to $x$. Looking at
   the type $(A \to B) \to B$ again, it is clear that $A$ is the type
-  of the term passed to a CPS-term's continuation:
+  of the term passed to the continuation of a CPS-term:
   
   \[
   \begin{array}{l}
@@ -305,9 +459,7 @@ Description of \lam-calculus: what why and who?
   
   This is a common operation so we define a utility operator \mono{>>=}
   that binds the first suspended computation to a continuation which 
-  returns another suspended computation:
-  
-  \footnote{ \mono{(>>=)} is pronounced 'bind'.}
+  returns another suspended computation\footnote{ \mono{(>>=)} is pronounced 'bind'.}:
  
   \[
     \mono{>>=} : ((A \to B) \to B) \to (A \to ((B \to C) \to C)) \to ((B \to C) \to C)
@@ -321,7 +473,7 @@ Description of \lam-calculus: what why and who?
     \mono{>>=} : Comp\ A \to (A \to Comp\ B) \to Comp\ B
   \]
   
-  We define another operator, $return$, that takse a value and returns a 
+  We define another operator, $return$, that takes a value and returns a 
   suspended computation that returns that value:
   
   \[
@@ -338,45 +490,18 @@ Description of \lam-calculus: what why and who?
   \end{Verbatim}
   
   The Monad type class generalizes CPS terms: they represent suspended
-  computations that can be composed using \mono{>>=}. 
-  % TODO: intuitively, that mu-terms are expressed easily by continuation 
-  %       passing style gives us some idea that they are about control flow
-  %       and that they will be easily expressed by monads
- 
-  Haskell has an infix operator for function application called \mono{\$}.
-  The operator has the type signature \mono{(a -> b) -> a -> b}. This
-  is the operator for function application. For instance we can take a
-  function \mono{addOne :: Int -> Int} and write:
-  
-  \Verbatimcode
-  ($) :: (a -> b) -> a -> b
-  intToString :: Int -> String
-  ($) intToString :: Int -> String
-  ($) intToString 4 :: String
-  \end{Verbatim}
-  
-  If we preapply \mono{\$} to an argument \mono{x :: a} then the resulting
-  term will be \mono{(\$ x) :: (a -> b) -> b}. We can read \mono{(\$ x)} as
-  a function that takes an argument $f$ and applies $f$ to $x$. It is a term
-  waiting for a function. This is the same type as CPS terms:
-  
-  \[
-  \begin{array}{l}
-    M : B \\
-    `lk.kM : (A \rightarrow B) \rightarrow B
-  \end{array}
-  \]
- 
-  A term with type $(A \rightarrow B) \rightarrow B$ represents a suspended
-  computation. When the computation is passed a function with which to
-  continue, the computation will return a value of type $B$. We will call
-  this a $B$-computation or $Comp\ B$ for short. If we have a term of type
-  $Comp\ B$, we have a term that requires a function. 
+  computations that can be composed using \mono{>>=}. Just like CPS terms,
+  a Monad type \mono{M a} tells us that we have a term that will pass
+  values of type \mono{a} to the continuation it is bound to using
+  \mono{>>=}.
   
   % TODO: finish explanation of linking suspended-computations and CPS
   %       to monads
 
 \section{\lmu-Calculus}
+  % TODO: intuitively, that mu-terms are expressed easily by continuation 
+  %       passing style gives us some idea that they are about control flow
+  %       and that they will be easily expressed by monads
   \subsection{Syntax}
   \begin{figure}[!h]
   \definition{ 
