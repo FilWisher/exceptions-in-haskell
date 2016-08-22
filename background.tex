@@ -137,10 +137,13 @@ Description of \lam-calculus: what why and who?
 %  % TODO: purity and laziness
 %  \subsection{Data Types}
 %  \subsection{Type Level/Value Level}
+%  \subsection{Type Classes}
 %  \subsection{Term Rewriting}
 %  % explain monads as generalizations of cps-terms
 %  % what they encode and why they are useful
 
+% TODO: these explanations of continuations (diff between delim and 
+%       undelim) are incorrect
 \section{Continuations}
   
   Compound terms can be decomposed into two seperate parts: a dominant 
@@ -195,7 +198,7 @@ Description of \lam-calculus: what why and who?
   entirety are \textbf{undelimited continuations}.
 
   \subsection{Delimited-Continuations}
- 
+
   For complex terms, we can instead maintain continuations of continuations:
   
   \begin{figure}[!h]
@@ -235,9 +238,9 @@ Description of \lam-calculus: what why and who?
     \textsc{(Semantics for continuation-passing style)} 
     \[
     \begin{array}{lrcl}
-      x     & = & `lk.kx      \\
-      `lx.\tr{M} & = & `lk.k(`lx.\tr{M}) \\
-      \tr{M N} & = & `lk.M(`lm.m\tr{N}k)
+      \tr{x}     & = & `lk.kx      \\
+      \tr{`lx.M} & = & `lk.k(`lx.\tr{M}) \\
+      \tr{M N} & = & `lk.M(`lm.m\tr{N}(`ln.mnk)
     \end{array}
     \]
   }
@@ -245,14 +248,97 @@ Description of \lam-calculus: what why and who?
   The term that a CPS program terminates on will be of the form
   $`lk.kM$. In order to extract the value, a \emph{final continuation}
   must be provided. Depending on the context, this is likely to be an
-  identity function $`lx.x$ or a display operation $`lx.display x$ to
+  identity function $`lx.x$ or a display operation $`lx.\text{display }x$ to
   display the results of the program.
  
+  The translation of standard \lam-terms into CPS similarly transforms the 
+  \emph{types} of \lam-terms. For example, a term $x : A$ becomes 
+  $`lk.kx : (A \to B) \to B$. This type represents a delayed computation:
+  a computation that is waiting for a function to continue execution with. 
+  In order to resume the computation, the term must be applied to a 
+  continuation.
+  
+  As an example, take the term M where
+  
+  \[
+    M = `lk.k(`ly.fy)
+  \]
+
+  To apply the abstraction contained in $M$, we have to apply $M$ to a
+  continuation function $`lm.N$:
+  
+  \[
+  \begin{array}{l}
+      (`lk.k(`ly.fy))(`lm.N) \\
+      (`lm.N)(`ly.fy) \\
+      N[`y.fy/m]
+  \end{array}
+  \]
+  
+  Within the body of $N$, $m$ is bound to the value contained by $M$.
+  So we can think about $M$ as a suspended computation that, when applied
+  to a continuation, applies the continuation to $`l.fy$. Looking at
+  the type $(A \to B) \to B$ again, it is clear that $A$ is the type
+  of the term passed to a CPS-term's continuation:
+  
+  \[
+  \begin{array}{l}
+    `lk.kx : (A \to B) \to B \\
+    k : (A \to B) \\
+    kx : B \\
+    x : A \\
+  \end{array} 
+  \]
+  
   % TODO: explain how order-of-evaluation can be enforced using 
-  cps.
+  %       cps.
  
   \subsection{Monads}
   
+  If we have two suspended computations $M$ and $M^\prime$ and we want to
+  run $M$ and then $M^\prime$, we have to apply $M$ to a continuation
+  to access its value and then do the same to $M^\prime$:
+  
+  \[
+    M(`lm.M^\prime(`lm^\prime.N))
+  \]
+  
+  This is a common operation so we define a utility operator \mono{>>=}
+  that binds the first suspended computation to a continuation which 
+  returns another suspended computation:
+  
+  \footnote{ \mono{(>>=)} is pronounced 'bind'.}
+ 
+  \[
+    \mono{>>=} : ((A \to B) \to B) \to (A \to ((B \to C) \to C)) \to ((B \to C) \to C)
+  \]
+ 
+  The type $(A \to B) \to B$ that represents a suspended computation returning
+  a value of type $A$ to its continuation we will call an $A$-computation or
+  $Comp\ A$. We can rewrite the type signature of \mono{>>=}:
+  
+  \[
+    \mono{>>=} : Comp\ A \to (A \to Comp\ B) \to Comp\ B
+  \]
+  
+  We define another operator, $return$, that takse a value and returns a 
+  suspended computation that returns that value:
+  
+  \[
+    return : A \to Comp\ A 
+  \]
+ 
+  The type constructor $Comp\ A$, together with the two utility functions
+  \mono{>>=} and $return$, make up Haskell's Monad type class:
+  
+  \Verbatimcode
+    class Monad M where
+      (>>=) :: M a -> (a -> M b) -> M b
+      return :: a -> M a
+  \end{Verbatim}
+  
+  The Monad type class generalizes CPS terms: they represent suspended
+  computations that can be composed using \mono{>>=}. 
   % TODO: intuitively, that mu-terms are expressed easily by continuation 
   %       passing style gives us some idea that they are about control flow
   %       and that they will be easily expressed by monads
@@ -333,6 +419,8 @@ Description of \lam-calculus: what why and who?
   variable.
   
   \subsection{Computational Significance}
+
+  % TODO: use cps translation to explain mu
 
   The additional \lmu\ reduction rules model context manipulation. 
   \lmu-variables map to contexts. When an unnamed term is labelled with a 
