@@ -1,3 +1,5 @@
+% TODO: introduce notation and concept of fv/bv and fn/bn
+
 \chapter{Background}
 
 This chapter explores what \emph{formal systems} are and what they are useful for. It looks at a number of related formal systems and their relation to computation. It outlines the context ontop of which the rest of this project is built.
@@ -110,11 +112,13 @@ different perspectives and thereby learn novel truths about them.
 
 \section{\lam-Calculus}
 
-The \lam-calculus is a formal system described by Alonzo Church. The system
-models the execution of computer programs. As a Turing-complete system,
-it is capable of expressing the solutions to all problems that can
-be solved by a computer. It is of interest for this project because we
-can use it to model computer programs.
+In response to Hilbert's \emph{Entscheidungsproblem}, Alonzo Church
+defined the \lam-calculus. It is a formal system capable of expressing
+the set of effectively-computible algorithms. Ontop of this, he built
+his proof that not all algorithms are decidable. Shortly after, Godel
+and Turing created their own models of effective computibility.
+\footnote{General recursive functions and Turing machines, respectively} 
+These models were later proved to all be equivalent.
 
 \subsection{Syntax}
   

@@ -1,5 +1,6 @@
 \chapter{Translations}
 
+% TODO: try to lmu from van Bakel
 %\section{\ltry-to-\lmu}
 %
 \section{\lmu-to-DCC}
@@ -50,59 +51,148 @@ $\dbr{M}_{p} \triangleq (`lp.\pp\ p\ \dbr{M})\np$
   \]
 }
 
+% TODO: Add proofs for completeness and other properties
 \begin{theorem}[Soundness of $\dbr{\bullet}$]
 If $M \rightarrow_{`m} N$ then $\dbr{M} \rightarrow_{DCC} \dbr{N}$
 \end{theorem}
 
+% TODO: separate D and E in DCC proofs 
 \begin{proof}{By induction on the definition of $\rightarrow_{`m}$}
 \[
-\begin{array}{rlrr}
-  (`m`a.[`b]M) N:  & & (`a \neq `b) \\
-  & \dbr{(`m`a.[`b]M) N}_{p} \\
-  \triangleq & \dbr{(`m`a.[`b]M)} \dbr{N} & p \\
-  \triangleq & (\wsc\ p\ `l`a.\pp\ p\ \dbr{[`b]M}) \dbr{N} & p \\
-  \rightarrow_{`b} & (\wsc\ p\ `l`a.\pp\ p\ \dbr{[`b]M}) & \square\dbr{N}:p \\
-  \rightarrow_{`b} & (`l`a.\pp\ p\ \dbr{[`b]M})(\square\dbr{N}) & \emptyset \\
-  \rightarrow_{`b} & (\pp\ p\ \dbr{[`b]M})\{\square\dbr{N}/`a\} & \emptyset \\
-  \rightarrow_{`b} & \pp\ p\ \dbr{[`b]M}\{\square\dbr{N}/`a\} & \emptyset \\
-  \rightarrow_{`b} & \pp\ p\ (\psc\ `b\ \dbr{M})\{\square\dbr{N}/`a\} & \emptyset \\
-  \rightarrow_{`b} & \pp\ p\ (\psc\ `b\ \dbr{M}\{\square\dbr{N}/`a\}) & \emptyset \\
-  \rightarrow_{`b} & \psc\ `b\ \dbr{M}\{\square\dbr{N}/`a\} & p \\
-  \\ 
-  %\rightarrow_{`b} & (`lp.\pp\ p\ ((\wsc\ p\ (`l`a.\dbr{M})) \dbr{N}))\ 0 & [] & 1 \\
-  %\rightarrow_{`b} & (\pp\ p\ ((\wsc\ p\ (`l`a.\dbr{M})) \dbr{N}))[0/p] & [] & 1 \\
-  %\rightarrow_{`b} & \pp\ 0\ ((\wsc\ 0\ (`l`a.\dbr{M})) \dbr{N}) & [] & 1\\
-  %\rightarrow_{`b} & (\wsc\ 0\ (`l`a.\dbr{M})) \dbr{N} & 0:[] & 1\\
-  %\rightarrow_{`b} & (\wsc\ 0\ (`l`a.\dbr{M})) & \square \dbr{N}:0:[] & 1\\
-  %\rightarrow_{`b} & (`l`a.\dbr{M})(\square \dbr{N}) & [] & 1\\
-  %\rightarrow_{`b} & \square \dbr{N} & `l`a.\dbr{M}\square:[] & 1\\
-  %\rightarrow_{`b} & `lx.x\dbr{N} & `l`a.\dbr{M}\square:[] & 1\\
-  %\rightarrow_{`b} & (`l`a.\dbr{M})(`lx.x\dbr{N}) & [] & 1\\
-  %\rightarrow_{`b} & \dbr{M}[(`lx.x\dbr{N})/`a] & [] & 1\\
-  (`m`a.[`a]M) N: \\
-  & \dbr{(`m`a.[`a]M) N}_{p} \\
-  \triangleq & \dbr{(`m`a.[`a]M)} \dbr{N} & p \\
-  \triangleq & (\wsc\ p\ `l`a.\pp\ p\ \dbr{[`a]M}) \dbr{N} & p \\
-  \rightarrow_{`b} & (\wsc\ p\ `l`a.\pp\ p\ \dbr{[`a]M}) & \square\dbr{N}:p \\
-  \rightarrow_{`b} & (`l`a.\pp\ p\ \dbr{[`a]M})(\square\dbr{N}) & \emptyset \\
-  \rightarrow_{`b} & (\pp\ p\ \dbr{[`a]M})\{\square\dbr{N}/`a\} & \emptyset \\
-  \rightarrow_{`b} & \pp\ p\ \dbr{[`a]M}\{\square\dbr{N}/`a\} & \emptyset \\
-  \rightarrow_{`b} & \pp\ p\ (\psc\ `a\ \dbr{M})\{\square\dbr{N}/`a\} & \emptyset \\
-  \rightarrow_{`b} & \pp\ p\ (\psc\ \square\dbr{N}\ \dbr{M}\{\square\dbr{N}/`a\}) & \emptyset \\
-  \rightarrow_{`b} & \psc\ \square\dbr{N}\ \dbr{M}\{\square\dbr{N}/`a\} & p \\
-  \rightarrow_{`b} & \dbr{M}\{\square\dbr{N}/`a\} & \square\dbr{N}:p \\
-  \rightarrow_{`b} & \dbr{M}\{\square\dbr{N}/`a\}\dbr{N} & p \\
-
+\begin{array}{rlrl}
+  \prooflabel{(`lx.M)N \to M[N/x]:} \\
+               & \tr{(`lx.M)N} \\
+    \triangleq & \tr{(`lx.M)} \tr{N} \\
+    \triangleq & (`lx.\tr{M}) \tr{N} \\
+    \tob\   & \tr{M}[\tr{N}/x] \\
+\end{array} 
+\]
+\\
+\[
+\begin{array}{rlrl}
+  \prooflabel{(`m`a.[`b]M)N \to `m`a.([`b]M)[[`a]M^\prime N/[`a]M^\prime]:} \\
+             & \tr{(`m`a.[`b]M)N} \\
+  \triangleq & \tr{(`m`a.[`b`]M)} \tr{N} \\
+  \triangleq & (\wsc\ p\ `l`a. \pp\ p\ (\psc\ `b\ \tr{M})) \tr{N} & p:[] \\
+  \todcc\ & \wsc\ p\ `l`a. \pp\ p\ (\psc\ `b\ \tr{M}) & \square \tr{N}:p:[] \\
+  \todcc\ & (`l`a. \pp\ p\ (\psc\ `b\ \tr{M}))(\square\tr{N}) & [] \\
+  \tob\ & (\pp\ p\ (\psc\ `b\ \tr{M}))[\square\tr{N}/`a] & [] \\
+  \tob\ & \pp\ p\ (\psc\ `b\ (\tr{M}[\square\tr{N}/`a])) & [] \\
+  \todcc\ & \psc\ `b\ (\tr{M}[\square\tr{N}/`a]) & p:[] \\
+  \triangleq\ & \tr{`m`a.([`b]M)[[`a]M^\prime N/[`a]M^\prime]} \\
+\end{array} 
+\]
+\\
+\[
+\begin{array}{rlrl}
+  \prooflabel{`m`a.[`a]M \to M:} \\
+              & \tr{`m`a.[`a]M} \\
+   \triangleq & \wsc\ p\ `l`a.\pp\ p\ (\psc\ `a\ \tr{M}) & p:[] \\
+   \todcc\    & `l`a.\pp\ p\ (\psc\ `a\ \tr{M})(\square) & [] \\
+   \tob\      & \pp\ p\ (\psc\ `a\ \tr{M})[\square/`a] & [] \\
+   \tob\      & \pp\ p\ (\psc\ \square\ (\tr{M}[\square/`a]) & [] \\
+   \todcc\    & \psc\ \square\ (\tr{M}[\square/`a] & p:[] \\
+   \todcc\    & \tr{M}[\square/`a] & p:[] \\
+   \triangleq & \tr{M} \\
+\end{array}
+\]
+\\ 
+\[
+\begin{array}{rlrl}
+  \prooflabel{`m`a.[`b]`m`g.[`d]M \to `m`a.[`d](M[`b/`g]):} \\
+    \triangleq & \wsc\ p\ `l`a.\pp\ p\ \tr{[`b]`m`g.[`d]M} & p:[] \\
+    \todcc\    & `l`a.\pp\ p\ \tr{[`b]`m`g.[`d]M}(\square) & [] \\
+    \tob\      & (\pp\ p\ \tr{[`b]`m`g.[`d]M})[\square/`a] & [] \\
+    \tob\      & \pp\ p\ \tr{[`b]`m`g.[`d]M}[\square/`a] & [] \\
+    \tob\      & \tr{[`b]`m`g.[`d]M}[\square/`a] & p:[] \\
+    \triangleq & (psc `b \tr{`m`g.[`d]M})[\square/`a] & p:[] \\
+    \triangleq & \tr{`m`g.[`d]M})[\square/`a] & `b:p:[] \\
+    \triangleq & (\wsc\ p\ `l`g.\tr{[`d]M})[\square/`a] & `b:p:[] \\
+    \triangleq & \wsc\ p\ `l`g.\pp\ p\ \tr{[`d]M}[\square/`a] & `b:p:[] \\
+    \triangleq & (`l`g.\pp\ p\ \tr{[`d]M}[\square/`a])(`b) & [] \\
+    \triangleq & (\pp\ p\ \tr{[`d]M}[\square/`a])[`b/`g] & [] \\
+    \triangleq & \pp\ p\ (\tr{[`d]M}[\square/`a])[`b/`g] & [] \\
+    \triangleq & \tr{[`d]M}[\square/`a])[`b/`g] & p:[] \\
+    \triangleq & (\psc\ `d\ M[\square/`a][`b/`g] & p:[] \\
+    \triangleq & \psc\ `d\ (M[\square/`a])[`b/`g] & p:[] \\
+    \triangleq & \tr{`m`a.[`d](M[`b/`g])} & p:[] \\
+\end{array}
+\]
+\\ 
+\[
+\begin{array}{rlrl}
+  \prooflabel{`m`a.[`b]`m`g.[`g]M \to `m`a.[`b](M[`b/`g]):} \\
+               & \tr{`m`a.[`b]`m`g.[`d]M} \\
+    \triangleq & \wsc\ p\ `l`a.\pp\ p\ \tr{[`b]`m`g.[`d]M} & p:[] \\
+    \todcc\    & `l`a.\pp\ p\ \tr{[`b]`m`g.[`d]M}(\square) & [] \\
+    \tob\      & (\pp\ p\ \tr{[`b]`m`g.[`d]M})[\square/`a] & [] \\
+    \tob\      & \pp\ p\ \tr{[`b]`m`g.[`d]M}[\square/`a] & [] \\
+    \tob\      & \tr{[`b]`m`g.[`d]M}[\square/`a] & p:[] \\
+    \triangleq & (psc `b \tr{`m`g.[`d]M})[\square/`a] & p:[] \\
+    \triangleq & \tr{`m`g.[`d]M})[\square/`a] & `b:p:[] \\
+    \triangleq & (\wsc\ p\ `l`g.\tr{[`d]M})[\square/`a] & `b:p:[] \\
+    \triangleq & \wsc\ p\ `l`g.\pp\ p\ \tr{[`d]M}[\square/`a] & `b:p:[] \\
+    \triangleq & (`l`g.\pp\ p\ \tr{[`d]M}[\square/`a])(`b) & [] \\
+    \triangleq & (\pp\ p\ \tr{[`d]M}[\square/`a])[`b/`g] & [] \\
+    \triangleq & \pp\ p\ (\tr{[`d]M}[\square/`a])[`b/`g] & [] \\
+    \triangleq & \tr{[`d]M}[\square/`a])[`b/`g] & p:[] \\
+    \triangleq & (\psc\ `d\ M[\square/`a][`b/`g] & p:[] \\
+    \triangleq & \psc\ `b\ (M[\square/`a])[`b/`g] & p:[] \\
+    \triangleq & \tr{`m`a.[`b](M[`b/`g])} & p:[]
+\end{array}
+\]
+\\ 
+% TODO: verify that this is correct
+\[
+\begin{array}{rlrl}
+  \prooflabel{(`m`d.[`a]M)[[`a]M^\prime N/[`a]M^\prime]
+    \to (`m`d.[`a](M[[`a]M^\prime N/[`a]M^\prime])} \\
+               & \tr{(`m`d.[`a]M)[[`g]M^\prime N/[`a]M^\prime]} \\
+    \triangleq & (\wsc\ p\ `l`d.\pp\ p\ (\psc\ `a\ M))[\square N/`a] \\
+    \tob\      & \wsc\ p\ `l`d.\pp\ p\ (\psc\ \square N\ (M[\square N/`a]))) \\
+    \triangleq & \tr{`m`d.[`a](M[[`a]M^\prime N/[`a]M^\prime])} \\
+\end{array}
+\]
+\\ 
+% TODO: verify that this is correct
+\[
+\begin{array}{rlrl}
+  \prooflabel{M[[`a]M^\prime N/[`a]M] \to M \hspace{10pt} (`a \not\in \fn(M)):} \\
+               & \tr{M[[`a]M^\prime N/[`a]M]} \\
+    \triangleq & \tr{M}[\square N/`a] \\
+    \tob\      & \tr{M} & (`a \not\in \fv(M))
 \end{array}
 \]
 \end{proof}
 
-\begin{figure}[!h]
-\[
-\begin{array}{lll}
-  `lx.M
-\end{array}
-\]
-\end{figure}
-
 \section{\ltry-to-DCC}
+
+  If we append the translation of \ltry\ into $`l`m$ with the translating of
+  $`l`m$ to DCC, we get a translation from \lam-calculus to DCC:
+
+  % TODO: add lines over (catch n(x) = L)
+  \definition{
+    \textsc{Translation of \ltry\ into DCC}
+    \[
+    \begin{array}{rcl}
+      \tr{x} & \triangleq & x \\
+      \tr{`lx.M} & \triangleq & `lx.\tr{M} \\
+      \tr{MN} & \triangleq & \tr{M} \tr{N} \\
+      
+      \tr{\throw{n($M$)}} & \triangleq & \wsc\ p\ `l\nonocc.\pp\ p\ (psc\ n\ (c\ \tr{M})) \\ 
+      \tr{\try M;\ \catch{n($x$) = $L$}}
+        &
+        \triangleq 
+        &
+        (`lc.\wsc\ p\ `ln.\pp\ p\ (\psc\ n\ \tr{M}))(`lx.\tr{L})
+      \\ 
+      %\multicolumn{3}{l}{\tr{\try M;\ \catch{n$_i$($x$) = $M_i$};\ \catch{m($x$) = $L$}}} \\
+      \multicolumn{3}{l}{\tr{\try M;\ \mcatch;\ \catch{m($x$) = $L$}}} \\
+        & \triangleq \\
+      \multicolumn{3}{r}{
+        %(`lc.\wsc\ p\ `lm.\pp\ p\ (\psc\ m\ \tr{\try M;\ \catch{n$_i$($x$) = $M_i$}}))(`lx.\tr{L})
+        (`lc.\wsc\ p\ `lm.\pp\ p\ (\psc\ m\ \tr{\try M;\ \mcatch}))(`lx.\tr{L})
+      }
+    \end{array} 
+    \]
+  }
