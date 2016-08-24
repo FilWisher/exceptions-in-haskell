@@ -97,7 +97,7 @@ Boolean algebra:
 \begin{array}{cc}
 \text{$tf$-system} & \text{Boolean algebra} \\
 t & 1 \\
-t & 0 \\
+f & 0 \\
 a & \wedge \\
 o & \vee 
 \end{array}
@@ -106,9 +106,68 @@ o & \vee
 Using formal systems allows us to understand the domains they model from
 different perspectives and thereby learn novel truths about them.
 
-%\subsection{Derivation Strategies}
+\subsection{Derivation Strategies}
 % TODO: explain that when you can make more than one decision,
 %       you can have a strategy for which decision you take
+
+When applying derivation rules to compound terms, we can imagine the 
+compound term being decomposed into simpler terms until one of the 
+derivation rules applies. When we decompose a term, we separate it into a
+dominant term and a context:
+
+\[
+\begin{array}{lcr}
+  & t\ o\ f\ a\ t \\
+  t\ o\ f\ && \square\ a\ t 
+\end{array}
+\]
+
+The left-hand side is the dominant term and the right-hand side is the context. 
+The $\square$ in the context denotes a hole that needs to be filled to create a full term.
+
+Once we have a term that we can apply a derivation rule to, 
+we apply the derivation rule and recombine the context with the resulting term:
+
+\[
+\begin{array}{rlcr}
+      & t\ o\ f\ && \square\ a\ t  \\
+  \to & t && \square\ a\ t  \\
+  \textit{recombine} & t\ a\ t 
+\end{array}
+\]
+
+The term $t\ o\ f\ a\ t$ can be decomposed in two ways:
+
+\[
+\begin{array}{rlr}
+  1. & t\ o\ f\ & \square\ a\ t  \\
+  2. & f\ a\ t & t\ o\ \square  \\
+\end{array}
+\]
+
+When we have more than one way derivation rules can be applied to a term,
+we can use \emph{derivation strategies} to determine which rule we apply.
+The derivation strategy we use decides how our compound terms are decomposed.
+In our $tf$-system, there are two obvious derivation strategies:
+either apply derivations starting from the left or starting from the right.
+
+\[
+\begin{array}{rcl}
+  
+  \textbf{(left)} & t\ o\ f\ a\ t \\
+  \to         & t\ o\ f & \square\ a\ t \\
+  \to         & t       & \square\ a\ t \\
+  \to         & t\ a\ t & \\
+  \\
+  \textbf{(right)}   & t\ o\ f\ a\ t \\
+  \to                & f\ a\ t & t\ o\ \square \\
+  \to                & f       & t\ o\ \square \\
+  \textit{recombine} & t\ o\ f & \\
+  
+\end{array}
+\]
+Whereas derivation rules are defined in the system, 
+derivation strategies are methods of choosing which derivation rule to apply when given a choice. 
 
 \section{\lam-Calculus}
 
