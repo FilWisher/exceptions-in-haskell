@@ -325,28 +325,83 @@ These models were later proved to all be equivalent.
   % \subsection{Reduction Strategies}
 
 \section{Logic and Types}
-%  \subsection{Logic Systems}
+
+  There are many formal systems for describing logic.
+  These systems attempt to describe the relationship between logical statements.
+  Like all formal systems, 
+  they allow us to derive new logical statements by following transformation rules.
+
   \subsection{Implicative Intuitionistic Logic}
-  A formal system based on Gerhard Gentzen's natural deduction.
-  Restricted only to $\rightarrow \mathcal{I}$ and $\rightarrow 
-  \mathcal{E}$.
-  Following Brouwer, also leaves out law of excluded middle.
+  \emph{Implicative Intuitionistic Logic} (IIL) is a subset of Gerhard Gentzen's system of natural deduction.
+  It is restricted to only the $\rightarrow \mathcal{I}$ and $\rightarrow \mathcal{E}$ rules.
+  Following Brouwer, it eschews the law of excluded middle.
+  \footnote{The law of excluded middle says $\vdash P \lor \neg P$}
+  
+  In natural deduction, the $\to$ symbol represents implication.
+  To say $A \to B$ is to say that whenever $A$ is true,
+  we know $B$ is true.
+  The statement should be read ``$A$ implies $B$''.
+  
+  Logical \emph{inference rules} describe that if some statement $A$ is true,
+  we can take for granted that some other statement $B$ is true.
+  The notation for this is:
   
   \[
+    \Inf{A}{B} 
+  \]
+  
+  Using this notation, we can now describe the inference rules for IIL:
+  \[
   \begin{array}{rl@{\quad\quad}rl}
-    ( \to \mathcal{I} ) &
+    ( \to \mathcal{E} ) &
     \Inf { A \to B \hspace{0.5cm} A }
         {B}
     &
-    ( \to \mathcal{E} ) &
-    \Inf { [A] \vdash B }
+    ( \to \mathcal{I} ) &
+    \Inf { \infer*{B}{[A]} }
         { A \to B}
   \end{array}
   \]
   
-%  \subsubsection{Classical}
-%  \subsubsection{Sequent}
-%
+  The $\to\mathcal{E}$ rule says that given the statement $A \to B$ and the statement $A$,
+  we can conclude $B$.
+  For instance, 
+  consider $A$ = ``It is raining''
+  and $B$ = ``It is wet outside''.
+  The statement $A \to B$ becomes ``If (it is raining) then (it is wet outside)''.
+jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are told ``It is raining'',
+  we can take for granted ``It is wet outside''.
+  
+  The $\to\mathcal{I}$ rule says that if we assume $A$ and from that assumption we deduce $B$,
+  we can conclude that $A \to B$.
+  Let us assume that Alan Turing did not see Alonzo Church's work.
+  From that assumption, we deduce that Alan Turing could not have stolen Alonzo Church's work.
+  Therefore we can conclude that ``If Alan Turing did not see Alonzo Church's work, he could not have stolen it''. 
+  
+  \subsection{Classical Logic}
+  
+  %TODO description of classical logic
+  
+  First, we introduce the notation for a \emph{sequent}:
+  
+    \[
+      `G \vdash T
+    \]
+    
+  The $`G$ is a sequence of statements called the \emph{antecedent}.
+  The right-hand side of the $\vdash$ is also a sequence of statements called the \emph{succedent}.
+  The whole sequent denotes that the conjunction of the statements in the antecedent imply the disjunction of the statements in the succedent.
+  That is to say, all the statements on the left taken together imply that at least one of the statements on the right is correct.
+  
+  \[
+    \begin{array}{c}
+    A_1,A_2,\dots,A_n \vdash S_1,S_2,\dots,S_m \\
+      \text{denotes} \\
+    A_1 \wedge A_2 \wedge \ldots \wedge A_n \to S_1 \lor S_2 \lor \dots \lor S_m \\
+    \end{array}
+  \]
+ 
+
   \subsection{Type Assignment}
   
   Type assignment introduces additional grammar and restrictions on
@@ -367,30 +422,98 @@ These models were later proved to all be equivalent.
   connected by a $\rightarrow$. This is described by the following
   BNF grammar:
   
-  \[
-    A,B ::= `v \mid A \rightarrow B 
-  \]
+  \definition{
+    \textsc{(Grammar for constructing types)} 
+    \item Type variables are represented by the lower-case greek alphabet $`a,`b,`g,...$
+    \[
+      A,B ::= `v \mid A \rightarrow B 
+    \]
+  }
   
-  Typing rules have their own form that resembles Gentzen's sequent 
-  calculus:
-  
-  \[
-    `G \vdash T 
-  \]
-    
-  This describes that $`G$ is a set of typed \lam-terms and $T$ is a
-  typed \lam-term that is derivable from $`G$.
+  \subsection{Typed \lam-Calculus}
+  Typed systems have rules for assigning types for terms.
+  Type assignment rules for the \emph{typed} \lam-calculus are:
 
+  \[
+    \begin{array}{lcrc}
+    { (\to\mathcal{E}}) \hspace{4pt} \Inf{
+      `G \vdash M : A \to B \hspace{20pt} N:A 
+    }{
+      `G \vdash M N : B 
+    }
+    \\
+    \\
+    { (\to\mathcal{I}}) \hspace{4pt} \Inf{
+      `G,x:A \vdash M : B
+    }{
+      `G \vdash `lx.M : A \to B 
+    }
+    \end{array}
+  \]
+
+  The first rule states that the application of a term of type $A \to B$ to
+  a term of type $A$ has type $B$.
+  The $\to\mathcal{I}$ rule says a term of type $B$ in a context where $x:A$
+  is the same as an abstraction of type $A \to B$ in a context without $x:A$. 
+  These rules add restrictions on what constitutes a well-formed term.
+  
+  \begin{example}[Type-assignment restricts set of valid terms]
+  \[  
+  \begin{array}{lr}
+    (`lx.xx)(`lx.xx) \\
+    xx : B \\
+    x : A \to B \\
+    x : A
+  \end{array}
+  \]
+  
+  The variable $x$ is applied to a term so it must have type $A \to B$.
+  The term it is applied to must have type $A$.
+  However $x$ is applied to itself so it must have type $A$ and $A \to B$.
+  This means the term $`lx.xx$ is untypable:
+  it is disallowed by the rules of the typed \lam-calculus.
+  \end{example}
+ 
   \subsection{Curry-Howard Isomophism}
   
   Curry-Howard isomorphism states that their is an isomorphism between
   the typed of a term and a logical proposition. The term itself is
   the proof of the proposition.
   
+  Looking again at the rules of the typed \lam-calculus and IIL,
+  there is a clear correspondence:
+  
+  \[
+    \begin{tabular}{|c|c|}
+      \hline
+      \lam-calculus & IIL 
+    \\ \hline 
+        \infer{
+          `G \vdash M N : B 
+        }{
+          `G \vdash M : A \to B \hspace{20pt} N:A 
+        }
+      &
+      \infer{B}
+            { A \to B \hspace{0.5cm} A }
+    \\ \hline
+      \infer{
+        `G,x:A \vdash M : B
+      }{
+        `G \vdash `lx.M : A \to B 
+      }
+    &
+      \infer { \infer*{B}{[A]} }
+        { A \to B}
+   \\ \hline 
+    \end{tabular}
+  \]
+  
   % TODO: add more - examples and demonstration
 
 \section{Haskell}
   % TODO: describe purity and laziness
+  % TODO: add section on exceptions
   
   \subsection{Data Types}
   New data types can be introduced into Haskell in 3 distinct ways. First,
