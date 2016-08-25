@@ -1,0 +1,53 @@
+\Verbatimcode
+eval :: State -> State
+eval (State (App e e') d es q) = case e of
+  Val v -> case e' of 
+    Val _ -> case v of 
+      Abs x m -> State (Sub m e' x) d es q
+      Seq es' -> State (ret (composeContexts es') e') d es q
+      otherwise -> State (App e e') d es q
+    otherwise -> State e' (ret d (App e Hole)) es q
+  otherwise -> State e (ret d (App Hole e')) es q
+
+eval (State (PushPrompt e e') d es q) = case e of
+  Val _ -> State e' Hole (e:d:es) q
+  otherwise -> case d of
+    Hole -> State e (PushPrompt Hole e') es q
+    otherwise -> State e (ret d (PushPrompt Hole e')) es q
+
+eval (State (WithSubCont e e') d es q) = case e of
+  Val v -> case e' of
+    Val _ -> case v of (Prompt p) -> State (App e' (seq' (d:beforeP))) 
+                                            Hole afterP q
+                                     where beforeP = splitBefore p es
+                                           afterP = splitAfter p es
+    otherwise -> State e' (ret d (WithSubCont e Hole)) es q 
+  otherwise -> State e (ret d (WithSubCont Hole e')) es q 
+  
+eval (State (PushSubCont e e') d es q) = case e of
+  Val (Seq es') -> State e' Hole (es'++(d:es)) q
+  otherwise -> State e (ret d (PushSubCont Hole e')) es q
+
+eval (State (Sub e y x) d es q) = State e' d es q
+  where e' = case e of
+          Val (Var m) -> if m == x then y else (Val (Var m))
+          Val (Abs h m) -> Val (Abs h (sub m y x))
+          App m n -> App (sub m y x) (sub n y x)
+          Val (Prompt p) -> Val (Prompt p)
+          NewPrompt -> NewPrompt
+          PushPrompt e1 e2 -> PushPrompt (sub e1 y x) (sub e2 y x)
+          WithSubCont e1 e2 -> WithSubCont (sub e1 y x) (sub e2 y x)
+          PushSubCont e1 e2 -> PushSubCont (sub e1 y x) (sub e2 y x)
+
+eval (State NewPrompt d es (Prompt p)) = State (Val (Prompt p)) 
+                                               d es (Prompt $ p+1)
+
+eval (State (Val v) d es q) = case d of
+  Hole -> case es of
+    (e:es') -> case e of
+      (Val (Prompt p)) -> State (Val v) Hole es' q
+      otherwise -> State (Val v) e es' q
+    otherwise -> State (Val v) d es q
+  otherwise -> State (ret d (Val v)) Hole es q
+
+\end{Verbatim}

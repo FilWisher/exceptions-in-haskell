@@ -4,34 +4,10 @@ This chapter explores the implementation of an interpreter for DCC. Portions of 
 
 \section{Interpreter}
 
-Although Peyton-Jones \emph{et al.} implement a language-level module for DCC, we are interested in the intermediate term transformations. Examining transformation steps in full allows us to derive proofs of soundness and completeness for the translations from the \lam\ and \lmu\ calculi into DCC. For this reason, the interpreter was implemented as a term-rewriting program.
-
-Whereas the original grammar for the DCC abstract machine presents sequences as values, the original exposition leaves the semantics for transforming sequences into useable expressions implicit. These semantics are unpacked in the implementation details. To capture the correct behaviour in this interpreter, we must formalize these semantics as a syntax-transformation. Sequences are therefore presented as expressions with the following explicit reduction rule:
-
-% TODO: add explicit substitution reduction rule and explain
-% TODO: describe that this happens implicitly during the $v (D:E^p)$ step
-\begin{figure}[!h]\label{fig:sequence-to-abstraction}
-\begin{definition}[Semantics of a sequence of continuations]
-\item Let $D_i$ denote some term with a hole and $D_i[v]$ denote the term $D_i$ with the hole filled by $v$:
-\[
-\begin{array}{rclr}
-  \langle 
-    (D_1:D_2:\dots:D_n) ,
-    D^\prime,
-    E,
-    q
-  \rangle 
-    &\Rightarrow&
-  \langle 
-    `lx.D_n[D_{n-1}[\ \dots D_1[x]\dots ]],
-    D^\prime,
-    E,
-    q
-  \rangle 
-\end{array}
-\]
-\end{definition}
-\end{figure}
+Although Peyton-Jones \emph{et al.} implement a language-level module for DCC, 
+we are interested in the intermediate term transformations. 
+Examining transformation steps in full allows us to derive proofs of soundness and completeness for the translations from the \lam\ and \lmu\ calculi into DCC. 
+For this reason, the interpreter was implemented as a term-rewriting program.
 
 A sequence of contexts evaluates to an abstraction that, when applied to a value $v$, returns $v$ to the first context which returns its value to the second context and so on through the whole sequence.
  
@@ -41,29 +17,28 @@ A sequence of contexts evaluates to an abstraction that, when applied to a value
 There are two data types for representing DCC terms, \mono{Value} and \mono{Expr}:
 
 \Verbatimcode
-data Value 
-  = Var Char
+data Value = Var Char
   | Abs Char Expr
   | Prompt Int
+  | Seq [Expr]
+  deriving (Show, Eq)
   
-data Expr 
-  = Val Value 
+data Expr = Val Value 
   | App Expr Expr
   | Hole
   | PushPrompt Expr Expr
   | PushSubCont Expr Expr
   | WithSubCont Expr Expr
   | NewPrompt
-  | Seq [Expr]
+  
   | Sub Expr Expr Char
+  deriving (Show, Eq)
+
+data State = State Expr Expr [Expr] Value
+  deriving (Show, Eq)
 \end{Verbatim}
 
-The core of the abstract machine is a function from one state to the next. A state is its own data type which corresponds to the tuple from the specification of the semantics of the abstract machine $\langle e,\ D,\ E,\ q\rangle$:
-
-\Verbatimcode
-data State 
-  = State Expr Expr [Expr] Value
-\end{Verbatim}
+The core of the abstract machine is a function from one state to the next. A state is its own data type which corresponds to the tuple from the specification of the semantics of the abstract machine $\langle e,\ D,\ E,\ q\rangle$.
 
 \subsection{Utility Functions}
 Some utility functions are defined to help readability. See Figure ~\ref{fig:dcc-helper-functions} for implementations:
@@ -74,9 +49,7 @@ Some utility functions are defined to help readability. See Figure ~\ref{fig:dcc
 
 \item \mono{ret :: Expr -> Expr -> Expr} returns the first expression with any holes filled in by the second expression.
 
-\item \mono{contextToAbs :: Expr -> Expr} takes a term with a hole and returns an abstraction that fills the hole with an expression when applied to it.
-
-\item \mono{seqToAbs :: [Expr] -> Expr} takes a sequence of expressions and, starting from the end, fills the hole of each expression with the previous expression. This in effect joins the output of each context with the input of the next context. It then turns this large context into an abstraction using \mono{contextToAbs}.
+\item \mono{composeContexts :: [Expr] -> Expr} takes a sequence of expressions and, starting from the end, fills the hole of each expression with the previous expression. This in effect joins the output of each context with the input of the next context.
 
 \item \mono{promptMatch :: Int -> Expr -> Bool} returns true if the second argument is a Prompt and has the same value as the first argument
 
@@ -88,10 +61,8 @@ Some utility functions are defined to help readability. See Figure ~\ref{fig:dcc
 
 \begin{figure}[!h]\label{fig:dcc-helper-functions}
 \Verbatimcode
-  contextToAbs e = (Val (Abs fresh body))
-    where fresh = 'x'  -- TODO: generate truly fresh var
-          body = ret e (Val (Var fresh))
-          
+
+  ret :: Expr -> Expr -> Expr
   ret d e = case d of
     Hole -> e
     App m n -> App (ret m e) (ret n e)
@@ -101,8 +72,10 @@ Some utility functions are defined to help readability. See Figure ~\ref{fig:dcc
     PushSubCont m n -> PushSubCont (ret m e) (ret n e)
     otherwise -> d
 
-  seqToAbs es = contextToAbs $ foldr ret Hole $ reverse es
+  composeContexts :: [Expr] -> Expr
+  composeContexts = foldr ret Hole . reverse
 
+  sub :: Expr -> Expr -> Char -> Expr
   sub m v x = case m of
     Val (Var n) -> if n == x then v else m
     Val (Abs y e) -> Val (Abs y $ sub e v x)
@@ -113,12 +86,15 @@ Some utility functions are defined to help readability. See Figure ~\ref{fig:dcc
     WithSubCont e e' -> WithSubCont (sub e v x) (sub e' v x)
     PushSubCont e e' -> PushSubCont (sub e v x) (sub e' v x)
 
+  promptMatch :: Int -> Expr -> Bool
   promptMatch i p = case p of
     (Val (Prompt p')) -> i == p'
     otherwise -> False
-    
+ 
+  splitBefore :: [Expr] -> [Expr]
   splitBefore p es = takeWhile (not . promptMatch p) es
 
+  splitAfter :: [Expr] -> [Expr]
   splitAfter  p es = case length es of
     0 -> []
     otherwise -> tail list
@@ -129,16 +105,11 @@ Some utility functions are defined to help readability. See Figure ~\ref{fig:dcc
 
 % TODO: make this section a little more structured
 \subsection{Reduction Rules}
+
 The heavy lifting is done by the function \mono{eval :: State -> State}. \mono{eval} is defined inductively on the structure of the current expression. Each case of \mono{eval} corresponds directly to at least one of the reduction rules of the DCC operational semantics. The full source can be found in the appendix: % which?
 
 The first case deals with applications of the form \mono{e e'}. If both terms are values and the first term is an abstraction of the form \mono{$`l$x.m}, the dominant term becomes a substitution of \mono{e'} for \mono{x} in \mono{m}. Otherwise, the term that is a redex is made the dominant term and the remainder of the application is added to the current context. If both terms are redexes, the left-most is made the dominant first. In effect, an application first ensures the left-hand term has been evaluated fully before evaluating the right-hand term.  
-\Verbatimcode
-eval (State (App e e') d es q) = case e of
-  Val v -> case e' of 
-    Val _ -> case v of (Abs x m) -> State (Sub m e' x) d es q
-    otherwise -> State e' (ret d (App e Hole)) es q
-  otherwise -> State e (ret d (App Hole e')) es q
-\end{Verbatim}
+
 This implements the following three reduction rules:
 \[
 \begin{array}{lrcl}
@@ -155,13 +126,6 @@ The following reduction rules for pushPrompt are implemented to ensure the first
     \langle pushPrompt\ p\ e, D, E, q \rangle &\Rightarrow &\langle e, \square, p : D : E, q \rangle \\
   \end{array}
 \]
-\Verbatimcode
-eval (State (PushPrompt e e') d es q) = case e of
-  Val _ -> State e' Hole (e:d:es) q
-  otherwise -> case d of
-    Hole -> State e (PushPrompt Hole e') es q
-    otherwise -> State e (ret d (PushPrompt Hole e')) es q
-\end{Verbatim}
 
 The reduction rules for \mono{WithSubCont} ensure that the first argument has been evaluated to a prompt \mono{p} and then that the second argument has been evaluated to an abstraction. Finally, it appends the current continuation to the sequence yielded by splitting the continuation stack at \mono{p}, and creates an application of the second argument to this sequence.
 \[
@@ -171,61 +135,16 @@ The reduction rules for \mono{WithSubCont} ensure that the first argument has be
 \langle withSubCont \ p\ v, D, E, q \rangle &\Rightarrow &\langle v (D : E\textsmaller[1]{\overset{p}{\uparrow}}, \square, E\textsmaller[1]{\overset{p}{\downarrow}}, q \rangle \\
   \end{array}
 \]
-\Verbatimcode
-eval (State (WithSubCont e e') d es q) = case e of
-  Val v -> case e' of
-    Val _ -> case v of 
-      (Prompt p) -> State (App e' (Seq (d:beforeP))) Hole afterP q
-                    where beforeP = splitBefore p es
-                          afterP = splitAfter p es
-    otherwise -> State e' (ret d (WithSubCont e Hole)) es q 
-  otherwise -> State e (ret d (WithSubCont Hole e')) es q 
-\end{Verbatim}
 
 % TODO: here relevant to explain that sequence is forced into abstraction
 Reducing \mono{PushSubCont} ensures that the first argument is a sequence, pushes the current continuation onto the stack, and then pushes the abstraction that represents the sequence onto the stack. The abstraction is first applied to a Hole. This is a hack to reverse the conversion of context-sequences into abstractions. This is necessary because context-sequences need to be abstractions when being applied but need to be sequences when being composed with other sequences of contexts.
-\Verbatimcode
-eval (State (PushSubCont e e') d es q) = case e of
-  Val v -> State e' Hole ([App (Val v) Hole]++(d:es)) q
-  otherwise -> State e (ret d (PushSubCont Hole e')) es q
-\end{Verbatim}
 
 The reduction of \mono{Sub} states is defined inductively on the structure of the first argument of dominant term. The base case replaces matching variables with the second term. The other cases ensure that substitution is propogated to the subterms. 
-\Verbatimcode
-eval (State (Sub e y x) d es q) = 
-  State e' d es q
-  where e' = case e of
-          Val (Var m) -> if m == x then y else (Val (Var m))
-          Val (Abs h m) -> Val (Abs h (sub m y x))
-          App m n -> App (sub m y x) (sub n y x)
-          Val (Prompt p) -> Val (Prompt p)
-          NewPrompt -> NewPrompt
-          PushPrompt e1 e2 -> PushPrompt (sub e1 y x) (sub e2 y x)
-          WithSubCont e1 e2 -> WithSubCont (sub e1 y x) (sub e2 y x)
-          PushSubCont e1 e2 -> PushSubCont (sub e1 y x) (sub e2 y x)
-\end{Verbatim}
 
 Evaluating a \mono{Seq} transforms the sequence into an abstraction using \mono{seqToAbs}. This corresponds to the reduction rule we introduced in Figure \ref{fig:sequence-to-abstraction}:
-\Verbatimcode
-eval (State (Seq s) d es q) = 
-  State (seqToAbs s) d es q
-\end{Verbatim}
 
 Evaluated a value returns the value to the current continuation if there is one or pulls a continuation off the stack if there is not. If the stack is empty, nothing happens.
-\Verbatimcode
-eval (State (Val v) d es q) = case d of
-  Hole -> case es of
-    (e:es') -> case e of
-      (Val (Prompt p)) -> State (Val v) Hole es' q
-      otherwise -> State (Val v) e es' q
-    otherwise -> State (Val v) d es q
-  otherwise -> State (ret d (Val v)) Hole es q
-\end{Verbatim}
 
 Evaluating \mono{NewPrompt} places the value of the current prompt as the dominant term and increments the global prompt counter:
-\Verbatimcode
-eval (State NewPrompt d es (Prompt p)) = 
-  State (Val (Prompt p)) d es (Prompt $ p+1)
-\end{Verbatim}
 
-%TODO: add figure of semantics 
+\input{eval}

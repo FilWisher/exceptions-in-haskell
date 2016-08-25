@@ -312,7 +312,7 @@ These models were later proved to all be equivalent.
   \]
   }
   \end{figure}
-  
+ 
   This means we can rename the lead variable of an abstraction $M$ on the 
   conditions that: 
   \begin{enumerate}
@@ -571,12 +571,14 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
   will share the same data constructors. 
  
   \subsection{Type Level/Value Level}
-  Haskell distinguishes between terms on the type level and terms on the
-  value level. Type level terms are descriptions of the types of a value.
-  They provide restrictions on the construction of invalid terms. For
-  instance if we have a function of type \mono{String -> Integer}, we cannot
-  apply it to a term of type \mono{Boolean}. The type-checker will throw
-  an error before any value-level computation is initiated.
+  
+  Haskell distinguishes between terms on the type level and terms on the value level. 
+  This is the same as the separate layer of terms and types in the \lam-calculus.
+  Types in Haskell are descriptions of the types of a value.
+  They provide restrictions on the construction of invalid terms. 
+  For instance if we have a function of type \mono{String -> Integer}, 
+  we cannot apply it to a term of type \mono{Boolean}. 
+  The type-checker will throw an error before any value-level computation is initiated.
  
   % TODO: better description needed
   The value level is the level on which data is constructed and manipulated.
@@ -943,8 +945,6 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
   % \subsection{Reduction Strategies}
   \subsection{Isomorphism \& Computational Interpretation}
 
-\section{\ltry-Calculus}
-
 \section{Delimited-Continuation Calculus}
 
   Simon Peyton-Jones \textit{et al.}\ extended the \lam-calculus with additional operators in order create a framework for implementing delimited continuations \cite{JonesDS07}. This calculus will be referred to as the delimited-continuation calculus or DCC. Many calculi have been devised with control mechanisms. Like the \lmu-calculus, these control mechanisms are all specific instances of delimited and undelimited continuations. DCC provides a set of operations that are capable of expressing many of these other common control mechanisms.
@@ -1006,3 +1006,103 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
   \item \op{withSubCont} captures the subcontinuation from the most recent occurrence of the first argument (a prompt) on the excution stack to the current point of execution. Aborts this continuation and applies the second argument (a \lam-abstraction) to the captured continuation.
   \item \op{pushSubCont} pushes the current continuation and then its first argument (a subcontinuation) onto the continuation stack before evaluating its second argument.
   \end{itemize}
+  
+\section{\ltry-Calculus}
+
+Steffen van Bakel extended the \lam-calculus with operators for modelling exceptions.
+Unlike previous systems, the \ltry-calculus uses named exceptions.
+
+\subsection{Exceptions}
+
+Exceptions in programming languages are indications that control flow cannot continue.
+For example, if you attempt to open a non-existent file,
+the operation might throw an exception.
+If an exception occurs without being caught, a program will exit with an error.
+Exceptions can be caught and attempts at recovery can be made by exception handlers.
+
+The common syntax for introducing exception handlers is in try-catch blocks.
+An exception that occurs in a try-catch block will be handled by a corresponding handler.
+For example, see the Javascript syntax for this:
+
+\begin{Verbatim}
+  try {
+    /* possibly throw exception */
+  } catch (e) {
+    /* recover thrown exception */ 
+  }
+\end{Verbatim}
+
+The \mono{catch (e) \{ ... \}} introduces a single exception handler.
+This exception handler will be called if an exception is thrown inside the try block.
+If we want to introduce multiple exception handlers,
+we need a mechanism for deciding which handler will be called.
+Java solves this by registering different exception handlers based on their type:
+
+\begin{Verbatim}
+  try {
+    /* possibly throw exception */
+  } catch (IOException e) {
+    /* recover from IOException */  
+  } catch (FileNotFoundException e) {
+    /* recover from FileNotFoundException */ 
+  }
+\end{Verbatim}
+
+Here, which handler is called depends on the type of the exception thrown.
+
+\subsection{Syntax}
+
+The grammar of the \ltry-calculus is as follows:
+\definition{
+\textsc{(Grammar of the \ltry-calculus)}
+\[
+  \begin{array}{rclr}
+    C &::=& \catch{ n$_1$($x$) = $M_1$ }; \dots; \catch{n$_i$($x$) = $M_i$} & (i \geq 1) \\
+    M,N &::=& x\ |\ `lx.M\ |\ MN\ |\ \try M;\ C\ |\ \throw{n($M$)}
+  \end{array}
+\]
+}
+
+The grammar for $C$ describes a catch block as series of one or more catch statements. 
+For convenience, we will use the notation 
+
+\[
+  \mult{\catch{n$_i$($x$) = $M_i$}}{i > 1}
+\]
+
+to describe a catch block with more than one catch statement. 
+
+The \ltry-calculus adds three new syntactic constructs:
+\begin{itemize}
+\item \textbf{throw n($M$)} denotes the throwing of an exception with name $n$ passing it the value $M$.
+\item \textbf{catch n($x$) = $M$} registers the exception handler $M$ to the name $n$ with parameter $x$.
+\item \textbf{try $M$; $C$} attempts to run term $M$ in an environment with the exception handlers in catch block $C$ registered.
+\end{itemize}
+
+\subsection{Reduction Rules}
+In conjunction with the additional syntactic constructions,
+the \ltry-calculus introduces some reduction rules:
+
+\definition{
+\textsc{(\ltry\ reduction rules)}
+\[
+\begin{array}{rlcl}
+  \text{($`b$):}      & (`lx.M)N &\to& M[N/x] \\
+  \text{(throw):}     & (\throw{n($M$)})N &\to& \throw{n($M$)} \\
+  \text{(try-throw):} & \try \throw{n$_l$($N$)};\ \mcatch &\to& M_l[N/x] \\
+  \text{(try-value):} & \try V;\ \mcatch &\to& V \\
+\end{array}
+\]
+}
+
+The $`b$ reduction rule is familiar from the \lam-calculus. 
+A \textbf{throw} term applied to any term discards the second term.
+A \textbf{try} term that contains a throw reduces to the handler that corresponds to the name of the exception thrown with all occurrences of the parameter replaced by the value thrown. 
+For instance a $\throw{n(N)}$ inside a \textbf{try} will reduce to $M[N/x]$ if there is a $\catch{n($x$) = $M$}$ in the catch block.
+A \textbf{try} term that contains a value reduces to just that value.
+
+\subsection{Significance}
+The occurrence of an exception aborts the current computation.
+\ltry\ models this by discarding terms that a \textbf{throw} is applied to.
+The \textbf{try-catch} statements mirror the syntax of try-catch statements in programming languages in the C-syntax family.
+
