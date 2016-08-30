@@ -947,6 +947,11 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
 
 \section{Delimited-Continuation Calculus}
 
+  % TODO: explain motivation behind DCC: \lmu requires
+  %       delimited continuations and DCC formalizes delimited
+  %       continuations in haskell so useful guide for implementing
+  %       exceptions in haskell
+
   Simon Peyton-Jones \textit{et al.}\ extended the \lam-calculus with additional operators in order create a framework for implementing delimited continuations \cite{JonesDS07}. This calculus will be referred to as the delimited-continuation calculus or DCC. Many calculi have been devised with control mechanisms. Like the \lmu-calculus, these control mechanisms are all specific instances of delimited and undelimited continuations. DCC provides a set of operations that are capable of expressing many of these other common control mechanisms.
 
   The grammar of DCC is an extension of the standard \lam-calculus:

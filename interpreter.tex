@@ -5,17 +5,27 @@ This chapter explores the implementation of an interpreter for DCC. Portions of 
 \section{Interpreter}
 
 Although Peyton-Jones \emph{et al.} implement a language-level module for DCC, 
-we are interested in the intermediate term transformations. 
-Examining transformation steps in full allows us to derive proofs of soundness and completeness for the translations from the \lam\ and \lmu\ calculi into DCC. 
+we are interested in the intermediate term transformations.
+Using the step-by-step transformations produced by this interpreter,
+we can construct and verify the implementations of \ltry\ and \lmu\ into DCC.
+Examining transformation steps in full also allows us to derive proofs of soundness and completeness for these translations. 
 For this reason, the interpreter was implemented as a term-rewriting program.
 
-A sequence of contexts evaluates to an abstraction that, when applied to a value $v$, returns $v$ to the first context which returns its value to the second context and so on through the whole sequence.
- 
 \section{Implementation}
 
 \subsection{Data structures}
-There are two data types for representing DCC terms, \mono{Value} and \mono{Expr}:
+There are two data types for representing DCC terms, \mono{Value} and \mono{Expr}
+(Figure \ref{fig:dcc-data-structures}).
+Values are not evaluated: when a term has been reduced to a value, 
+it has terminated on that value. 
+An expression (\mono{Expr}) is a term that can be evaluated to another term. 
+The only exception is a \mono{Hole} which can take any position an expression can. 
+For this reason, it must be a data constructor for expression types.
 
+The core of the abstract machine is a function from one state to the next. 
+A state is its own data type which corresponds to the tuple from the specification of the semantics of the abstract machine $\langle e,\ D,\ E,\ q\rangle$:
+
+\begin{figure}[!h]\label{fig:dcc-data-structures}
 \Verbatimcode
 data Value = Var Char
   | Abs Char Expr
@@ -37,25 +47,30 @@ data Expr = Val Value
 data State = State Expr Expr [Expr] Value
   deriving (Show, Eq)
 \end{Verbatim}
-
-The core of the abstract machine is a function from one state to the next. A state is its own data type which corresponds to the tuple from the specification of the semantics of the abstract machine $\langle e,\ D,\ E,\ q\rangle$.
+\end{figure}
 
 \subsection{Utility Functions}
-Some utility functions are defined to help readability. See Figure ~\ref{fig:dcc-helper-functions} for implementations:
+Some utility functions are simplify the implementation.
+Informally, these functions behave as follows (see Figure ~\ref{fig:dcc-helper-functions} for implementations details):
 
 \begin{itemize}\itemsep0.1cm
 
-\item \mono{prettify :: Expr -> String} is defined inductively for pretty-printing terms.
+\item \mono{prettify :: Expr -> String} is defined inductively for pretty-\\ printing terms.
 
 \item \mono{ret :: Expr -> Expr -> Expr} returns the first expression with any holes filled in by the second expression.
 
-\item \mono{composeContexts :: [Expr] -> Expr} takes a sequence of expressions and, starting from the end, fills the hole of each expression with the previous expression. This in effect joins the output of each context with the input of the next context.
+\item \mono{composeContexts :: [Expr] -> Expr} takes a sequence of expressions and, starting from the end, 
+fills the hole of each expression with the previous expression. 
+This in effect joins the output of each context with the input of the next context.
 
-\item \mono{promptMatch :: Int -> Expr -> Bool} returns true if the second argument is a Prompt and has the same value as the first argument
+\item \mono{promptMatch :: Int -> Expr -> Bool} returns true if the second argument is a Prompt with the same value as the first argument
 
-\item \mono{splitBefore :: [Expr] -> Int -> [Expr]} 
-\item \mono{splitAfter :: [Expr] -> Int -> [Expr]}
-\item \mono{sub :: [Expr] -> Int -> [Expr]}
+\item \mono{splitBefore :: [Expr] -> Int -> [Expr]} returns the sequence of expressions up until (but not including) the prompt matching the second argument.
+
+\item \mono{splitAfter :: [Expr] -> Int -> [Expr]} returns the sequence of expressions from (but not including) the prompt matching the second argument.
+
+\item \mono{sub :: Expr -> Expr -> Char -> Expr} returns the first expression with all occurences of the third expression replaced by the second expression. 
+If we name the arguments \mono{sub M V x} then this corresponds to the result of evaluating the substitution notation $M[v/x]$.
 
 \end{itemize}
 
@@ -106,40 +121,31 @@ Some utility functions are defined to help readability. See Figure ~\ref{fig:dcc
 % TODO: make this section a little more structured
 \subsection{Reduction Rules}
 
-The heavy lifting is done by the function \mono{eval :: State -> State}. \mono{eval} is defined inductively on the structure of the current expression. Each case of \mono{eval} corresponds directly to at least one of the reduction rules of the DCC operational semantics. The full source can be found in the appendix: % which?
+The heavy lifting of the interpreter is done by the function \mono{eval :: State -> State}. 
+\mono{eval} is defined inductively on the structure of DCC terms. 
+Using pattern-matching, each case of \mono{eval} corresponds directly to at least one of the reduction rules of the DCC abstract machine. 
+For the full implementation of \mono{eval}, see Figure \ref{fig:dcc-eval}
 
-The first case deals with applications of the form \mono{e e'}. If both terms are values and the first term is an abstraction of the form \mono{$`l$x.m}, the dominant term becomes a substitution of \mono{e'} for \mono{x} in \mono{m}. Otherwise, the term that is a redex is made the dominant term and the remainder of the application is added to the current context. If both terms are redexes, the left-most is made the dominant first. In effect, an application first ensures the left-hand term has been evaluated fully before evaluating the right-hand term.  
+The \mono{App e e'} case deals with applications:
+if both terms are values and the first term is an abstraction of the form \mono{$`l$x.m}, 
+the dominant term becomes a substitution of \mono{e'} for \mono{x} in \mono{m}. 
+Otherwise, the term that is not a value is made the dominant term and the remainder of the application is added to the current context. 
+If both terms are redexes, the left-most is made the dominant term first. 
+In effect, an application first ensures the left-hand term has been evaluated fully before evaluating the right-hand term.
 
-This implements the following three reduction rules:
-\[
-\begin{array}{lrcl}
-  \langle e\ e^\prime, D, E, q \rangle &\Rightarrow &\langle e, D[\square\ e^\prime], E, q \rangle &\text{e non-value} \\
-  \langle v\ e, D, E, q \rangle &\Rightarrow &\langle e, D[v\ \square], E, q \rangle &\text{e non-value} \\
-  \langle (`lx.e)\ v, D, E, q \rangle &\Rightarrow &\langle e[v/x], D, E, q \rangle
-\end{array}
-\]
+The \mono{PushPrompt e e'} case ensures the left term is a value.
+It then pushes the first argument (a prompt) and the current context onto the stack and makes the second argument the dominant term. 
 
-The following reduction rules for pushPrompt are implemented to ensure the first expression has been evaluated to a prompt:
-\[
-  \begin{array}{lcl}
-    \langle pushPrompt\ e\ e^\prime, D, E, q \rangle &\Rightarrow &\langle e, D[pushPrompt\ \square\ e^\prime], E, q \rangle \\
-    \langle pushPrompt\ p\ e, D, E, q \rangle &\Rightarrow &\langle e, \square, p : D : E, q \rangle \\
-  \end{array}
-\]
+The reduction rules for \mono{WithSubCont e e'} ensure that the first argument has been evaluated to a prompt \mono{p} and then that the second argument has been evaluated to an abstraction. 
+Finally, it appends the current continuation to the sequence yielded by splitting the continuation stack at \mono{p}, 
+and creates an application of the second argument to this sequence.
 
-The reduction rules for \mono{WithSubCont} ensure that the first argument has been evaluated to a prompt \mono{p} and then that the second argument has been evaluated to an abstraction. Finally, it appends the current continuation to the sequence yielded by splitting the continuation stack at \mono{p}, and creates an application of the second argument to this sequence.
-\[
-  \begin{array}{lcl}
-\langle withSubCont\ e\ e^\prime, D, E, q \rangle &\Rightarrow &\langle e, D[withSubCont\ \square\ e^\prime], E, q \rangle\\
-\langle withSubCont\ p\ e, D, E, q \rangle &\Rightarrow &\langle e, D[withSubCont\ p\ \square], E, q \rangle \\
-\langle withSubCont \ p\ v, D, E, q \rangle &\Rightarrow &\langle v (D : E\textsmaller[1]{\overset{p}{\uparrow}}, \square, E\textsmaller[1]{\overset{p}{\downarrow}}, q \rangle \\
-  \end{array}
-\]
+Reducing \mono{PushSubCont e e'} ensures that the first argument is a sequence.
+Then it pushes the current continuation, followed by this sequence, onto the stack.
+The second argument is promoted to be the dominant term.
+This has the effect of evaluating the dominant term and return the result to the sequence.
 
-% TODO: here relevant to explain that sequence is forced into abstraction
-Reducing \mono{PushSubCont} ensures that the first argument is a sequence, pushes the current continuation onto the stack, and then pushes the abstraction that represents the sequence onto the stack. The abstraction is first applied to a Hole. This is a hack to reverse the conversion of context-sequences into abstractions. This is necessary because context-sequences need to be abstractions when being applied but need to be sequences when being composed with other sequences of contexts.
-
-The reduction of \mono{Sub} states is defined inductively on the structure of the first argument of dominant term. The base case replaces matching variables with the second term. The other cases ensure that substitution is propogated to the subterms. 
+The reduction of \mono{Sub e y x} uses \mono{sub} to recursively substitute the third argument for the second in the first. 
 
 Evaluating a \mono{Seq} transforms the sequence into an abstraction using \mono{seqToAbs}. This corresponds to the reduction rule we introduced in Figure \ref{fig:sequence-to-abstraction}:
 
@@ -148,3 +154,5 @@ Evaluated a value returns the value to the current continuation if there is one 
 Evaluating \mono{NewPrompt} places the value of the current prompt as the dominant term and increments the global prompt counter:
 
 \input{eval}
+
+%TODO: evaluation of different implementation approaches
