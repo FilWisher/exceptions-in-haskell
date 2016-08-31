@@ -9,7 +9,7 @@
 \newcommand{\wsc}{\textsc{wsc}}
 \newcommand{\psc}{\textsc{psc}}
 \newcommand{\np}{\textsc{np}}
-\newcommand{\tr}[1]{\underline{#1}}
+\newcommand{\tr}[1]{\dbr{#1}}
 %\newcommand{\to}{\rightarrow}
 \newcommand{\by}[2]{#1 & \text{by (#2)}}
 \newcommand{\throw}[1]{\text{throw #1}}
@@ -63,5 +63,5 @@
 
 \def\Vect{\@ifnextchar[{\VectTwo}{\VectOne}}%]
 
-\newcommand{\mult}[2]{\overbrace{\hbox{#1}}^{\scriptsize\hbox{#2}}}
-\newcommand{\mcatch}{\mult{\catch{n$_i$($x$) = $M_i$}}{$ i > 1$} }
+\newcommand{\mult}[1]{\overline{#1}}
+\newcommand{\mcatch}{\mult{\catch{n$_i$($x$) = $M_i$}}}

@@ -68,7 +68,7 @@ This means that the translation of a full \lmu-program $M$ in DCC is:
 
 \definition{
   \textsc{(Initialization of stack for running $M$ in DCC)}
-  \[ (`l\gp.\pp\ \gp\ \dbr{M})\np \]
+  \[ (`l\gp.\pp\ \gp\ \dbr{M})\ \np \]
 }
 This creates a new prompt \gp\ which is in scope for all terms in $M$.
 It also prepares the stack by pushing \gp\ immediately. 
@@ -79,11 +79,11 @@ the interpretation of \lmu\ terms into DCC proceeds as follows:
   \textsc{(Interpretation of \lmu\ into DCC)}
   \[
   \begin{array}{lcl}
-    \dbr{x}        & \triangleq & x \\
-    \dbr{`lx.M}    & \triangleq & `lx.\dbr{M} \\
-    \dbr{M N}      & \triangleq & \dbr{M} \dbr{N} \\
-    \dbr{`m`a.M}   & \triangleq & \wsc\ \gp\ `l`a.\pp\ \gp\ \dbr{M} \\
-    \dbr{[`b]M} & \triangleq & \psc\ `b\ \dbr{M}
+    \tr{x}        & \triangleq & x \\
+    \tr{`lx.M}    & \triangleq & `lx.\tr{M} \\
+    \tr{M N}      & \triangleq & \tr{M} \tr{N} \\
+    \tr{`m`a.M}   & \triangleq & \wsc\ \gp\ `l`a.\pp\ \gp\ \tr{M} \\
+    \tr{[`b]M} & \triangleq & \psc\ `b\ \tr{M}
   \end{array}
   \]
 }
@@ -112,7 +112,7 @@ The final state has restored the initial state of the stack by pushing \gp\ back
 
 
 % TODO: Add proofs for completeness and other properties
-\begin{theorem}[Soundness of $\dbr{\bullet}$]
+\begin{theorem}[Soundness of $\tr{\bullet}$]
 If $M \rightarrow_{`m} N$ then $\dbr{M} \rightarrow_{DCC} \dbr{N}$
 \end{theorem}
 
@@ -226,6 +226,20 @@ If $M \rightarrow_{`m} N$ then $\dbr{M} \rightarrow_{DCC} \dbr{N}$
 \]
 \end{proof}
 
+This means that the translation of $M$ reduces a term $Q$ that relates to the untranslated reduct of $N$, given $M \to N$.
+The relation is either that $Q$ reduces to $N$, is the same as $N$, or $N$ reduces to $Q$.
+
+\begin{theorem}[Completeness of $\tr{\bullet}$]
+
+\end{theorem}
+
+We attempt to prove one of the following properties:
+\begin{enumerate}
+  \item $\tr{M} \to Q \Rightarrow \exists N. M \to N \land Q \to^* \tr{N}$
+  \item $\tr{M} \to^{nf} Q \Rightarrow \exists N. M \to^* N \land \tr{N} = Q$
+  \item $\tr{M} \to^{nf} Q \Rightarrow \exists N. M \to^* N \land \tr{N} \to^{nf} Q$
+\end{enumerate}
+
 \section{Interpreting \ltry\ in DCC}
 
   By appending the interpretation of \ltry\ in $`l`m$ with the interpretation of
@@ -257,12 +271,5 @@ If $M \rightarrow_{`m} N$ then $\dbr{M} \rightarrow_{DCC} \dbr{N}$
     \end{array} 
     \]
   }
- 
-We attempt to prove one of the following properties:
-\begin{enumerate}
-  \item $\tr{M} \to Q \Rightarrow \exists N. M \to N \land Q \to^* \tr{N}$
-  \item $\tr{M} \to^{nf} Q \Rightarrow \exists N. M \to^* N \land \tr{N} = Q$
-  \item $\tr{M} \to^{nf} Q \Rightarrow \exists N. M \to^* N \land \tr{N} \to^{nf} Q$
-\end{enumerate}
 
-This means proving either:
+% TODO: describe the interpretation

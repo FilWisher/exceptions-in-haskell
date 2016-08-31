@@ -321,8 +321,65 @@ These models were later proved to all be equivalent.
   \end{enumerate}
   
   
-  %TODO: add alpha reduction(?)
-  % \subsection{Reduction Strategies}
+  \subsection{Head Reduction}
+  
+  Head reduction is a reduction strategy for the \lam-calculus.
+  In head reduction, only the head variables are reduced.
+  The head variable $hv$ of a term is defined inductively:
+  
+  \definition{
+  \textsc{Head variable $hv$ for \lam-terms}
+  \[
+  \begin{array}{rclr}
+    hv(`lx.M) &=& hv(M) \\
+    hv(xM_1 \dots M_n) &=& x \\
+    % define head variables 
+  \end{array}
+  \]
+  }
+  By only allowing reduction on head variables, 
+  \bta-reduction is restricted to the following contexts:
+ 
+  \definition{
+  \textsc{Head reduction for \lam-calculus}
+  \[
+  \begin{array}{lclrcl}
+    M \to N & \Rightarrow &\{&  \\
+                           &&& `lx.M & \to_{H} & `lx.N \\
+                           &&& M\mult{L} & \to_{H} & N\mult{L} \\
+            &             &\}
+  \end{array}
+  \]
+  }
+  
+  These restricted rules define head reduction for the \lam-calculus. 
+  When a term can no longer be \bta-reduced, it is in \bta-normal form.
+  Similarly, if a term cannot be head-reduced any further, it is in $`bH$-normal form.
+  We can define $`bH$-normal form on \lam-terms with the following BNF grammar:
+ 
+  \definition{
+  \textsc{Grammar for \lam-terms in $`bH$-normal form.}
+  \[
+  \begin{array}{rcl}
+    N & ::= & `lx.N \\
+      &  |  & xM_1\dots M_2
+  \end{array}
+  \]
+  }
+  
+  $`bH$-normal form only allows the reduction of the outermost, left-most redex.
+  We define $\to_{`bH}^{nf}$ as the reduction of a term to $`bH$-normal form.
+  Similarly we use $\to_{`b}^{nf}$ to denote the reduction to $`b$-normal form.
+  
+  \begin{example}[\lam-terms in \bta- and $`bH$-normal forms]
+  \[
+  \begin{array}{rcl}
+    & \to_{`b}^{nf} & `ly.zy \\
+    (`lv.`ly.z(vy))(`lx.x) \\
+    & \to_{`bH}^{nf} & `ly.z((`lx.x)y) \\
+  \end{array} 
+  \]
+  \end{example}
 
 \section{Logic and Types}
 
@@ -688,20 +745,18 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
   \caption{Decomposing a term into multiple contexts}
   \end{figure}
 
-  Here, when a dominant term has been reduced, the reduct is returned
-  to its corresponding continuation. This newly joined term then
-  becomes the dominant redex. After this new dominant term has been
-  reduced, it will be returned to the next waiting continuation, and
-  so on. Throughout this process, we maintain each continuation
-  separately.
+  Here, when a dominant term has been reduced, 
+  the reduct is returned to the continuation at the top of the stack. 
+  This newly joined term then becomes the dominant term. 
+  After this new dominant term has been reduced, 
+  it will be returned to the next waiting continuation, and so on. 
+  Throughout this process, we maintain each continuation separately.
   
-  Assume again that we have reduction rules defined for manipulating
-  continuations. By keeping continuations separate, this model would 
-  allow use to use parts of the stack selectively for instance placing
-  delimiters between portions of interest. The increased granularity of 
-  control means we can manipulate not just the entire remaining continuation 
-  but sections of it. Thus, continuations of this kind are called 
-  \textbf{delimited continuations}.
+  Assume again that we have reduction rules defined for manipulating continuations. 
+  By keeping continuations separate, 
+  this model would allow us to use parts of the stack selectively for instance taking just top $N$ contexts. 
+  The increased granularity of control means we can manipulate not just the entire remaining continuation but sections of it. 
+  Continuations of this kind are called \textbf{delimited continuations}.
 
   \subsection{Continuation-Passing Style}
  
@@ -726,7 +781,7 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
   The term that a CPS program terminates on will be of the form
   $`lk.kM$. In order to extract the value, a \emph{final continuation}
   must be provided. Depending on the context, this could be an identity 
-  function $`lx.x$ or a display operation $`lx.\text{display }x$ to
+  function $`lx.x$ or a display operation $`lx.\textsc{display }x$ to
   display the results of the program.
 
   \begin{figure}[!h]
@@ -834,10 +889,26 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
   %       to monads
 
 \section{\lmu-Calculus}
+  
+  Michel Parigot wrote the \lmu-calculus as a system with an isomorphism to classical logic.
+  It is an extension of the \lam-calculus. 
+  This means that the grammar and reduction rules of the \lmu-calculus are a superset of those of the \lam-calculus.
+  
+
   % TODO: intuitively, that mu-terms are expressed easily by continuation 
   %       passing style gives us some idea that they are about control flow
   %       and that they will be easily expressed by monads
+  % TODO: add rules for consumption of multiple terms
+  % TODO: add typing rules
+  % TODO: add reduction strategy and information about normal form
   \subsection{Syntax}
+  
+  Just as \lam\ introduces \lam-abstractions, 
+  \lmu\ introduces \lmu-abstractions. 
+  The body of a \lmu-abstraction must be a named term. 
+  A named term consists of a name of the form $[`a]$ followed by an unnamed 
+  term. 
+
   \begin{figure}[!h]
   \definition{ 
     \textsc{(Grammar for \lmu-calculus)}
@@ -852,31 +923,32 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
   }
   \end{figure}
   
-  Just as \lam\ introduces a new \lam-abstraction, \lmu\ introduces a new 
-  \lmu-abstraction. The body of a \lmu-abstraction must be a named term. 
-  A named term consists of a name of the form $[`a]$ followed by an unnamed 
-  term. 
-
   \subsection{Reduction Rules}
   \begin{figure}[!h]
   \definition{ 
     \textsc{(Reduction rules for \lmu-calculus)}
     \[
-    \begin{array}{rcl}
-    x & \rightarrow & x \\
-    `lx.M & \rightarrow & `lx.M \\
-    `m`a.[`b]M & \rightarrow & `m`a.[`b]M \\
-    (`lx.M) N & \rightarrow & M[N/x] \\
-    (`m`a.[`b]M) N & \rightarrow & (`m`a.[`b]M[[`g]M^\prime N/[`a]M^\prime]) \\
+    \begin{array}{lrcll}
+    i) & (`lx.M) N & \to_{`b} & M[N/x] \\
+    ii) & (`m`a.[`b]M) N & \to{`m} & (`m`a.[`b]M[[`g]M^\prime N/[`a]M^\prime]) \\
+    iii) & `m`a.[`a]M & \to{`m} & M & (`a \notin fn(M)) \\
+    iv) & `m`d.[`b](`m`g.[`a]M) & \to{`m} & `m`d.[`a]M[`b/`g] \\
     \end{array}
     \]
   }
   \end{figure}
 
-  The terse reduction rule at the end simple states that the application
-  of a \lmu-abstraction $`m`a.M$ to a term $N$ applies all the sub-terms 
-  of $M$ labelled $[`a]$ to $N$ and relabels them with a fresh $`m$ 
-  variable.
+  The terse reduction rule of $iii)$ simply states that the application of a \lmu-abstraction $`m`a.M$ to a term $N$ applies all the sub-terms of $M$ labelled $[`a]$ to $N$ and relabels them with a fresh $`m$ variable.
+  It can be thought of as a \lam-abstraction that can be applied to any number of variables.
+  If we knew how many variables the term is applied to, we could replace
+  
+  \[
+    `m`a\dots[`a]M 
+  \]
+  with 
+  \[
+    `lx_1\dots`lx_n\dots Mx_1\dots x_n
+  \]
   
   \subsection{Computational Significance}
 
@@ -885,7 +957,7 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
   The additional \lmu\ reduction rules model context manipulation. 
   \lmu-variables map to contexts. When an unnamed term is labelled with a 
   \lmu-variable, it is evaluated in that context. For instance the named 
-  term $['a]M$ has the effect of evaluating $M$ in the context pointed to 
+  term $[`a]M$ has the effect of evaluating $M$ in the context pointed to 
   by $`a$.
   
   To make this more concrete, consider the compound term $(`m`a.[`b]M)\ N$. 
@@ -909,6 +981,7 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
   All subterms of $M$ labelled $`a$ will now be evaluated in the context 
   $\square N$ and the context will destroyed. For example, let us replace 
   $M$ with \mbox{$`m\circ.[`a](`ls.fs)$}:
+  \footnote{Following van Bakel, we use $\circ$ to denote a $`m$-variable that does not occur in the body of the \lmu-abstraction.}
   
   \begin{example}
     \[
@@ -942,8 +1015,59 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
     \]
   \end{example}
   
-  % \subsection{Reduction Strategies}
-  \subsection{Isomorphism \& Computational Interpretation}
+  \subsection{Head Reduction}
+  
+  The idea of head-reduction can be extended to the \lmu-calculus.
+  First, we extend the definition of head variables and add the definition of \emph{head names}:
+  
+  \definition{
+  \textsc{Head variables and head names $hn$ for the \lmu-calculus}
+  \[
+  \begin{array}{lclr}
+    hv(`lx.M) &=& hv(M) \\
+    hv(xM_1 \dots M_n) &=& x \\
+    hv(`m`a.[`b]M) &=& hv(M) \\
+    \\
+    hn(`m`a.[`b]M) &=& `b
+  \end{array} 
+  \]
+  }
+  Reduction rules can only be applied to the head variable.
+  Additionally, $`m$-reduction rules are restricted to terms labelled with the head name:
+  
+  \definition{
+  \textsc{Head reduction for \lmu-calculus}
+  \[
+  \begin{array}{lclrcl}
+    M \to N & \Rightarrow &\{&  \\
+                           &&& `lx.M & \to_{H} & `lx.N \\
+                           &&& M\mult{L} & \to_{H} & N\mult{L} \\
+                           &&& `m`a.[`b]M & \to_{H} & `m`a.[`b]N \\
+                           &&& M[[`a]M'L/[`a]M'] & \to_{H} & N[[`a]M'L/[`a]M'] \\
+            &             &\}
+  \end{array}
+  \]
+  }
+  These restricted rules define head reduction for the \lmu-calculus.
+  $`mH$-normal form is defined as terms that cannot be $`mH$-reduced any further.
+  Terms in $`mH$-normal form are those producible by the following grammar:
+  
+  \definition{
+  \textsc{Grammar for \lmu-terms in $`b`mH$-normal form.}
+  \[
+  \begin{array}{rcll}
+    N & ::= & `lx.N \\
+      &  |  & xM_1\dots M_2 \\
+      &  |  & `m`a.[`b]N & (`a \not= `b \lor `a \in N,N\not=`m`g.[`d]N') \\
+      &  |  & N[[`a]ML/[`a]M] & (hn(N) \not= `a)
+  \end{array}
+  \]
+  }
+  
+  The head reduction of \lmu-terms ensures only the left-most and outer-most term is reduced.
+  We define $\to_{`mH}^{nf}$ as the reduction to normal form with respect to $\to_{`mH}$.
+  
+  %\subsection{Types and Isomorphism}
 
 \section{Delimited-Continuation Calculus}
 
@@ -954,9 +1078,9 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
 
   Simon Peyton-Jones \textit{et al.}\ extended the \lam-calculus with additional operators in order create a framework for implementing delimited continuations \cite{JonesDS07}. This calculus will be referred to as the delimited-continuation calculus or DCC. Many calculi have been devised with control mechanisms. Like the \lmu-calculus, these control mechanisms are all specific instances of delimited and undelimited continuations. DCC provides a set of operations that are capable of expressing many of these other common control mechanisms.
 
+  \subsection{Syntax}
   The grammar of DCC is an extension of the standard \lam-calculus:
 
-  \subsection{Syntax}
   \begin{figure}[!h]
   \definition{ 
     \textsc{(Grammar for DCC)}
@@ -974,28 +1098,28 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
   \subsection{Reduction Rules}
   The operational semantics can be understood through an abstract machine that transforms tuple of the form $\langle e,\ D,\ E\, q \rangle$:
 
-  \begin{figure}[!h]
+  \begin{figure}[!h]\label{fig:dcc-abstract-machine}
   \relscale{0.9}
   \definition{ 
     \textsc{(Operational semantics for DCC)}
     \[
     \begin{array}{lrcl}
-      \langle e\ e^\prime, D, E, q \rangle &\Rightarrow &\langle e, D[\square\ e^\prime], E, q \rangle &\text{e non-value} \\
-      \langle v\ e, D, E, q \rangle &\Rightarrow &\langle e, D[v\ \square], E, q \rangle &\text{e non-value} \\
-      \langle pushPrompt\ e\ e^\prime, D, E, q \rangle &\Rightarrow &\langle e, D[pushPrompt\ \square\ e^\prime], E, q \rangle &\text{e non-value} \\
-      \langle withSubCont\ e\ e^\prime, D, E, q \rangle &\Rightarrow &\langle e, D[withSubCont\ \square\ e^\prime], E, q \rangle &\text{e non-value} \\
-      \langle withSubCont\ p\ e, D, E, q \rangle &\Rightarrow &\langle e, D[withSubCont\ p\ \square], E, q \rangle &\text{e non-value} \\
-      \langle pushSubCont\ e\ e^\prime, D, E, q \rangle &\Rightarrow &\langle e, D[pushSubCont\ \square\ e^\prime], E, q \rangle &\text{e non-value} \\
+      \langle e\ e^\prime, D, E, q \rangle &\to &\langle e, D[\square\ e^\prime], E, q \rangle &\text{e non-value} \\
+      \langle v\ e, D, E, q \rangle &\to &\langle e, D[v\ \square], E, q \rangle &\text{e non-value} \\
+      \langle pushPrompt\ e\ e^\prime, D, E, q \rangle &\to &\langle e, D[pushPrompt\ \square\ e^\prime], E, q \rangle &\text{e non-value} \\
+      \langle withSubCont\ e\ e^\prime, D, E, q \rangle &\to &\langle e, D[withSubCont\ \square\ e^\prime], E, q \rangle &\text{e non-value} \\
+      \langle withSubCont\ p\ e, D, E, q \rangle &\to &\langle e, D[withSubCont\ p\ \square], E, q \rangle &\text{e non-value} \\
+      \langle pushSubCont\ e\ e^\prime, D, E, q \rangle &\to &\langle e, D[pushSubCont\ \square\ e^\prime], E, q \rangle &\text{e non-value} \\
     \\
-      \langle (`lx.e)\ v, D, E, q \rangle &\Rightarrow &\langle e[v/x], D, E, q \rangle \\
-      \langle newPrompt, D, E, q \rangle &\Rightarrow &\langle q, D, E, q+1 \rangle \\
-      \langle pushPrompt\ p\ e, D, E, q \rangle &\Rightarrow &\langle e, \square, p : D : E, q \rangle \\
-      \langle withSubCont \ p\ v, D, E, q \rangle &\Rightarrow &\langle v (D : E\textsmaller[1]{\overset{p}{\uparrow}}, \square, E\textsmaller[1]{\overset{p}{\downarrow}}, q \rangle \\
-      \langle pushSubCont E^\prime\ e, D, E, q \rangle &\Rightarrow &\langle e, \square, E^\prime +{+} (D : E), q \rangle \\
+      \langle (`lx.e)\ v, D, E, q \rangle &\to &\langle e[v/x], D, E, q \rangle \\
+      \langle newPrompt, D, E, q \rangle &\to &\langle q, D, E, q+1 \rangle \\
+      \langle pushPrompt\ p\ e, D, E, q \rangle &\to &\langle e, \square, p : D : E, q \rangle \\
+      \langle withSubCont \ p\ v, D, E, q \rangle &\to &\langle v (D : E\textsmaller[1]{\overset{p}{\uparrow}}, \square, E\textsmaller[1]{\overset{p}{\downarrow}}, q \rangle \\
+      \langle pushSubCont E^\prime\ e, D, E, q \rangle &\to &\langle e, \square, E^\prime +{+} (D : E), q \rangle \\
     \\
-      \langle v, D, E, q \rangle &\Rightarrow &\langle D[v], \square, E, q \rangle \\
-      \langle v, \square, p : E, q \rangle &\Rightarrow &\langle v, \square, E, q \rangle \\
-      \langle v, \square, D : E, q \rangle &\Rightarrow &\langle v, D, E, q \rangle
+      \langle v, D, E, q \rangle &\to &\langle D[v], \square, E, q \rangle \\
+      \langle v, \square, p : E, q \rangle &\to &\langle v, \square, E, q \rangle \\
+      \langle v, \square, D : E, q \rangle &\to &\langle v, D, E, q \rangle
     \end{array}
     \]
   }
@@ -1012,6 +1136,9 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
   \item \op{pushSubCont} pushes the current continuation and then its first argument (a subcontinuation) onto the continuation stack before evaluating its second argument.
   \end{itemize}
   
+  The abstract machine defined in Figure \ref{fig:dcc-abstract-machine} also encodes the reduction strategy.
+  The first block of rules define in what order redexes are reducted.
+ 
 \section{\ltry-Calculus}
 
 Steffen van Bakel extended the \lam-calculus with operators for modelling exceptions.

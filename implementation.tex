@@ -1,0 +1,127 @@
+\chapter{Implementation}
+
+% TODO: explain that objective of implementation is external library
+%       that doesn't leak implementation details or require knowledge of monads
+
+This chapter explains the implementation of \ltry\ in Haskell.
+It examines how the translations from the previous chapter and the DCC library published in \cite{JonesDS07} are transformed into Haskell code.
+Finally, it explores the possibility of a generalized Haskell library.
+
+\section{DCC Library}
+% TODO: explain the DCC library, w/ type signatures
+% TODO: src in appendix or inline?
+
+\subsection{Missing Typeclass Instances}
+
+\section{Single Naive Implementation}
+
+Blindly transcribing the translation yields a naive implementation in Haskell.
+This implementation is a functioning proof-of-concept that the translation works as intended.
+It does not present a high level of abstraction, requiring programs to be manually translated to Haskell:
+
+\Verbatimcode
+  try :: Prompt ans b 
+         -> ((t -> CC ans a) -> CC ans a1) -> (t -> CC ans a1) 
+         -> CC ans a1
+  try p0 m handler = withSubCont p0 (\n ->
+      pushPrompt p0 (pushSubCont n (m $ \x -> 
+        throw p0 n handler x)))
+  
+  throw :: Prompt ans b 
+           -> SubCont ans a1 b -> (t -> CC ans a1) -> t 
+           -> CC ans a
+  throw p0 n c m = withSubCont p0 (\_ ->
+    pushPrompt p0 (pushSubCont n (c m)))
+\end{Verbatim}
+
+This short implementation:
+- adds explicit p0 argument required by wsc and pp.
+- requires program to be run inside:
+
+\mono{runCC} with
+
+\begin{figure}[!h]
+\Verbatimcode
+
+example1 = runCC (do
+  p <- newPrompt
+  pushPrompt p (testy p (\t -> return 5) (\x -> return $ x+1)))
+
+example2 = runCC (do
+  p <- newPrompt
+  pushPrompt p (testy p (\t -> (t 4)) (\x -> return $ x+1)))
+\end{Verbatim}
+\end{figure}
+
+%%\Verbatim
+%%implementation
+%%\end{Verbatim}
+
+\subsection{Issues}
+Remark: wrap throw in a function to solve scoping issues
+
+Impedance mismatch between DCC and \ltry-calculus. 
+We only need a single prompt. 
+This prompt should be triggered on beginning of "try" statement. 
+Prompt should be reused for setting up all catch handlers statements
+
+Access to each handler requires explicitly passing catch names to solve scoping.
+This means that we have to define try, try1, try2, etc for number of handlers:
+no approach for variadic handlers.
+
+Type signature exposes CC, Prompt, etc data constructors.
+We want to abstract over these so user does not rely on knowing them.
+Leaky abstractions.
+
+\section{Improved Implementation}
+
+The improved version creates a single prompt for the try block.
+The throw operation is defined in scope of the prompt, 
+removing the need to add an additional argument.
+
+We are still required to call runCC to return the result.
+Although handlers can be ordinary functions (see examples), 
+the body must \mono{return} a value if not calling one of the exception handlers.
+Also, multiple handlers still require multiple function instances:
+
+\Verbatimcode
+try m handler = do
+  p <- newPrompt
+  let throw n = \v -> withSubCont p (\_ ->
+            pushPrompt p (pushSubCont n $ return v))
+  pushPrompt p (withSubCont p (\n ->
+    pushPrompt p (pushSubCont n 
+      (m (thr n . handler)))))
+        
+try2 m h1 h2 = do
+  p <- newPrompt
+  let throw n = \v -> withSubCont p (\_ ->
+            pushPrompt p (pushSubCont n $ return v))
+  pushPrompt p (withSubCont p (\n ->
+    pushPrompt p (pushSubCont n 
+      (m (thr n . h1) (thr n . h2)))))
+\end{Verbatim}
+
+\Verbatimcode
+handler1 = (+2)
+handler2 = (+4)
+
+tryExample1 = try (\t -> return 1) handler1
+tryExample2 = try (\t -> t 1) handler1
+
+try2Example1 = try2 (\t1 -> \t2 -> return 1) handler1 handler2
+try2Example2 = try2 (\t1 -> \t2 -> t1 1) handler1 handler2
+try2Example3 = try2 (\t1 -> \t2 -> t2 1) handler1 handler2
+\end{Verbatim}
+
+If we look at the type signatures, we can see the same important restrictions from the naive implementation.
+The handlers must produce values of the same type. 
+This will also be the type of running \mono{runCC} on the returned \mono{CC} value.
+
+
+\Verbatimcode
+  try  :: ((a -> CC ans a1) -> CC ans a2) -> (a -> a2) -> CC ans a2
+  try2 :: ((a -> CC ans a1) -> (a2 -> CC ans a3) -> CC ans a4)
+           -> (a -> a4) -> (a2 -> a4) -> CC ans a4
+\end{Verbatim}
+
