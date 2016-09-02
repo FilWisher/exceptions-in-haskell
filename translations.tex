@@ -1,9 +1,11 @@
 \chapter{Translations}
 
-In this chapter, we develop a interpretation of \lmu\ in DCC.
+% TODO: explain nf reduction in background
+
+In this chapter, we develop a interpretation of \lmu\ in CDC.
 We prove some properties of this interpretation, including \emph{soundness}.
 We concatenate this interpretation with van Bakel's interpretation of \ltry\ in \lmu.
-This concatenation yields an interpretation of \ltry\ in DCC.
+This concatenation yields an interpretation of \ltry\ in CDC.
 This will then be used as a basis for the implementation of \ltry\ in Haskell.
 
 \section{Interpreting \ltry\ in \lmu}
@@ -37,7 +39,7 @@ are in scope for the reduction of the body of the try $M$.
 
 % TODO: explain translation ?
 
-\section{Interpreting \lmu\ in DCC}
+\section{Interpreting \lmu\ in CDC}
 
 % TODO: explain initial attempt and explain why it was simple and intuitive
 %       and follow up with why it went wrong and what we had to change.
@@ -46,7 +48,7 @@ are in scope for the reduction of the body of the try $M$.
 
 %\begin{figure}[!h]
 %\definition{
-%  \textsc{(Interpretation of \lmu\ into DCC)}
+%  \textsc{(Interpretation of \lmu\ into CDC)}
 %  \[
 %  \begin{array}{lcl}
 %    \dbr{x}        & \triangleq & x \\
@@ -62,21 +64,21 @@ are in scope for the reduction of the body of the try $M$.
 %}
 %\end{figure}
 
-The translation of \lmu-terms into DCC assumes that there is a single global prompt \gp. 
+The translation of \lmu-terms into CDC assumes that there is a single global prompt \gp. 
 It also assumes that this prompt has already been pushed onto the stack.
-This means that the translation of a full \lmu-program $M$ in DCC is:
+This means that the translation of a full \lmu-program $M$ in CDC is:
 
 \definition{
-  \textsc{(Initialization of stack for running $M$ in DCC)}
+  \textsc{(Initialization of stack for running $M$ in CDC)}
   \[ (`l\gp.\pp\ \gp\ \dbr{M})\ \np \]
 }
-This creates a new prompt \gp\ which is in scope for all terms in $M$.
-It also prepares the stack by pushing \gp\ immediately. 
-With the stack prepared, 
-the interpretation of \lmu\ terms into DCC proceeds as follows:
+This creates a new prompt \gp which is in scope for all subterms of $M$.
+It also prepares the stack by pushing \gp immediately. 
+With the abstract machine prepared, 
+the interpretation of \lmu\ terms into CDC proceeds as follows:
 
 \definition{
-  \textsc{(Interpretation of \lmu\ into DCC)}
+  \textsc{(Interpretation of \lmu\ into CDC)}
   \[
   \begin{array}{lcl}
     \tr{x}        & \triangleq & x \\
@@ -88,173 +90,253 @@ the interpretation of \lmu\ terms into DCC proceeds as follows:
   \]
 }
 
-To implement \lmu-abstractions, we capture the subcontinuation until the last occurrence of \gp\ on the stack.
+To implement \lmu-abstractions, we capture the subcontinuation until the last occurrence of \gp on the stack.
 This subcontinuation is bound to $`a$ which ensures the subcontinuation is distributed to all occurrences of $`a$ in $M$.
-\gp\ is then pushed back onto the stack before the evaluation of $M$.
+\gp is then pushed back onto the stack before the evaluation of $M$.
 
 To implement named-terms, the subcontinuation $`b$ is pushed into the stack before evaluating $M$.
 This means the reduct of $M$ will be returned to this subcontinuation.
-In effect, this reduces $M$ and passes the result to $`b$. 
+In effect, this reduces $M$ and passes the result to $`b$.
 
-\begin{example}{$\tr{`m`a.[`a](`lx.x)} \to \tr{`lx.x}$}
+\subsection{Notation}
+To carry out proofs, the full state of the abstract machine is displayed:
 \[
-\begin{array}{llrr}
-             & \tr{`m`a.[`a](`lx.x)}  \\
-  \triangleq & \wsc\ \gp\ `l`a.\pp\ \gp\ `lx.x, & \square, & \gp:[] \\
-  \tob\      & (`l`a.\pp\ \gp\ `lx.x)(\square), & \square, & [] \\
-  \tob\      & (\pp\ \gp\ `lx.x)[\square/`a],   & \square, & [] \\
-  \tob\      & \pp\ \gp\ `lx.x,                 & \square, & [] \\
-  \tob\      & `lx.x,                           & \square, & \gp:[]
-\end{array}   
+\begin{array}{lll}
+  M & D & E
+\end{array}
 \]
-The final state has restored the initial state of the stack by pushing \gp\ back on.
-\end{example}
+where each column corresponds to one component of the original abstract machine.
+Our translations only use a single prompt so we omit the final column of the abstract machine 
+(used for representing the global prompt counter).
 
+When an empty context is in a sequence, it has no effect on the machine:
+a sequence $D:\square:D^\prime$ is extensionally equivalent to $D:D^\prime$.
+For this reason, we omit empty contexts from sequences.
+For example in the case of the following reduction
+\[
+\begin{array}{lllclll}
+  \psc `b\ M & \square & \gp & \tocdc\ & M & \square & `b:\square:\gp
+\end{array}
+\]
+we will instead write
+\[
+\begin{array}{lllclll}
+  \psc `b\ M & \square & \gp & \tocdc\ & M & \square & `b:\gp
+\end{array}
+\]
+
+
+\subsection{Additional Translations}
+We alter $`m$-reduction to consume multiple variables.
+The application of a $`m$ abstraction to multiple variables will consume them all at once:
+\definition{
+\textsc{$`m$-reduction to consume multiple variables}
+\[ 
+\begin{array}{rcl}
+  (`m`a.[`b]M)\mult{N} & \to_{`m} & `m`a.[`b](M[[`a]M'\mult{N}/[`a]M'])
+\end{array}
+\]
+}
+This does not change the behaviour of $`m$-reduction but condenses the reduction steps.
+The entire applicative context is consumed.
+Therefore the remaining $`m$ abstraction will point $`a$ to $\square$.
+This means that all labelled subterms $[`a]M'$ will be translated to $\psc \square\ \tr{M'}$.
+CDC reduces $\psc \square\ \tr{M'}$ to $\tr{M'}$.
+This reduction means we can discard the $`a$ labels after consuming the entire context.
+Given this, we can define the following translation for multiple-variable consumption:
+\definition{
+\textsc{Translation of multiple variable consumption to CDC}
+\[ 
+\begin{array}{rcl}
+  \tr{M[[`a]M'\mult{N}/[`a]M']} & \triangleq & \tr{M}[\square \tr{\mult{N}}/`a]
+\end{array}
+\]
+}
+With this translation, the proof that $\tr{`.}$ respects $\to_{`m}$ is easy.
+
+\subsection{Properties}
 
 % TODO: Add proofs for completeness and other properties
-\begin{theorem}[Soundness of $\tr{\bullet}$]
-If $M \rightarrow_{`m} N$ then $\dbr{M} \rightarrow_{DCC} \dbr{N}$
+\begin{theorem}[Soundness of $\tr{`.}$]
+\[ M \to_{`m} N \Rightarrow \exists P.\ \tr{M} \to^{nf} P \land \tr{N} \to^{nf} P \]
 \end{theorem}
 
-% TODO: separate D and E in DCC proofs 
-\begin{proof}{By induction on the definition of $\rightarrow_{`m}$}
+% TODO: remark: mu abstractions can only occur
+% TODO: separate D and E in CDC proofs 
+\begin{Proof}
+By induction on the definition of $\rightarrow_{`m}$
 \[
-\begin{array}{rlrl}
-  \prooflabel{(`lx.M)N \to M[N/x]:} \\
-               & \tr{(`lx.M)N} \\
-    \triangleq & \tr{(`lx.M)} \tr{N} \\
-    \triangleq & (`lx.\tr{M}) \tr{N}, & \square, & \gp:[] \\
-    \tob\   & \tr{M}[\tr{N}/x], & \square, & \gp:[] \\
-    \triangleq\ & \tr{M[\tr{N}/x]}, & \square, & \gp:[] \\
-\end{array} 
+\begin{array}{@{}llrr}
+  \prooflabel{`m`a.[`a]M \to M} & (`a \notin fv(M)) \\
+             & \tr{`m`a.[`a]M} \\
+  \triangleq & \wsc \gp `l`a.\pp \gp (\psc `a \tr{M}) & D       & \gp \\
+  \tocdc\    & (`l`a.\pp \gp (\psc `a \tr{M}))(D)     & \square & []     \\
+  \tocdc\    & (\pp \gp (\psc `a\ \tr{M}))[D/`a]      & \square & []     \\
+  \tocdc\    & \pp \gp (\psc `a\ \tr{M})[D/`a]        & \square & []     \\
+  \tocdc\    & (\psc `a\ \tr{M})[D/`a]                & \square & \gp \\
+  \tocdc\    & \psc D\ \tr{M}[D/`a]                   & \square & \gp \\
+  \tocdc\    & \tr{M}[\square/`a]                     & \square & D:\square:\gp \\
+  \tocdc\    & \tr{M}                                 & \square & D:\square:\gp \\
+  \tocdc\    & \tr{M}                                 & D       & \gp \\
+  \triangleq & M                                      & D       & \gp \\
+\end{array}
 \]
+\[
+\begin{array}{@{}llrr}
+  \prooflabel{(`m`a.[`a]M)\mult{N} \to `m`a.[`a]M([`a]M'\mult{N}/[`a]M')\mult{N}} \\
+             & \tr{(`m`a.[`a]M)\mult{N}} \\
+  \triangleq & \tr{(`m`a.[`a]M)}\tr{\mult{N}} \\
+  \triangleq & (\wsc \gp `l`a.\pp \gp (\psc `a\ \tr{M})) \tr{\mult{N}} & \square                & \gp \\
+  \tocdc\    & \wsc \gp `l`a.\pp \gp (\psc `a\ \tr{M})                 & \square \tr{\mult{N}}  & \gp \\
+  \tocdc\    & `l`a.\pp \gp (\psc `a\ \tr{M})(\square \tr{\mult{N}})   & \square                & [] \\
+  \tocdc\    & (\pp \gp (\psc `a\ \tr{M}))[\square \tr{\mult{N}}/`a]   & \square                & [] \\
+  \tocdc\    & \pp \gp (\psc `a\ \tr{M})[\square \tr{\mult{N}}/`a]     & \square                & [] \\
+  \tocdc\    & \pp \gp (\psc \square \tr{\mult{N}}\ \tr{M}[\square \tr{\mult{N}}/`a]) & \square & [] \\
+  \tocdc\    & \psc \square \tr{\mult{N}}\ \tr{M}[\square \tr{\mult{N}}/`a] & \square  & \gp \\
+  \tocdc\    & \tr{M}[\square \tr{\mult{N}}/`a] & \square & \square \tr{\mult{N}}:\square:\gp \\
+  \tocdc\    & \tr{M}[\square \tr{\mult{N}}/`a] & \square \tr{\mult{N}} & \gp \\
+\end{array}
+\]
+This final state is $P$. Now we must prove $\tr{N} \to^{nf} P$:
+\[
+\begin{array}{llrr}
+             & \tr{`m`a.[`a]M([`a]M'\mult{N}/[`a]M')\mult{N}} \\
+  \triangleq & \wsc \gp `l`a.\pp \gp (\psc `a\ \tr{M[[`a]M'\mult{N}/[`a]M']\mult{N}}) & \square & \gp \\
+  \tocdc\    & `l`a.\pp \gp (\psc `a\ \tr{M[[`a]M'\mult{N}/[`a]M']\mult{N}})(\square) & \square & [] \\
+  \tocdc\    & (\pp \gp (\psc `a\ \tr{M[[`a]M'\mult{N}/[`a]M']\mult{N}}))[\square/`a] & \square & [] \\
+  \tocdc\    & \pp \gp (\psc `a\ \tr{M[[`a]M'\mult{N}/[`a]M']\mult{N}})[\square/`a]   & \square & [] \\
+  \tocdc\    & (\psc `a\ \tr{M[[`a]M'\mult{N}/[`a]M']\mult{N}})[\square/`a]           & \square & \gp \\
+  \tocdc\    & \psc \square\ \tr{M[[`a]M'\mult{N}/[`a]M']\mult{N}}[\square/`a]        & \square & \gp \\
+  \tocdc\    & \tr{M[[`a]M'\mult{N}/[`a]M']\mult{N}}[\square/`a]  & \square           & \gp \\
+  \tocdc\    & \tr{M[[`a]M'\mult{N}/[`a]M']}[\square/`a]\ \tr{\mult{N}}               & \square & \gp \\
+  \tocdc\    & \tr{M[[`a]M'\mult{N}/[`a]M']}[\square/`a]                              & \square \tr{\mult{N}} & \gp \\
+  \tocdc\    & \tr{M}[\square \mult{N}/`a][\square/`a]                                & \square \tr{\mult{N}} & \gp \\
+  \tocdc\    & \tr{M}[\square \mult{N}/`a]                                            & \square \tr{\mult{N}} & \gp \\
+\end{array}
+\]
+\begin{remark}
+$`a$ cannot occur in $\mult{N}$ because it has been pulled in from outside the $`m$-abstraction.
+Neither can it occur in $\tr{M}[\square \mult{N}/`a]$ because all occurrences have been substituted for $\square \tr{\mult{N}}$.
+\end{remark}
+
+\[
+\begin{array}{llrr}
+  \prooflabel{(`m`a.[`b]M)\mult{N} \to `m`a.[`b](M[[`a]M'N/[`a]M'])} \\
+             & \tr{(`m`a.[`b]M)\mult{N}} \\
+  \triangleq & \tr{(`m`a.[`b]M)}\tr{\mult{N}} \\
+  \triangleq & (\wsc \gp `l`a.\pp \gp (\psc `b\  \tr{M})) \tr{\mult{N}} & \square & \gp \\
+  \tocdc\    & (\wsc \gp `l`a.\pp \gp (\psc `b\  \tr{M})) & \square \tr{\mult{N}} & \gp \\
+  \tocdc\    & (`l`a.\pp \gp (\psc `b\ \tr{M}))(\square \tr{\mult{N}}) & \square & []   \\
+  \tocdc\    & (\pp \gp (\psc `b\ \tr{M}))[\square \tr{\mult{N}}/`a]   & \square & []   \\
+  \tocdc\    & \pp \gp (\psc `b\ \tr{M})[\square \tr{\mult{N}}/`a]     & \square & []   \\
+  \tocdc\    & (\psc `b\ \tr{M})[\square \tr{\mult{N}}/`a]             & \square & \gp  \\
+  \tocdc\    & \psc `b\ \tr{M}[\square \tr{\mult{N}}/`a]               & \square & \gp  \\
+  \tocdc\    & \tr{M}[\square \tr{\mult{N}}/`a]                        & \square & `b:[]:\gp  \\
+\end{array}
+\]
+\[
+\begin{array}{llrr}
+             & \tr{`m`a.[`b](M[[`a]M'N/[`a]M'])} \\
+  \triangleq & \wsc \gp `l`a. \pp \gp (\psc `b \tr{M[[`a]M'N/[`a]M']})   & \square & \gp \\
+  \tocdc\    & (`l`a. \pp \gp (\psc `b \tr{M[[`a]M'N/[`a]M']}))(\square) & \square & [] \\
+  \tocdc\    & (\pp \gp (\psc `b \tr{M[[`a]M'N/[`a]M']}))[\square/`a]    & \square & [] \\
+  \tocdc\    & \pp \gp (\psc `b \tr{M[[`a]M'N/[`a]M']})[\square/`a]      & \square & [] \\
+  \tocdc\    & \psc `b \tr{M[[`a]M'N/[`a]M']}[\square/`a]                & \square & \gp \\
+  \tocdc\    & \tr{M[[`a]M'N/[`a]M']}[\square/`a]                        & \square & `b:[]:\gp \\
+  \tocdc\    & M[\square \tr{N}/`a][\square/`a]                          & \square & `b:[]:\gp \\
+  \tocdc\    & M[\square \tr{N}/`a]                                      & \square & `b:[]:\gp \\
+\end{array}
+\]
+\[
+\begin{array}{llrr}
+  \prooflabel{`m`a.[`b]`m`g.[`d]M \to `m`a[`d]M[`b/`g]} & (`g \not= `d) \\
+             & \tr{`m`a.[`b]`m`g.[`d]M} \\
+  \triangleq & \wsc \gp `l`a.\pp \gp (\psc `b\ \tr{`m`g.[`d]M})     & \square & \gp        \\
+  \tocdc\    & (`l`a.\pp \gp (\psc `b\ \tr{`m`g.[`d]M}))(\square)   & \square & []         \\
+  \tocdc\    & (\pp \gp (\psc `b\ \tr{`m`g.[`d]M}))[\square/`a]     & \square & []         \\
+  \tocdc\    & \pp \gp (\psc `b\ \tr{`m`g.[`d]M})[\square/`a]       & \square & []         \\
+  \tocdc\    & (\psc `b\ \tr{`m`g.[`d]M})[\square/`a]               & \square & \gp        \\
+  \tocdc\    & \psc `b\ \tr{`m`g.[`d]M}[\square/`a]                 & \square & \gp        \\
+  \tocdc\    & \tr{`m`g.[`d]M}[\square/`a]                          & \square & `b:[]:\gp  \\
+  \triangleq & (\wsc \gp `l`g.\pp \gp (\psc `d \tr{M}))[\square/`a] & \square & `b:[]:\gp  \\
+  \tocdc\    & \wsc \gp `l`g.\pp \gp (\psc `d \tr{M})[\square/`a]   & \square & `b:[]:\gp  \\
+  \tocdc\    & (`l`g.\pp \gp (\psc `d \tr{M})[\square/`a])(`b)      & \square & []  \\
+  \tocdc\    & (\pp \gp (\psc `d \tr{M})[\square/`a])[`b/`g]        & \square & []  \\
+  \tocdc\    & \pp \gp (\psc `d \tr{M})[\square/`a][`b/`g]          & \square & []  \\
+  \tocdc\    & (\psc `d \tr{M})[\square/`a][`b/`g]                  & \square & \gp  \\
+  \tocdc\    & \psc `d \tr{M}[\square/`a][`b/`g]                    & \square & \gp  \\
+  \tocdc\    & \tr{M}[\square/`a][`b/`g]                            & \square & `d:[]:\gp  \\
 \\
-\[
-\begin{array}{rlrr}
-  \prooflabel{(`m`a.[`b]M)N \to `m`a.([`b]M)[[`a]M^\prime N/[`a]M^\prime]:} \\
-             & \tr{(`m`a.[`b]M)N} \\
-  \triangleq & \tr{(`m`a.[`b`]M)} \tr{N} \\
-  \triangleq & (\wsc\ \gp\ `l`a. \pp\ \gp\ (\psc\ `b\ \tr{M})) \tr{N}, & \square, & \gp:[] \\
-  \todcc\ & \wsc\ \gp\ `l`a. \pp\ \gp\ (\psc\ `b\ \tr{M}), & \square \tr{N}, & \gp:[] \\
-  \todcc\ & (`l`a. \pp\ \gp\ (\psc\ `b\ \tr{M}))(\square\tr{N}), & \square, & [] \\
-  \tob\ & (\pp\ \gp\ (\psc\ `b\ \tr{M}))[\square\tr{N}/`a], & \square, & [] \\
-  \tob\ & \pp\ \gp\ (\psc\ `b\ (\tr{M}[\square\tr{N}/`a])), & \square, & [] \\
-  \todcc\ & \psc\ `b\ (\tr{M}[\square\tr{N}/`a]), & \square, & \gp:[] \\
-  \triangleq\ & \tr{`m`a.([`b]M)[[`a]M^\prime N/[`a]M^\prime]} \\
-\end{array} 
-\]
-\\
-\[
-\begin{array}{rlrr}
-  \prooflabel{`m`a.[`a]M \to M:} \\
-              & \tr{`m`a.[`a]M} \\
-   \triangleq & \wsc\ \gp\ `l`a.\pp\ \gp\ (\psc\ `a\ \tr{M}), & \square, & \gp:[]  \\
-   \todcc\    & `l`a.\pp\ \gp\ (\psc\ `a\ \tr{M})(\square), & \square, & [] \\
-   \tob\      & \pp\ \gp\ (\psc\ `a\ \tr{M})[\square/`a], & \square, & [] \\
-   \tob\      & \pp\ \gp\ (\psc\ \square\ (\tr{M}[\square/`a]), & \square, & [] \\
-   \todcc\    & \psc\ \square\ (\tr{M}[\square/`a], & \square, & \gp:[] \\
-   \todcc\    & \tr{M}[\square/`a], & \square,  & \gp:[] \\
-   \triangleq & \tr{M} \\
+             & \tr{`m`a[`d]M[`b/`g]} \\
+  \triangleq & \wsc \gp `l`a.\pp \gp (\psc `d\ \tr{M}[`b/`g])   & \square & \gp       \\
+  \tocdc\     & (`l`a.\pp \gp (\psc `d\ \tr{M}[`b/`g]))(\square) & \square & []        \\
+  \tocdc\     & (\pp \gp (\psc `d\ \tr{M}[`b/`g]))[\square/`a]   & \square & []        \\
+  \tocdc\     & \pp \gp (\psc `d\ \tr{M}[`b/`g])[\square/`a]     & \square & []        \\
+  \tocdc\     & (\psc `d\ \tr{M}[`b/`g])[\square/`a]             & \square & \gp       \\
+  \tocdc\     & \psc `d\ \tr{M}[`b/`g][\square/`a]               & \square & \gp       \\
+  \tocdc\     & \tr{M}[`b/`g][\square/`a]                        & \square & `d:[]:\gp \\
 \end{array}
 \]
-\\ 
+\begin{remark}
+  The terms $\tr{M}[`b/`g][\square/`a]$ and $\tr{M}[\square/`a][`b/`g]$ are denotationally equivalent if $`a \not= `b \not= `g$.
+\end{remark}
 \[
-\begin{array}{rlrr}
-  \prooflabel{`m`a.[`b]`m`g.[`d]M \to `m`a.[`d](M[`b/`g]):} \\
-    \triangleq & \wsc\ \gp\ `l`a.\pp\ \gp\ \tr{[`b]`m`g.[`d]M}, & \square, & \gp:[] \\
-    \todcc\    & `l`a.\pp\ \gp\ \tr{[`b]`m`g.[`d]M}(\square), & \square, & [] \\
-    \tob\      & (\pp\ \gp\ \tr{[`b]`m`g.[`d]M})[\square/`a], & \square,& [] \\
-    \tob\      & \pp\ \gp\ \tr{[`b]`m`g.[`d]M}[\square/`a], & \square,& [] \\
-    \tob\      & \tr{[`b]`m`g.[`d]M}[\square/`a], & \square,& \gp:[] \\
-    \triangleq & (psc `b \tr{`m`g.[`d]M})[\square/`a], & \square,& \gp:[] \\
-    \triangleq & \tr{`m`g.[`d]M})[\square/`a], & \square, & `b:\gp:[] \\
-    \triangleq & (\wsc\ \gp\ `l`g.\tr{[`d]M})[\square/`a], & \square,& `b:\gp:[] \\
-    \triangleq & \wsc\ \gp\ `l`g.\pp\ \gp\ \tr{[`d]M}[\square/`a], & \square, & `b:\gp:[] \\
-    \triangleq & (`l`g.\pp\ \gp\ \tr{[`d]M}[\square/`a])(`b), & \square, & [] \\
-    \triangleq & (\pp\ \gp\ \tr{[`d]M}[\square/`a])[`b/`g], & \square,& [] \\
-    \triangleq & \pp\ \gp\ (\tr{[`d]M}[\square/`a])[`b/`g], & \square,& [] \\
-    \triangleq & \tr{[`d]M}[\square/`a])[`b/`g], & \square,& \gp:[] \\
-    \triangleq & (\psc\ `d\ M[\square/`a][`b/`g], & \square,& \gp:[] \\
-    \triangleq & \psc\ `d\ (M[\square/`a])[`b/`g], & \square,& \gp:[] \\
-    \triangleq & \tr{`m`a.[`d](M[`b/`g])}, & \square,& \gp:[] \\
+\begin{array}{llrr}
+  \prooflabel{`m`a.[`b]`m`g.[`g]M \to `m`a[`b]M[`b/`g]} \\
+             & \tr{`m`a.[`b]`m`g.[`g]M} \\
+  \triangleq & \wsc \gp `l`a.\pp \gp (\psc `b\ \tr{`m`g.[`g]M})     & \square & \gp        \\
+  \tocdc\    & (`l`a.\pp \gp (\psc `b\ \tr{`m`g.[`g]M}))(\square)   & \square & []         \\
+  \tocdc\    & (\pp \gp (\psc `b\ \tr{`m`g.[`g]M}))[\square/`a]     & \square & []         \\
+  \tocdc\    & \pp \gp (\psc `b\ \tr{`m`g.[`g]M})[\square/`a]       & \square & []         \\
+  \tocdc\    & (\psc `b\ \tr{`m`g.[`g]M})[\square/`a]               & \square & \gp        \\
+  \tocdc\    & \psc `b\ \tr{`m`g.[`g]M}[\square/`a]                 & \square & \gp        \\
+  \tocdc\    & \tr{`m`g.[`g]M}[\square/`a]                          & \square & `b:[]:\gp  \\
+  \triangleq & (\wsc \gp `l`g.\pp \gp (\psc `g \tr{M}))[\square/`a] & \square & `b:[]:\gp  \\
+  \tocdc\    & \wsc \gp `l`g.\pp \gp (\psc `g \tr{M})[\square/`a]   & \square & `b:[]:\gp  \\
+  \tocdc\    & (`l`g.\pp \gp (\psc `g \tr{M})[\square/`a])(`b)      & \square & []  \\
+  \tocdc\    & (\pp \gp (\psc `g \tr{M})[\square/`a])[`b/`g]        & \square & []  \\
+  \tocdc\    & \pp \gp (\psc `g \tr{M})[\square/`a][`b/`g]          & \square & []  \\
+  \tocdc\    & (\psc `g \tr{M})[\square/`a][`b/`g]                  & \square & \gp  \\
+  \tocdc\    & \psc `b \tr{M}[\square/`a][`b/`g]                    & \square & \gp  \\
+  \tocdc\    & \tr{M}[\square/`a][`b/`g]                            & \square & `b:[]:\gp  \\
+  \\
+             & \tr{`m`a[`b]M[`b/`g]} \\
+  \triangleq & \wsc \gp `l`a.\pp \gp (\psc `b\ \tr{M}[`b/`g])   & \square & \gp       \\
+  \tocdc\     & (`l`a.\pp \gp (\psc `b\ \tr{M}[`b/`g]))(\square) & \square & []        \\
+  \tocdc\     & (\pp \gp (\psc `b\ \tr{M}[`b/`g]))[\square/`a]   & \square & []        \\
+  \tocdc\     & \pp \gp (\psc `b\ \tr{M}[`b/`g])[\square/`a]     & \square & []        \\
+  \tocdc\     & (\psc `b\ \tr{M}[`b/`g])[\square/`a]             & \square & \gp       \\
+  \tocdc\     & \psc `b\ \tr{M}[`b/`g][\square/`a]               & \square & \gp       \\
+  \tocdc\     & \tr{M}[`b/`g][\square/`a]                        & \square & `b:[]:\gp \\
 \end{array}
 \]
-\\ 
-\[
-\begin{array}{rlrl}
-  \prooflabel{`m`a.[`b]`m`g.[`g]M \to `m`a.[`b](M[`b/`g]):} \\
-               & \tr{`m`a.[`b]`m`g.[`d]M} \\
-    \triangleq & \wsc\ \gp\ `l`a.\pp\ \gp\ \tr{[`b]`m`g.[`d]M},    & \square, & \gp:[] \\
-    \todcc\    & `l`a.\pp\ \gp\ \tr{[`b]`m`g.[`d]M}(\square),    & \square, & [] \\
-    \tob\      & (\pp\ \gp\ \tr{[`b]`m`g.[`d]M})[\square/`a],    & \square, & [] \\
-    \tob\      & \pp\ \gp\ \tr{[`b]`m`g.[`d]M}[\square/`a],      & \square, & [] \\
-    \tob\      & \tr{[`b]`m`g.[`d]M}[\square/`a],              & \square, & \gp:[] \\
-    \triangleq & (psc `b \tr{`m`g.[`d]M})[\square/`a],         & \square, & \gp:[] \\
-    \triangleq & \tr{`m`g.[`d]M})[\square/`a],                 & \square, & `b:\gp:[] \\
-    \triangleq & (\wsc\ \gp\ `l`g.\tr{[`d]M})[\square/`a],       & \square, & `b:\gp:[] \\
-    \triangleq & \wsc\ \gp\ `l`g.\pp\ \gp\ \tr{[`d]M}[\square/`a], & \square, & `b:\gp:[] \\
-    \triangleq & (`l`g.\pp\ \gp\ \tr{[`d]M}[\square/`a])(`b),    & \square, & [] \\
-    \triangleq & (\pp\ \gp\ \tr{[`d]M}[\square/`a])[`b/`g],      & \square, & [] \\
-    \triangleq & \pp\ \gp\ (\tr{[`d]M}[\square/`a])[`b/`g],      & \square, & [] \\
-    \triangleq & \tr{[`d]M}[\square/`a])[`b/`g],               & \square, & \gp:[] \\
-    \triangleq & (\psc\ `d\ M[\square/`a][`b/`g],              & \square, & \gp:[] \\
-    \triangleq & \psc\ `b\ (M[\square/`a])[`b/`g],             & \square, & \gp:[] \\
-    \triangleq & \tr{`m`a.[`b](M[`b/`g])},                     & \square, & \gp:[]
-\end{array}
-\]
-\\ 
-% TODO: verify that this is correct
-\[
-\begin{array}{rlrl}
-  \prooflabel{(`m`d.[`a]M)[[`a]M^\prime N/[`a]M^\prime]
-    \to (`m`d.[`a](M[[`a]M^\prime N/[`a]M^\prime])N} \\
-               & \tr{(`m`d.[`a]M)[[`g]M^\prime N/[`a]M^\prime]}\\
-    \triangleq & (\wsc\ \gp\ `l`d.\pp\ \gp\ (\psc\ `a\ M))[\square N/`a]         & \square, & \gp:[]  \\
-    \tob\      & \wsc\ \gp\ `l`d.\pp\ \gp\ (\psc\ \square N\ (M[\square N/`a]))) & \square, & \gp:[]  \\
-    \triangleq & \tr{`m`d.[`a](M[[`a]M^\prime N/[`a]M^\prime])N}
-\end{array}
-\]
-\\ 
-% TODO: verify that this is correct
-\[
-\begin{array}{rlrl}
-  \prooflabel{M[[`a]M^\prime N/[`a]M] \to M \hspace{10pt} (`a \not\in \fn(M)):} \\
-               & \tr{M[[`a]M^\prime N/[`a]M]} \\
-    \triangleq & \tr{M}[\square N/`a] \\
-    \tob\      & \tr{M} & (`a \not\in \fv(M))
-\end{array}
-\]
-\end{proof}
+\end{Proof}
 
-This means that the translation of $M$ reduces a term $Q$ that relates to the untranslated reduct of $N$, given $M \to N$.
-The relation is either that $Q$ reduces to $N$, is the same as $N$, or $N$ reduces to $Q$.
-
-\begin{theorem}[Completeness of $\tr{\bullet}$]
-
+\begin{theorem}[Completeness of $\tr{`.}$]
+\[
+  \tr{M} \to^{nf} \tr{N} \Rightarrow \exists Q. M \to^* N \land \tr{N} \to^{nf} Q
+\]
 \end{theorem}
+\begin{Proof}
+  To come...
+\end{Proof}
 
-We attempt to prove one of the following properties:
-\begin{enumerate}
-  \item $\tr{M} \to Q \Rightarrow \exists N. M \to N \land Q \to^* \tr{N}$
-  \item $\tr{M} \to^{nf} Q \Rightarrow \exists N. M \to^* N \land \tr{N} = Q$
-  \item $\tr{M} \to^{nf} Q \Rightarrow \exists N. M \to^* N \land \tr{N} \to^{nf} Q$
-\end{enumerate}
 
-\section{Interpreting \ltry\ in DCC}
+\section{Interpreting \ltry\ in CDC}
 
   By appending the interpretation of \ltry\ in $`l`m$ with the interpretation of
-  $`l`m$ in DCC, we get a translation from \ltry\ to DCC:
+  $`l`m$ in CDC, we get a translation from \ltry\ to CDC:
 
   % TODO: add lines over (catch n(x) = L)
   \definition{
-    \textsc{Translation of \ltry\ into DCC}
+    \textsc{Translation of \ltry\ into CDC}
     \[
     \begin{array}{rcl}
       \tr{x} & \triangleq & x \\
       \tr{`lx.M} & \triangleq & `lx.\tr{M} \\
       \tr{MN} & \triangleq & \tr{M} \tr{N} \\
       
-      \tr{\throw{n($M$)}} & \triangleq & \wsc\ \gp\ `l\nonocc.\pp\ \gp\ (psc\ n\ (c_n\ \tr{M})) \\ 
+      \tr{\throw{n($M$)}} & \triangleq & \wsc\ \gp\ `l\nonocc.\pp\ \gp\ (\psc\ n\ (c_n\ \tr{M})) \\ 
       \tr{\try M;\ \catch{n($x$) = $L$}}
         &
         \triangleq 

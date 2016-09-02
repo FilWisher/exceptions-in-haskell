@@ -42,7 +42,6 @@ This short implementation:
 
 \begin{figure}[!h]
 \Verbatimcode
-
 example1 = runCC (do
   p <- newPrompt
   pushPrompt p (testy p (\t -> return 5) (\x -> return $ x+1)))

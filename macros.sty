@@ -5,27 +5,29 @@
 \newcommand{\mono}[1]{\texttt{#1}}
 \newcommand{\bta}{$`b$}
 \newcommand{\dbr}[1]{\llbracket #1 \rrbracket}
-\newcommand{\pp}{\textsc{pp}}
-\newcommand{\wsc}{\textsc{wsc}}
-\newcommand{\psc}{\textsc{psc}}
-\newcommand{\np}{\textsc{np}}
+\newcommand{\pp}{\textsc{pp }}
+\newcommand{\wsc}{\textsc{wsc }}
+\newcommand{\psc}{\textsc{psc }}
+\newcommand{\np}{\textsc{np }}
 \newcommand{\tr}[1]{\dbr{#1}}
-%\newcommand{\to}{\rightarrow}
 \newcommand{\by}[2]{#1 & \text{by (#2)}}
 \newcommand{\throw}[1]{\text{throw #1}}
 \newcommand{\nonocc}{\circ}
 \newcommand{\try}{\text{try }}
 \newcommand{\catch}[1]{\text{catch #1}}
 \newcommand{\tob}[1]{\to_{`b} }
-\newcommand{\todcc}[1]{\to_{DCC} }
-\newcommand{\prooflabel}[1]{ \multicolumn{3}{l}{#1} \vspace{5pt} }
+\newcommand{\tocdc}[1]{\to_{\scriptscriptstyle{CDC}} }
+\newcommand{\prooflabel}[1]{ \multicolumn{3}{l}{#1:} \vspace{5pt} }
 \newcommand{\fn}[1]{\text{fn$#1$}}
 \newcommand{\fv}[1]{\text{fv$#1$}}
-\newcommand{\gp}{\textsc{p$_0$}}
+\newcommand{\gp}{\textsc{p$_0$ }}
 
+\newenvironment{Proof}{%\vspace*{-5\point}
+\trivlist \item[\hskip \labelsep \textbf{Proof. }] \begingroup % \raggedright
+}{\qed
+\endgroup \endtrivlist}
 
-\newcommand{\Verbatimcode}{\begin{Verbatim}[frame=lines,framerule=1.5pt,framesep=0.5cm,rulecolor=\color{pale-gray},samepage=true]}
-
+\newcommand{\Verbatimcode}{\begin{Verbatim}[frame=leftline,framerule=1pt,framesep=0.4cm,rulecolor=\color{pale-gray},samepage=true]}
 
 \newlength\harpoonlngth
 

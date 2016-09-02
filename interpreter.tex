@@ -12,6 +12,9 @@ Examining transformation steps in full also allows us to derive proofs of soundn
 For this reason, the interpreter was implemented as a term-rewriting program.
 
 \section{Implementation}
+We follow the operational semantics of the system to provide an implementation.
+This is not necessary and results in an ineffecient implementation.
+It is the simplest approach to implementation and efficiency is not required for the primary purpose of the interpreter: to produce proofs.
 
 \subsection{Data structures}
 There are two data types for representing DCC terms, \mono{Value} and \mono{Expr}
