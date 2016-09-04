@@ -39,7 +39,7 @@ are in scope for the reduction of the body of the try $M$.
 
 % TODO: explain translation ?
 
-\section{Interpreting \lmu\ in CDC}
+\section{Interpreting \lmu\ in CDC}\label{sec:lmu-in-cdc}
 
 % TODO: explain initial attempt and explain why it was simple and intuitive
 %       and follow up with why it went wrong and what we had to change.
@@ -157,7 +157,7 @@ With this translation, the proof that $\tr{`.}$ respects $\to_{`m}$ is easy.
 \subsection{Properties}
 
 % TODO: Add proofs for completeness and other properties
-\begin{theorem}[Soundness of $\tr{`.}$]
+\begin{theorem}[Soundness of $\tr{`.}$]\label{theorem:soundness}
 \[ M \to_{`m} N \Rightarrow \exists P.\ \tr{M} \to^{nf} P \land \tr{N} \to^{nf} P \]
 \end{theorem}
 
@@ -314,11 +314,37 @@ Neither can it occur in $\tr{M}[\square \mult{N}/`a]$ because all occurrences ha
 
 \begin{theorem}[Completeness of $\tr{`.}$]
 \[
-  \tr{M} \to^{nf} \tr{N} \Rightarrow \exists Q. M \to^* N \land \tr{N} \to^{nf} Q
+  \tr{M} \to^{nf} Q \Rightarrow \exists N. M \to^{nf} N \land \tr{N} \to^{nf} Q
 \]
 \end{theorem}
 \begin{Proof}
-  To come...
+By induction on the definition of $\tr{M}$.
+\prooftitle{$`m`a.[`a]M$}
+From the proof for Theorem \ref{theorem:soundness}, we know that:
+\[
+\begin{array}{rclll}
+\tr{`m`a.[`a]M} & \to^{nf} & \tr{M} & \square & \gp
+\end{array}
+\]
+From the definition of $\to_{`m}$:
+\[
+`m`a.[`a]M \to^{nf} M
+\]
+And from the translation in \ref{sec:lmu-in-cdc}:
+\[
+\begin{array}{rclll}
+\tr{M} \triangleq \tr{M} & \square & \gp 
+\end{array}
+\]
+
+\prooftitle{$(`m`a.[`a]M)N$}
+\dots
+\prooftitle{$(`m`a.[`b]M)N$ \hspace{1cm} ($`a \not= `b$)}
+\dots
+\prooftitle{$(`m`a.[`b]`m`g.[`d]M)$ \hspace{1cm} ($`g \not= `d$)}
+\dots
+\prooftitle{$(`m`a.[`b]`m`g.[`g]M)$}
+\dots
 \end{Proof}
 
 
@@ -353,5 +379,3 @@ Neither can it occur in $\tr{M}[\square \mult{N}/`a]$ because all occurrences ha
     \end{array} 
     \]
   }
-
-% TODO: describe the interpretation

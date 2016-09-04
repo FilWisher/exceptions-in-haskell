@@ -69,7 +69,8 @@ particular form into a new formula. Using the grammar from Figure
 \begin{array}{lcl}
   t\ a\ M &\to& M \\ 
   M\ a\ t &\to& M \\
-  f\ a\ f &\to& f \\
+  f\ a\ M &\to& f \\
+  M\ a\ f &\to& f \\
   \\
   M\ o\ t &\to& t \\ 
   t\ o\ M &\to& t \\
@@ -115,12 +116,14 @@ compound term being decomposed into simpler terms until one of the
 derivation rules applies. When we decompose a term, we separate it into a
 dominant term and a context:
 
+\begin{figure}[!h]\label{fig:decomposing}
 \[
 \begin{array}{lcr}
   & t\ o\ f\ a\ t \\
   t\ o\ f\ && \square\ a\ t 
 \end{array}
 \]
+\end{figure}
 
 The left-hand side is the dominant term and the right-hand side is the context. 
 The $\square$ in the context denotes a hole that needs to be filled to create a full term.
@@ -155,9 +158,9 @@ either apply derivations starting from the left or starting from the right.
 \begin{array}{rcl}
   
   \textbf{(left)} & t\ o\ f\ a\ t \\
-  \to         & t\ o\ f & \square\ a\ t \\
-  \to         & t       & \square\ a\ t \\
-  \to         & t\ a\ t & \\
+  \to                & t\ o\ f & \square\ a\ t \\
+  \to                & t       & \square\ a\ t \\
+  \textit{recombine} & t\ a\ t & \\
   \\
   \textbf{(right)}   & t\ o\ f\ a\ t \\
   \to                & f\ a\ t & t\ o\ \square \\
@@ -181,7 +184,7 @@ These models were later proved to all be equivalent.
 
 \subsection{Syntax}
   
-  \lam-variables are represented by $x,y,z,\&c$. Variables denote an
+  \lam-variables are represented by $x,y,z,etc$. Variables denote an
   arbitrary value: they do not describe what the value is but that any
   two occurrences of the same variable represent the same value. The
   grammar for constructing well-formed \lam-terms is:
@@ -191,8 +194,10 @@ These models were later proved to all be equivalent.
     \textsc{(Grammar for untyped \lam-calculus)}
     \item $`l$-variables are denoted by $x, y,\dots$ \\
     \[
-    \begin{array}{rcl}
-    M,N & ::= & x\ \mid\ `lx.M\ \mid\ M\ N
+    \begin{array}{rcll}
+    M,N & ::= & x         & \text{(Variable)} \\
+        & \mid\ & `lx.M\  & \text{(Abstraction)} \\ 
+        & \mid\ & M\ N    & \text{(Application)} \\ 
     \end{array}
     \]
   }
@@ -222,7 +227,7 @@ These models were later proved to all be equivalent.
   the grammar, placed alongside one another. Application gives highest
   precedence to the left-most terms. Bracketing can be introduced to enforce 
   alternative application order for example $xyz$ is implicitly read as 
-  $(xy)z$ but an be written as $x(yz)$ to describe that the application of 
+  $(xy)z$ but can be written as $x(yz)$ to describe that the application of 
   $yz$ should come first. Examples of applications are:
     \begin{figure}[!h]
       \[
@@ -279,8 +284,30 @@ These models were later proved to all be equivalent.
   redex models the computing of a function. 
 
 % TODO: define free variables and bound variables
-\subsubsection{$\alpha$-reduction}
-  
+\subsubsection{$`a$-reduction}
+ 
+  The variables in a \lam-term are either \emph{bound} or \emph{free}. 
+  The bound variables of a term are those introduced by \lam-abstractions before their use.
+ 
+  \definition{
+  \textsc{Bound variables $bv$ of \lam-terms}
+  \cite{Bakel15}
+  \[
+  \begin{array}{rcl}
+    bv(x)     & = & \varnothing \\
+    bv(`lx.M) & = & bv(M) \cup \{x\} \\
+    bv(MN) & = & bv(M) \cup bv(N) \\
+  \end{array} 
+  \]
+  }
+  \definition{
+  \textsc{Free variables $fv$ of \lam-terms}
+  \\
+  The free variables of a term $M$ are variables that occur in $M$ that are not bound.
+  \\
+  }
+ 
+  % TODO: explain this in terms of bound and free variables
   The \lam-calculus defines a reduction rule for renaming variables.
   Variable names are arbitrary and chosen just to denote identity:
   all occurrences of $x$ are the same. This can become a problem
@@ -322,64 +349,14 @@ These models were later proved to all be equivalent.
   
   
   \subsection{Normal Forms}
-  
-  Head reduction is a reduction strategy for the \lam-calculus.
-  In head reduction, only the head variables are reduced.
-  The head variable $hv$ of a term is defined inductively:
-  
-  \definition{
-  \textsc{Head variable $hv$ for \lam-terms}
-  \[
-  \begin{array}{rclr}
-    hv(`lx.M) &=& hv(M) \\
-    hv(xM_1 \dots M_n) &=& x \\
-    % define head variables 
-  \end{array}
-  \]
-  }
-  By only allowing reduction on head variables, 
-  \bta-reduction is restricted to the following contexts:
  
-  \definition{
-  \textsc{Head reduction for \lam-calculus}
-  \[
-  \begin{array}{lclrcl}
-    M \to N & \Rightarrow &\{&  \\
-                           &&& `lx.M & \to_{H} & `lx.N \\
-                           &&& M\mult{L} & \to_{H} & N\mult{L} \\
-            &             &\}
-  \end{array}
-  \]
-  }
-  
-  These restricted rules define head reduction for the \lam-calculus. 
-  When a term can no longer be \bta-reduced, it is in \bta-normal form.
-  Similarly, if a term cannot be head-reduced any further, it is in $`bH$-normal form.
-  We can define $`bH$-normal form on \lam-terms with the following BNF grammar:
- 
-  \definition{
-  \textsc{Grammar for \lam-terms in $`bH$-normal form.}
-  \[
-  \begin{array}{rcl}
-    N & ::= & `lx.N \\
-      &  |  & xM_1\dots M_2
-  \end{array}
-  \]
-  }
-  
-  $`bH$-normal form only allows the reduction of the outermost, left-most redex.
-  We define $\to_{`bH}^{nf}$ as the reduction of a term to $`bH$-normal form.
-  Similarly we use $\to_{`b}^{nf}$ to denote the reduction to $`b$-normal form.
-  
-  \begin{example}[\lam-terms in \bta- and $`bH$-normal forms]
-  \[
-  \begin{array}{rcl}
-    & \to_{`b}^{nf} & `ly.zy \\
-    (`lv.`ly.z(vy))(`lx.x) \\
-    & \to_{`bH}^{nf} & `ly.z((`lx.x)y) \\
-  \end{array} 
-  \]
-  \end{example}
+  A term is a in normal form for a reduction strategy if, 
+  following that reduction strategy,
+  no more reductions can take place.
+  For instance, a term that can no longer be \bta-reduced is in \bta-normal form.
+  We can define \bta-normal form on \lam-terms with the following BNF grammar:
+  We use $\to_{`b}^{nf}$ to denote a term in \bta-normal form.
+  Again, we can omit the \bta\ subscript if it is clear from context.
 
 \section{Logic and Types}
 
@@ -388,26 +365,36 @@ These models were later proved to all be equivalent.
   Like all formal systems, 
   they allow us to derive new logical statements by following transformation rules.
 
-  \subsection{Implicative Intuitionistic Logic}
-  \emph{Implicative Intuitionistic Logic} (IIL) is a subset of Gerhard Gentzen's system of natural deduction.
-  It is restricted to only the $\rightarrow \mathcal{I}$ and $\rightarrow \mathcal{E}$ rules.
-  Following Brouwer, it eschews the law of excluded middle.
-  \footnote{The law of excluded middle says $\vdash P \lor \neg P$}
+  Logic relates statements together with logical connectives.
+  Under an interpretation, a statement is either true or false.
+  Depending on the truth value of the component statements, a compound statement is either true or false.
+  As far as we are concerned, the logical connectives consist of $\land, \lor, \to$, and $\neg$.
+  \begin{itemize}
+    \item $M \land N$ (read: `and') is true only when both $M$ and $N$ are true.
+    \item $M \lor N$ (read: `or') is true only if either $M$ or $N$ are true. 
+    \item $M \to N$ (read: `implies') is false when $M$ is true but $N$ is false.
+    \item $\neg M$ (read: `not') is true only when $M$ is false.
+  \end{itemize}
+  The symbol $\to$ represents implication: whenever $M$ is true, $N$ is true.
   
-  In natural deduction, the $\to$ symbol represents implication.
-  To say $A \to B$ is to say that whenever $A$ is true,
-  we know $B$ is true.
-  The statement should be read ``$A$ implies $B$''.
+  \subsection{Natural Deduction}
   
-  Logical \emph{inference rules} describe that if some statement $A$ is true,
+  In natural deduction, there are \emph{introduction} and \emph{elimination} rules for each logical connective.
+  These are presented as \emph{inference rules}.
+  Logical inference rules describe that if some statement $A$ is true,
   we can take for granted that some other statement $B$ is true.
-  The notation for this is:
+  This is denoted by:
   
   \[
     \Inf{A}{B} 
   \]
   
-  Using this notation, we can now describe the inference rules for IIL:
+  Using this notation, we can now describe the inference rules for $\to$.
+  For our purposes, this is the only logical connective we are interested in.
+  The reason for this will become clear.
+  
+  \definition{
+  \textsc{$\to$ introduction and elimination rules} 
   \[
   \begin{array}{rl@{\quad\quad}rl}
     ( \to \mathcal{E} ) &
@@ -419,44 +406,114 @@ These models were later proved to all be equivalent.
         { A \to B}
   \end{array}
   \]
+  }
   
   The $\to\mathcal{E}$ rule says that given the statement $A \to B$ and the statement $A$,
   we can conclude $B$.
-  For instance, 
-  consider $A$ = ``It is raining''
-  and $B$ = ``It is wet outside''.
-  The statement $A \to B$ becomes ``If (it is raining) then (it is wet outside)''.
-jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are told ``It is raining'',
-  we can take for granted ``It is wet outside''.
+  For instance, consider 
+ 
+  \[
+  \begin{array}{lcl}
+    A & = & \textit{It is raining} \\
+    B & = & \textit{It is wet outside} \\
+    A \to B & = & \textit{If (it is raining) then (it is wet outside)}
+  \end{array}
+  \]
+  If we know that ``if (it is raining) then (it is wet outside)'' and we are told ``it is raining'',
+  clearly we can take for granted ``it is wet outside''.
   
   The $\to\mathcal{I}$ rule says that if we assume $A$ and from that assumption we deduce $B$,
   we can conclude that $A \to B$.
-  Let us assume that Alan Turing did not see Alonzo Church's work.
-  From that assumption, we deduce that Alan Turing could not have stolen Alonzo Church's work.
-  Therefore we can conclude that ``If Alan Turing did not see Alonzo Church's work, he could not have stolen it''. 
+  Let us assume (where $[A]$ denotes that we assume $A$ is true): 
+  \[
+    [A] = \textit{Turing did not see Church's work} 
+  \]
+  From this assumption, it's clear that that 
+  \[
+    B = \textit{Turing could not have stolen Church's work} 
+  \]
+  The $\to\mathcal{I}$ rule lets us conclude from these statements that
+  \[
+    A \to B = \textit{If Turing did not see Church's work, he could not have stolen it}
+  \]
+
+  By restricting ourselves to these rules, we are working within \emph{Implicative Intuitionistic Logic} (IIL).
+  \footnote{Importantly, IIL also rejects the law of excluded middle which says for every $P$, $P \lor \neg P$.
+  According to intuitionistic logic, unless we have a \emph{constructive} proof for which of $P$ or $\neg P$ is true, the statement is false}
   
-  \subsection{Classical Logic}
+  \subsection{Sequent Calculus}
   
-  %TODO description of classical logic
+  Gentzen explored natural deduction through the sequent calculus as well. 
+  We have followed Girard \emph{et al.}'s observation that the syntax of the sequent calculus is overcomplicated for the purpose of natural deduction.\cite{Girard89}
   
-  First, we introduce the notation for a \emph{sequent}:
+  Sequent calculus manipulates \emph{sequents} where a sequent is denoted by:
   
     \[
       `G \vdash T
     \]
     
-  The $`G$ is a sequence of statements called the \emph{antecedent}.
-  The right-hand side of the $\vdash$ is also a sequence of statements called the \emph{succedent}.
+  On the left-hand side, the $`G$ represents a sequence of statements called the \emph{antecedent}.
+  On the right-hand side of the $\vdash$, $T$ represents a different sequence of statements called the \emph{succedent}.
   The whole sequent denotes that the conjunction of the statements in the antecedent imply the disjunction of the statements in the succedent.
-  That is to say, all the statements on the left taken together imply that at least one of the statements on the right is correct.
+  That is to say, if all the statements on the left are true then at least one of the statements on the right is true:
   
   \[
     \begin{array}{c}
     A_1,A_2,\dots,A_n \vdash S_1,S_2,\dots,S_m \\
       \text{denotes} \\
-    A_1 \wedge A_2 \wedge \ldots \wedge A_n \to S_1 \lor S_2 \lor \dots \lor S_m \\
+    A_1 \wedge A_2 \wedge \dots \wedge A_n \to S_1 \lor S_2 \lor \dots \lor S_m \\
     \end{array}
   \]
+
+  The sequent calculus introduces a set of structural rules for manipulating sequents:
+  
+  \definition{
+  \textsc{Structural rules of the sequent calculus} 
+  \[
+  \begin{array}{c@{\quad\quad}c}
+  
+    \Inf{A,C,D,A' \vdash B}
+       {A,D,C,A' \vdash B}
+       {\hspace{5pt}\mathcal{L}X}
+    &
+    \Inf{A \vdash B,C,D,B'}
+       {A \vdash B,D,C,B'}
+       {\hspace{5pt}\mathcal{R}X}
+    \\
+    \\
+    \Inf{A \vdash B}
+       {A,C \vdash B}
+       {\hspace{5pt}\mathcal{L}W}
+    &
+    \Inf{A \vdash B}
+       {A \vdash B,C}
+       {\hspace{5pt}\mathcal{R}W}
+   \\
+   \\
+   \Inf{A,C,C \vdash B}
+       {A,C \vdash B}
+       {\hspace{5pt}\mathcal{L}C}
+    &
+    \Inf{A \vdash C,C,B}
+       {A \vdash C,B}
+       {\hspace{5pt}\mathcal{R}C}
+   \\
+   \\
+   \multicolumn{2}{c}{
+    \Inf{A \vdash B \hspace{10pt} A',B \vdash C}
+        {A,A' \vdash C}
+        {\hspace{5pt}\textbf{Cut}}
+   }
+  \end{array} 
+  \]
+  }
+  In addition to these, it maintains...
+  % TODO: inspect parigot's paper for whatever is relevant
+  
+  \subsection{Classical Logic}
+  
+  %TODO description of classical logic
+  
  
 
   \subsection{Type Assignment}
@@ -465,11 +522,9 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
   the reduction rules of a system. These extensions prevent logically
   inconsistent terms from being constructed. A type assignment has the
   form:
-  
   \[
     M : `a 
   \]
-  
   which states that term $M$ has the type $`a$. Like variables, type 
   variables are abstract: they do not describe anything more about a 
   type than its identity. That is to say $x: A$ and $y : A$ have the
@@ -483,24 +538,26 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
     \textsc{(Grammar for constructing types)} 
     \item Type variables are represented by the lower-case greek alphabet $`a,`b,`g,...$
     \[
-      A,B ::= `v \mid A \rightarrow B 
+      A ::= `v \mid `v \rightarrow B 
     \]
   }
   
   \subsection{Typed \lam-Calculus}
-  Typed systems have rules for assigning types for terms.
+  The typed \lam-calculus is an extension of the \lam-calculus with types assigned to \lam-terms.
+  \lam-abstractions have arrow types: $A \to B$.
+  This describes that the abstraction can be applied to a value of type $A$ and returns one of type $B$.
   Type assignment rules for the \emph{typed} \lam-calculus are:
 
   \[
-    \begin{array}{lcrc}
-    { (\to\mathcal{E}}) \hspace{4pt} \Inf{
+    \begin{array}{c}
+    \Inf{
       `G \vdash M : A \to B \hspace{20pt} N:A 
     }{
       `G \vdash M N : B 
     }
     \\
     \\
-    { (\to\mathcal{I}}) \hspace{4pt} \Inf{
+    \Inf{
       `G,x:A \vdash M : B
     }{
       `G \vdash `lx.M : A \to B 
@@ -509,10 +566,10 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
   \]
 
   The first rule states that the application of a term of type $A \to B$ to
-  a term of type $A$ has type $B$.
-  The $\to\mathcal{I}$ rule says a term of type $B$ in a context where $x:A$
-  is the same as an abstraction of type $A \to B$ in a context without $x:A$. 
+  a term of type $A$ has type $B$. 
+  The second rule says a term of type $B$ in a context where $x:A$ is the same as an abstraction of type $A \to B$ in a context without $x:A$. 
   These rules add restrictions on what constitutes a well-formed term.
+  These restrictions prevent the formation of terms sometimes undesirable properties.  
   
   \begin{example}[Type-assignment restricts set of valid terms]
   \[  
@@ -523,7 +580,6 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
     x : A
   \end{array}
   \]
-  
   The variable $x$ is applied to a term so it must have type $A \to B$.
   The term it is applied to must have type $A$.
   However $x$ is applied to itself so it must have type $A$ and $A \to B$.
@@ -533,39 +589,40 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
  
   \subsection{Curry-Howard Isomophism}
   
-  Curry-Howard isomorphism states that their is an isomorphism between
-  the typed of a term and a logical proposition. The term itself is
-  the proof of the proposition.
+  The Curry-Howard isomorphism states that their is a true isomorphism between the type of a term and a logical proposition. 
+  The type of a term is a logical proposition and the term itself its a proof of that proposition.
+  The simplification of a proof maps to the evaluation of the corresponding program.\cite{Wadler15}
   
   Looking again at the rules of the typed \lam-calculus and IIL,
-  there is a clear correspondence:
+  the correspondence is clear:
   
   \[
-    \begin{tabular}{|c|c|}
-      \hline
-      \lam-calculus & IIL 
-    \\ \hline 
-        \infer{
-          `G \vdash M N : B 
-        }{
-          `G \vdash M : A \to B \hspace{20pt} N:A 
-        }
-      &
-      \infer{B}
-            { A \to B \hspace{0.5cm} A }
-    \\ \hline
-      \infer{
-        `G,x:A \vdash M : B
-      }{
-        `G \vdash `lx.M : A \to B 
-      }
+  \begin{array}{cc@{\quad\quad}c}
+    & `l\textbf{-calculus} & \textbf{IIL}
+    \\
+    \\
+    \to\mathcal{E} 
     &
-      \infer { \infer*{B}{[A]} }
+    \Inf{ `G \vdash M : A \to B \hspace{20pt} N:A }
+        { `G \vdash M N : B }
+    &
+    \Inf{ A \to B \hspace{0.5cm} A }
+        {B}
+    \\
+    \\
+    \to\mathcal{I} 
+    &
+    \Inf{ `G,x:A \vdash M : B }
+      { `G \vdash `lx.M : A \to B }
+    &
+    \Inf{ \infer*{B}{[A]} }
         { A \to B}
-   \\ \hline 
-    \end{tabular}
+   \\
+    \end{array}
   \]
-  
+ 
+  The correspondence between logic and programs is not limited to IIL and the typed lambda-calculus.
+  There are many features of computer programs that have counter-parts in logical systems.
   % TODO: add more - examples and demonstration
 
 \section{Haskell}
@@ -630,7 +687,7 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
   \subsection{Type Level/Value Level}
   
   Haskell distinguishes between terms on the type level and terms on the value level. 
-  This is the same as the separate layer of terms and types in the \lam-calculus.
+  This is the same as the separate layer of terms and types in the typed \lam-calculus.
   Types in Haskell are descriptions of the types of a value.
   They provide restrictions on the construction of invalid terms. 
   For instance if we have a function of type \mono{String -> Integer}, 
@@ -668,19 +725,16 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
       add Two One = ThreeOrMore 
   \end{Verbatim}    
   
-  %\subsection{Term Rewriting}
-  % explain ($) operator
-  % explain monads as generalizations of cps-terms
-  % what they encode and why they are useful
-
+  To declare an instance of a type class, we must supply the bodies for functions in the class specification.
+  The \mono{Addable} class, for instance, requires that the body of the \mono{add} function is defined.
+  When declaring an instance, we have to ensure the type specification of each function is respected.
+  
 % TODO: these explanations of continuations (diff between delim and 
 %       undelim) are incorrect 
 \section{Continuations}
-  
-  Compound terms can be decomposed into two seperate parts: a dominant 
-  term and a context. The dominant term is the term currently being 
-  evaluated. The context is a term with a hole that will be filled with 
-  the value the dominant term reduces to.
+ 
+  As in the example in Figure \ref{fig:decomposing}, 
+  compound \lam-terms can be decomposed into a dominant term and a context:
   
   \begin{figure}[!h]
     \hspace{1cm}Assume that $M \rightarrow_{`b} M^\prime$
@@ -695,12 +749,11 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
   \caption{Decomposing a term into a dominant term and a context}
   \end{figure}
   
-  When $M$ has \bta-reduced to a value -- $M^\prime$ -- then the hole
-  of the context $\square N$ is filled to form $M^\prime N$. What the
-  dominant term and context are for a given term depends on the
-  reduction rules and strategy. The context is what remains to be
-  reduced at given moment of reduction. Thus a context is also called
-  a \emph{continuation}.
+  The reduction strategy will define how the term will be decomposed.
+  When $M$ has \bta-reduced to a value, $M^\prime$, then the hole of the context $\square N$ is filled to form $M^\prime N$. 
+  When the hole of a context is filled, the reduction of the compound term continues.
+  This means the context contains the remaining terms to be reduced: it represents how reduction will continue. 
+  Thus a context is also called a \emph{continuation}.
  
   \subsection{Undelimited Continuations} 
  
@@ -718,16 +771,14 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
   \caption{Decomposing a term into multiple contexts}
   \end{figure}
 
-  By amalgamating continuatinos into one big continuation we only have
+  By amalgamating continuations into one big continuation we only have
   two components at point during the reduction: the current dominant term
   and the \emph{current continuation}. 
-  
-  Assume we have some reduction rules defined for manipulating
-  continuations. This model keeps continuations grouped together which
-  means these hypothetical reduction rules could manipulate only this
-  entire remaining continuation. For this reason, continuations that
-  can only be manipulated in their entirety are \textbf{undelimited
-  continuations}.
+ 
+  By adding additional operators to a language, the continuations of terms can be exposed.
+  This provides programmers with the ability to control continuations.
+  Control operators that only allow manipulation of the entire remaining continuation are \textbf{undelimited continuations}. 
+  For example, Scheme's \mono{call/cc} operator aborts the entire remaining continuation.
 
   \subsection{Delimited-Continuations}
 
@@ -751,16 +802,17 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
   After this new dominant term has been reduced, 
   it will be returned to the next waiting continuation, and so on. 
   Throughout this process, we maintain each continuation separately.
-  
-  Assume again that we have reduction rules defined for manipulating continuations. 
-  By keeping continuations separate, 
-  this model would allow us to use parts of the stack selectively for instance taking just top $N$ contexts. 
-  The increased granularity of control means we can manipulate not just the entire remaining continuation but sections of it. 
-  Continuations of this kind are called \textbf{delimited continuations}.
+
+  If the control operators of a language allow manipulation of portions of the continuation stack,
+  the continuations are \textbf{delimited}.
+  To manipulate portions of the stack, these operators need a control delimiter.
+  These are commonly called \emph{prompts}, after Felleisen first introduced them as such.
+  By allowing prompts to be pushed onto the stack, we can recall portions of the stack up until a prompt.
+  This gives the operators a finer grain of control.
 
   \subsection{Continuation-Passing Style}
  
-  By rewriting \lam-terms, the continuations can be made explicit. All
+  By rewriting \lam-terms, a term's continuation can be made explicit. All
   terms must be turned into \lam-abstractions of some variable $k$
   where $k$ is the continuation of a term. $k$ is then called on the
   result of the term, triggering the continuation to take control.
@@ -812,10 +864,10 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
   continuation function $`lm.N$:
   
   \[
-  \begin{array}{l}
+  \begin{array}{rl}
       (`lk.kx)(`lm.N) \\
-      (`lm.N)x \\
-      N[x/m]
+      \to & (`lm.N)x \\
+      \to & N[x/m]
   \end{array}
   \]
   
@@ -904,8 +956,8 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
   \subsection{Syntax}
   
   Just as \lam\ introduces \lam-abstractions, 
-  \lmu\ introduces \lmu-abstractions. 
-  The body of a \lmu-abstraction must be a named term. 
+  $`m$ introduces $`m$-abstractions. 
+  The body of a $`m$-abstraction must be a named term. 
   A named term consists of a name of the form $[`a]$ followed by an unnamed 
   term. 
 
@@ -942,28 +994,35 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
   It can be thought of as a \lam-abstraction that can be applied to any number of variables.
   If we knew how many variables the term is applied to, we could replace
   
-  \[
-    `m`a\dots[`a]M 
-  \]
+  \[ `m`a\dots[`a]M \]
   with 
-  \[
-    `lx_1\dots`lx_n\dots Mx_1\dots x_n
-  \]
+  \[ `lx_1\dots`lx_n\dots Mx_1\dots x_n \]
+  \cite{Parigot92}
   
   \subsection{Computational Significance}
 
-  % TODO: use cps translation to explain mu
-
-  The additional \lmu\ reduction rules model context manipulation. 
-  \lmu-variables map to contexts. When an unnamed term is labelled with a 
-  \lmu-variable, it is evaluated in that context. For instance the named 
-  term $[`a]M$ has the effect of evaluating $M$ in the context pointed to 
-  by $`a$.
+  The \lmu-calculus makes use of \emph{applicative contexts}:
+  An \lmu-abstraction applied to some term $N$ points the $`m$-variable to the context $\square N$.
+  In this sense, the \lmu-abstraction captures contexts where the contexts are supplied by application.
+  When an unnamed term is labelled with a \lmu-variable, it is evaluated in that context. 
+  For instance the named term $[`a]M$ has the effect of evaluating $M$ in the context pointed to by $`a$.
+  
+  By translating $`m$-terms into CPS, we can see the mapping between $`m$-variables and contexts more clearly:
+  \definition{
+  \textsc{CPS translation of $`m$-terms} \cite{Groote94}
+  \[
+  \begin{array}{rcl}   
+    \tr{`m`a.M} & \triangleq & `l`a.\tr{M} \\
+    \tr{[`a]M} & \triangleq & `lk.\tr{M}\ `a\ k
+  \end{array}
+  \]
+  }
+  A $`m$-abstraction binds a continuation to a variable for use throughout the abstraction's body.
+  A named term applies the term to the name, effectively running the term in the continuation.
   
   To make this more concrete, consider the compound term $(`m`a.[`b]M)\ N$. 
   First we decompose the term into a dominant term $(`m`a.[`b]M)$ and a 
-  context $\square N$. Informally, we can imagine that the \lmu-variable 
-  $`a$ now maps to this context $\{`a \Rightarrow \square N\}$:
+  context $\square N$. Informally, we can imagine that the variable at the head of the $`m$-abstraction now maps to this context $\{`a \Rightarrow \square N\}$:
   
   % TODO: reform to get rid of context mapping:
   %   keep mu abstraction in dominant and consult context for
@@ -995,12 +1054,11 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
   \end{example}
 
   % TODO: explain applicative contexts
-  After applying the term $[`a](`ls.fs)$ to $N$, the context $\square N$
-  is consumed and every occurrence of $`a$ is replaced with a fresh 
-  variable -- in this case a $`g$ -- to clarify that the new 
-  \lmu-abstraction points to a new context. This means that 
-  \lmu-abstractions will pass all of the applicative contexts to the
-  named subterms:
+  After applying the term $[`a](`ls.fs)$ to $N$, 
+  the context $\square N$ is consumed and every occurrence of $`a$ is replaced with a fresh variable 
+  -- in this case a $`g$ -- 
+  to clarify that the $`m$-abstraction now points to a new context. 
+  This means that $`m$-abstractions will pass all of the applicative contexts to the named subterms:
   
   \begin{example}
     \[
@@ -1015,75 +1073,27 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
     \]
   \end{example}
   
-  \subsection{Head Reduction}
-  
-  The idea of head-reduction can be extended to the \lmu-calculus.
-  First, we extend the definition of head variables and add the definition of \emph{head names}:
-  
-  \definition{
-  \textsc{Head variables and head names $hn$ for the \lmu-calculus}
-  \[
-  \begin{array}{lclr}
-    hv(`lx.M) &=& hv(M) \\
-    hv(xM_1 \dots M_n) &=& x \\
-    hv(`m`a.[`b]M) &=& hv(M) \\
-    \\
-    hn(`m`a.[`b]M) &=& `b
-  \end{array} 
-  \]
-  }
-  Reduction rules can only be applied to the head variable.
-  Additionally, $`m$-reduction rules are restricted to terms labelled with the head name:
-  
-  \definition{
-  \textsc{Head reduction for \lmu-calculus}
-  \[
-  \begin{array}{lclrcl}
-    M \to N & \Rightarrow &\{&  \\
-                           &&& `lx.M & \to_{H} & `lx.N \\
-                           &&& M\mult{L} & \to_{H} & N\mult{L} \\
-                           &&& `m`a.[`b]M & \to_{H} & `m`a.[`b]N \\
-                           &&& M[[`a]M'L/[`a]M'] & \to_{H} & N[[`a]M'L/[`a]M'] \\
-            &             &\}
-  \end{array}
-  \]
-  }
-  These restricted rules define head reduction for the \lmu-calculus.
-  $`mH$-normal form is defined as terms that cannot be $`mH$-reduced any further.
-  Terms in $`mH$-normal form are those producible by the following grammar:
-  
-  \definition{
-  \textsc{Grammar for \lmu-terms in $`b`mH$-normal form.}
-  \[
-  \begin{array}{rcll}
-    N & ::= & `lx.N \\
-      &  |  & xM_1\dots M_2 \\
-      &  |  & `m`a.[`b]N & (`a \not= `b \lor `a \in N,N\not=`m`g.[`d]N') \\
-      &  |  & N[[`a]ML/[`a]M] & (hn(N) \not= `a)
-  \end{array}
-  \]
-  }
-  
-  The head reduction of \lmu-terms ensures only the left-most and outer-most term is reduced.
-  We define $\to_{`mH}^{nf}$ as the reduction to normal form with respect to $\to_{`mH}$.
-  
   %\subsection{Types and Isomorphism}
 
-\section{Delimited-Continuation Calculus}
+\section{Calculus of Delimited-Continuations}
 
   % TODO: explain motivation behind DCC: \lmu requires
   %       delimited continuations and DCC formalizes delimited
   %       continuations in haskell so useful guide for implementing
   %       exceptions in haskell
 
-  Simon Peyton-Jones \textit{et al.}\ extended the \lam-calculus with additional operators in order create a framework for implementing delimited continuations \cite{JonesDS07}. This calculus will be referred to as the delimited-continuation calculus or DCC. Many calculi have been devised with control mechanisms. Like the \lmu-calculus, these control mechanisms are all specific instances of delimited and undelimited continuations. DCC provides a set of operations that are capable of expressing many of these other common control mechanisms.
+  Simon Peyton-Jones \textit{et al.}\ extended the \lam-calculus with additional operators in order create a framework for implementing delimited continuations \cite{JonesDS07}. 
+  This calculus will be referred to as the calculus of delimited-continuations or \emph{CDC}. 
+  Many calculi have been devised with control mechanisms for manipulating continuations, like the \lmu-calculus.
+  These control mechanisms manipulate either delimited and undelimited continuations. 
+  CDC provides a set of operations that are capable of expressing many of the common control mechanisms found in the literature.
 
   \subsection{Syntax}
-  The grammar of DCC is an extension of the standard \lam-calculus:
+  The grammar of CDC is an extension of the standard \lam-calculus:
 
   \begin{figure}[!h]
   \definition{ 
-    \textsc{(Grammar for DCC)}
+    \textsc{(Grammar for CDC)}
     \[
     \begin{array}{lrcl}
     \textrm{(Variables)} & x, y, \dots \\
@@ -1096,14 +1106,29 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
   \end{figure}
 
   \subsection{Reduction Rules}
-  The operational semantics can be understood through an abstract machine that transforms tuple of the form $\langle e,\ D,\ E\, q \rangle$:
+  
+  The operational semantics can be understood through an abstract machine that transforms tuple of the form $\langle e,\ D,\ E,\ q \rangle$.
+  The tuple consists of:
+    \begin{itemize}
+      \item $e$ - the current dominant term
+      \item $D$ - the current context/continuation
+      \item $E$ - the stack of remaining continuations
+      \item $q$ - a global counter for producing fresh prompt values
+    \end{itemize}
+  By representing terms in this way, 
+  the reduction rules are able to make the control of terms and their continuations more explicit.
+  
+  The abstract machine also introduces some Haskell-style notation for dealing with sequences. An empty sequence is represented by $[]$. 
+  A value added to the head of a list is represented by $:$ for instance $D:[]$. $\app$ represents two lists appended together. 
+  $E\until{p}$ and $E\from{p}$ denote the subsequence of $E$ \emph{until} prompt $p$ and \emph{from} prompt $p$, respectively. 
+  Neither of these subsequences contain $p$.
 
-  \begin{figure}[!h]\label{fig:dcc-abstract-machine}
+  \begin{figure}[!h]\label{fig:cdc-abstract-machine}
   \relscale{0.9}
   \definition{ 
-    \textsc{(Operational semantics for DCC)}
+    \textsc{(Operational semantics for CDC)} \cite{JonesDS07}
     \[
-    \begin{array}{lrcl}
+    \begin{array}{lcll}
       \langle e\ e^\prime, D, E, q \rangle &\to &\langle e, D[\square\ e^\prime], E, q \rangle &\text{e non-value} \\
       \langle v\ e, D, E, q \rangle &\to &\langle e, D[v\ \square], E, q \rangle &\text{e non-value} \\
       \langle pushPrompt\ e\ e^\prime, D, E, q \rangle &\to &\langle e, D[pushPrompt\ \square\ e^\prime], E, q \rangle &\text{e non-value} \\
@@ -1114,8 +1139,8 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
       \langle (`lx.e)\ v, D, E, q \rangle &\to &\langle e[v/x], D, E, q \rangle \\
       \langle newPrompt, D, E, q \rangle &\to &\langle q, D, E, q+1 \rangle \\
       \langle pushPrompt\ p\ e, D, E, q \rangle &\to &\langle e, \square, p : D : E, q \rangle \\
-      \langle withSubCont \ p\ v, D, E, q \rangle &\to &\langle v (D : E\textsmaller[1]{\overset{p}{\uparrow}}, \square, E\textsmaller[1]{\overset{p}{\downarrow}}, q \rangle \\
-      \langle pushSubCont E^\prime\ e, D, E, q \rangle &\to &\langle e, \square, E^\prime +{+} (D : E), q \rangle \\
+      \langle withSubCont \ p\ v, D, E, q \rangle &\to &\langle v (D : E\until{p}, \square, E\from{p}, q \rangle \\
+      \langle pushSubCont E^\prime\ e, D, E, q \rangle &\to &\langle e, \square, E^\prime \app (D : E), q \rangle \\
     \\
       \langle v, D, E, q \rangle &\to &\langle D[v], \square, E, q \rangle \\
       \langle v, \square, p : E, q \rangle &\to &\langle v, \square, E, q \rangle \\
@@ -1136,7 +1161,7 @@ jk  If we know that ``If (it is raining) then (it is wet outside)'' and we are t
   \item \op{pushSubCont} pushes the current continuation and then its first argument (a subcontinuation) onto the continuation stack before evaluating its second argument.
   \end{itemize}
   
-  The abstract machine defined in Figure \ref{fig:dcc-abstract-machine} also encodes the reduction strategy.
+  The abstract machine defined in Figure \ref{fig:cdc-abstract-machine} also encodes the reduction strategy.
   The first block of rules define in what order redexes are reducted.
  
 \section{\ltry-Calculus}

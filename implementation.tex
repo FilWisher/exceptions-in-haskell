@@ -4,28 +4,25 @@
 %       that doesn't leak implementation details or require knowledge of monads
 
 This chapter explains the implementation of \ltry\ in Haskell.
-It examines how the translations from the previous chapter and the DCC library published in \cite{JonesDS07} are transformed into Haskell code.
-Finally, it explores the possibility of a generalized Haskell library.
+It examines how the translations from the previous chapter and the CDC library published in \cite{JonesDS07} are transformed into Haskell code.
+Finally, it explores the possibility of a language extension to Haskell.
 
-\section{DCC Library}
-% TODO: explain the DCC library, w/ type signatures
+\section{CDC Library}
+% TODO: explain the CDC library, w/ type signatures
 % TODO: src in appendix or inline?
 
-\subsection{Missing Typeclass Instances}
-
-\section{Single Naive Implementation}
+\section{Naive Implementation}
 
 Blindly transcribing the translation yields a naive implementation in Haskell.
 This implementation is a functioning proof-of-concept that the translation works as intended.
-It does not present a high level of abstraction, requiring programs to be manually translated to Haskell:
+It does not present a high level of abstraction:
 
 \Verbatimcode
   try :: Prompt ans b 
          -> ((t -> CC ans a) -> CC ans a1) -> (t -> CC ans a1) 
          -> CC ans a1
   try p0 m handler = withSubCont p0 (\n ->
-      pushPrompt p0 (pushSubCont n (m $ \x -> 
-        throw p0 n handler x)))
+      pushPrompt p0 (pushSubCont n (m $ \x -> throw p0 n handler x)))
   
   throw :: Prompt ans b 
            -> SubCont ans a1 b -> (t -> CC ans a1) -> t 
@@ -34,93 +31,150 @@ It does not present a high level of abstraction, requiring programs to be manual
     pushPrompt p0 (pushSubCont n (c m)))
 \end{Verbatim}
 
-This short implementation:
-- adds explicit p0 argument required by wsc and pp.
-- requires program to be run inside:
+There is no catch construct because the exception handlers are passed directly to \mono{try}.
+This is because the body of the \mono{try} block needs access to the handlers.
+In order to resolve the scoping issues that \mono{throw} also needs access to the exception handlers,
+calls to \mono{throw} are wrapped in a lambda-abstraction and passed to the body.
+This means that throw is not directly invoked by the program but via these lambda-abstractions.
 
-\mono{runCC} with
-
+In order to run a \mono{try}-block, 
+it is necessary to generate a prompt, push it, and pass it as an argument to both \mono{try} and \mono{throw}:
 \begin{figure}[!h]
 \Verbatimcode
 example1 = runCC (do
   p <- newPrompt
-  pushPrompt p (testy p (\t -> return 5) (\x -> return $ x+1)))
+  pushPrompt p (try p (\t -> return 5) (\x -> return $ x+1)))
 
 example2 = runCC (do
   p <- newPrompt
-  pushPrompt p (testy p (\t -> (t 4)) (\x -> return $ x+1)))
+  pushPrompt p (try p (\t -> (t 4)) (\x -> return $ x+1)))
 \end{Verbatim}
 \end{figure}
 
-%%\Verbatim
-%%implementation
-%%\end{Verbatim}
+However, we only need a single prompt.
+The same prompt is reused for setting up all the catch handlers.
+This prompt should either be created and pushed at the beginning of a \mono{try} statement or it should be an unexported global constant.
 
-\subsection{Issues}
-Remark: wrap throw in a function to solve scoping issues
+This implementation means we cannot have variadic numbers of handlers.
+Instead, we need to define \mono{try}, \mono{try2}, \dots\ for different numbers of handlers:
+\Verbatimcode
+  try2 p0 m h1 h2 = withSubCont p0 (\n ->
+      pushPrompt p0 (pushSubCont n (m (\x -> throw p0 n h1 x)
+                                      (\x -> throw p0 n h2 x))))
+\end{Verbatim}
 
-Impedance mismatch between DCC and \ltry-calculus. 
-We only need a single prompt. 
-This prompt should be triggered on beginning of "try" statement. 
-Prompt should be reused for setting up all catch handlers statements
+Naming the handlers takes place in the names of the parameters of the abstraction in the body of \mono{try}:
+\Verbatimcode
+  try2 p (\name1 -> \name2 -> return 1) 
+    (\x -> return $ x+2)  -- first handler bound to name1
+    (\x -> return $ x+4)  -- second handler bound to name2
+\end{Verbatim}
+This is not like the semantics of \ltry\ which binds the names dynamically:
+\[ 
+  \throw n(x)
+\]
+will behave differently in contexts where the name $n$ is bound to different exception handlers.
+To mirror this more closely, we would need a mechanism for dynamic variable binding, for example macros.
 
-Access to each handler requires explicitly passing catch names to solve scoping.
-This means that we have to define try, try1, try2, etc for number of handlers:
-no approach for variadic handlers.
-
-Type signature exposes CC, Prompt, etc data constructors.
-We want to abstract over these so user does not rely on knowing them.
-Leaky abstractions.
+Additionally, the type signatures expose \mono{CC}, \mono{Prompt}, and \mono{SubCont}.
+If we want to present a \ltry\ model of exceptions, we want to abstract over these so user does not rely on knowing them.
+Unless we do this, we have \emph{leaky abstractions}.
 
 \section{Improved Implementation}
 
-The improved version creates a single prompt for the try block.
-The throw operation is defined in scope of the prompt, 
-removing the need to add an additional argument.
-
-We are still required to call runCC to return the result.
-Although handlers can be ordinary functions (see examples), 
-the body must \mono{return} a value if not calling one of the exception handlers.
-Also, multiple handlers still require multiple function instances:
-
+By creating a global prompt \mono{p0}, we can implement all the operators without passing a prompt as an additional argument.
+This requires exporting the \mono{Prompt} data constructor from the \mono{Prompt} module.
+We can then define a \mono{runTry} operation that takes a \mono{CC ans a} term constructed by \mono{try} and returns its value:
 \Verbatimcode
-try m handler = do
-  p <- newPrompt
-  let throw n = \v -> withSubCont p (\_ ->
-            pushPrompt p (pushSubCont n $ return v))
-  pushPrompt p (withSubCont p (\n ->
-    pushPrompt p (pushSubCont n 
-      (m (thr n . handler)))))
-        
-try2 m h1 h2 = do
-  p <- newPrompt
-  let throw n = \v -> withSubCont p (\_ ->
-            pushPrompt p (pushSubCont n $ return v))
-  pushPrompt p (withSubCont p (\n ->
-    pushPrompt p (pushSubCont n 
-      (m (thr n . h1) (thr n . h2)))))
+p0 :: Prompt ans a
+p0 = Prompt 0
+
+runTry :: (forall ans. CC ans a) -> a
+runTry trycc = 
+  runCC $ pushPrompt p0 trycc
 \end{Verbatim}
 
+With a global prompt defined, 
+the implementations of \mono{try} and \mono{throw} are much closer to the syntax of the \ltry-calculus and to the CDC translation defined in the previous chapter.
+
 \Verbatimcode
-handler1 = (+2)
-handler2 = (+4)
+try :: ((a -> CC ans b) -> CC ans r) -> (a -> r) -> CC ans r
+try m handler =
+  withSubCont p0 (\n -> pushPrompt p0 
+    (pushSubCont n (m $ \x -> throw n $ return $ handler x)))
+ 
+throw :: SubCont ans a b -> CC ans a -> CC ans c
+throw n v =
+  withSubCont p0 (\_ -> pushPrompt p0 (pushSubCont n v))
+\end{Verbatim}
 
-tryExample1 = try (\t -> return 1) handler1
-tryExample2 = try (\t -> t 1) handler1
+The \mono{catch} block is still implicit in the \mono{try} function.
+In order bind the correct throw to the correct handler, 
+throw is still wrapped in a lambda abstraction in the definition of try.
+This also means that we still require separate definitions for multiple handlers:
 
-try2Example1 = try2 (\t1 -> \t2 -> return 1) handler1 handler2
-try2Example2 = try2 (\t1 -> \t2 -> t1 1) handler1 handler2
-try2Example3 = try2 (\t1 -> \t2 -> t2 1) handler1 handler2
+\Verbatimcode
+try2 m h1 h2 =
+  withSubCont p0 (\n -> pushPrompt p0 
+    (pushSubCont n (m (\x -> throw n $ return $ h1 x)
+                      (\x -> throw n $ return $ h2 x))))
 \end{Verbatim}
 
 If we look at the type signatures, we can see the same important restrictions from the naive implementation.
 The handlers must produce values of the same type. 
 This will also be the type of running \mono{runCC} on the returned \mono{CC} value.
 
-
+As a simple example:
 \Verbatimcode
-  try  :: ((a -> CC ans a1) -> CC ans a2) -> (a -> a2) -> CC ans a2
-  try2 :: ((a -> CC ans a1) -> (a2 -> CC ans a3) -> CC ans a4)
-           -> (a -> a4) -> (a2 -> a4) -> CC ans a4
+runTry $ try2 (\thr1 -> \thr2 -> thr1 randomNumber) 
+              (\x -> x + 100) -- first handler
+              (\x -> x + 1000) -- second handler
 \end{Verbatim}
 
+From this example, we can see we still have the same problem with injecting lambdas to correctly bind names.
+In order to avoid this,
+we need to extend the syntax of the language. 
+
+\section{Language Extension}
+
+The Haskell2010 standard represents $\bot$ as exceptions. \cite{Haskell2010}
+Exceptions can be generated by either \mono{error} or \mono{undefined}:
+\Verbatimcode
+error :: String -> a
+undefined :: a
+\end{Verbatim}
+Haskell is a lazy language which means that an expression of any type could produce an error when it is actually computed.
+In a strict language, the error would be produced on assignment.
+For this reason, $\bot$ is implicitly a member of every type in Haskell.
+This is why the types of both \mono{error} and \mono{undefined} are universally quantified.
+
+The simplest extension to the language is to introduce named exceptions.
+Named exceptions are produced using \mono{throw name value}.
+With this extension, we can introduce two other new language-level operators: \mono{try} and \mono{catch}.
+\mono{try} takes a term that could produce an exception and returns a \mono{try}-block.
+\mono{catch} is an infix function from a \mono{try}-block, a name, and an exception handler function to a \mono{try}-block.
+If \mono{try} and \mono{catch} are both left-associative and have the same precedence,
+we can construct terms with variable numbers of exception handlers:
+\Verbatimcode
+  try body 
+    catch name1 handler1 
+    ...
+    catch nameN handlerN
+\end{Verbatim}
+\mono{throw} then takes a name and a value and returns a named exception (which can inhabit any type).
+
+For example, we can handle errors produced by the system:
+
+\Verbatimcode
+  try (parseFile pathName) 
+    catch fileNotFound (\x -> L)
+    catch parseError (\x -> L')
+\end{Verbatim}
+and somewhere in the body of M, the corresponding errors can be thrown:
+\Verbatimcode
+  throw fileNotFound pathName
+\end{Verbatim}
+
+It would be trivial to implement static analysis to ensure all possible exceptions had corresponding handlers in the catch block.
+
+% TODO: discuss implementation details
