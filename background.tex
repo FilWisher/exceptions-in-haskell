@@ -465,7 +465,9 @@ These models were later proved to all be equivalent.
     \end{array}
   \]
 
-  The sequent calculus introduces a set of structural rules for manipulating sequents:
+  \subsection{Classical Logic}
+  
+  Gentzen's classical natural deduction used the sequent calculus and introduced a set structural rules for manipulating sequents:
   
   \definition{
   \textsc{Structural rules of the sequent calculus} 
@@ -507,15 +509,16 @@ These models were later proved to all be equivalent.
   \end{array} 
   \]
   }
-  In addition to these, it maintains...
-  % TODO: inspect parigot's paper for whatever is relevant
   
-  \subsection{Classical Logic}
+  The first set of rules are left and right exchange rules. 
+  They express the commutativity of statements in the left and right sequences.
+  The second set of rules, weakening rules, allows the introduction of new formula either the left or right sequences.
+  The third set of rules, contraction rules, allow the contraction of multiple occurrences of a formula into a single occurrence. 
+  The cut rule allows us to replace assumptions of formulae with their concrete proofs, if we have proved them somewhere else.
   
-  %TODO description of classical logic
+  In addition to these, the system maintains the standard introduction/elimination rules from natural deduction.
+  The introduction/elimination rules have variants for manipulating the right sequence or the left sequence of statements.
   
- 
-
   \subsection{Type Assignment}
   
   Type assignment introduces additional grammar and restrictions on
@@ -1073,7 +1076,26 @@ These models were later proved to all be equivalent.
     \]
   \end{example}
   
-  %\subsection{Types and Isomorphism}
+  \subsection{Curry-Howard Isomorphism}
+  The typed variant of the \lmu-calculus is isomorphic to classical natural deduction.
+  The type assignment rules for the typed \lmu-calculus are as follows:
+  
+  \definition{
+  \textsc{Typing rules for the typed \lmu-calculus}
+  \[
+  \begin{array}{c@{\quad\quad}c}
+    \Inf{`G \vdash M : B\ |\  `a : A, `b : B, `D}
+        {`G \vdash `m`a.[`b]M : A |\ `b : B, `D}
+    &
+    \Inf{`G \vdash M : A\ |\ `a : A, `D}
+        {`G \vdash `m`a.[`a]M : A\ |\ `D}
+  \end{array}
+  \]
+  }
+  
+  These rules correspond to the structural rules of classical natural deduction.
+  The original presentation of Parigot's type assignment makes the isomorphism clearer.
+  Our presentation here makes it easier to understand the role of the operators.
 
 \section{Calculus of Delimited-Continuations}
 
