@@ -245,7 +245,98 @@ eval (State NewPrompt d es (Prompt p)) =
   State (Val (Prompt p)) d es (Prompt $ p+1)
 \end{Verbatim}
 
-%\input{eval}
+\subsection{Example}
 
-%TODO: show example output for a given term
-%TODO: evaluation of different implementation approaches
+The terms $pushPrompt$, $newPrompt$, $withSubCont$, and $pushSubCont$ are too long to work with easily.
+We define the following aliases for convenience:
+\definition{
+\textsc{CDC aliases for operators}
+\[
+\begin{array}{rcl}
+  \np & = & newPrompt \\
+  \pp & = & pushPrompt \\
+  \wsc & = & withSubCont \\
+  \psc & = & pushSubCont \\
+\end{array}
+\]
+
+Additionally, we have defined utility function aliases for our data constructors
+\Verbatimcode
+np = NewPrompt
+pp = PushPrompt
+wsc = WithSubCont
+psc = PushSubCont
+var = Val . Var 
+abst c = Val . Abs c
+\end{Verbatim}
+}
+
+We define an evaluation engine which recursively evaluates the term until the evaluation returns the same term.
+At this point it terminates.
+The evaluation engine takes a function of type \mono{State -> String} to specify the format of the printed term.
+
+\Verbatimcode
+evalFull :: (State -> String) -> State -> IO ()
+evalFull formatFn st = do
+  putStrLn $ formatFn st
+  let st' = eval st in
+    if st == st' then 
+      putStrLn "QED"
+    else 
+      evalFull formatFn st'
+\end{Verbatim}
+We can translate the CDC term
+\[
+(`lp.\pp p\ (\wsc p\ (`l`a.\psc `a\ s))\ t)\ \np
+\]
+into the data structures defined by our interpreter:
+\Verbatimcode
+term = App 
+  (abst 'p' 
+    (pp (var 'p') (App 
+      (wsc (var 'p') (abst 'a' 
+        (psc (var 'a') (var 's')))) 
+      (var 't')))) 
+  np
+\end{Verbatim}
+Passing this state into our evaluator with \mono{prettifyState}, we get the following:
+
+\begin{Verbatim}
+(((\p.(pp p ((wsc p (\a.(psc a s)))t))) np), _, [], 0)
+( np, ((\p.(pp p ((wsc p (\a.(psc a s)))t)))_), [], 0)
+(0, ((\p.(pp p ((wsc p (\a.(psc a s)))t)))_), [], 1)
+(((\p.(pp p ((wsc p (\a.(psc a s)))t)))0), _, [], 1)
+((pp p ((wsc p (\a.(psc a s)))t))[0/p], _, [], 1)
+((pp 0 ((wsc 0 (\a.(psc a s)))t)), _, [], 1)
+(((wsc 0 (\a.(psc a s)))t), _, [0:_], 1)
+((wsc 0 (\a.(psc a s))), (_t), [0:_], 1)
+(((\a.(psc a s))(_t)), _, [_], 1)
+((psc a s)[(_t)/a], _, [_], 1)
+((psc (_t) s), _, [_], 1)
+(s, _, [(_t):_:_], 1)
+(s, (_t), [_:_], 1)
+((st), _, [_:_], 1)
+QED
+\end{Verbatim}
+From this, which we can translate to the following derivation:
+{
+\relscale{0.9}
+\[
+\begin{array}{lcrrr}
+         & (`lp.\pp p\ (\wsc p\ (`l`a.\psc `a\ s))\ t)\ \np & \square & []                        & 0 \\
+\tocdc\  & \np & (`lp \dots t)\ \square & []                                                      & 0 \\
+\tocdc\  & 0 & (`lp \dots t)\ \square & []                                                        & 1 \\
+\tocdc\  & (`lp.\pp p\ (\wsc p\ (`l`a.\psc `a\ s))\ t)\ 0 & \square    & []                        & 1 \\
+\to_{`b} & (\pp p\ (\wsc p\ (`l`a.\psc `a\ s))\ t))[p/0]  & \square    & []                        & 1 \\
+\to_{`b} & \pp 0\ (\wsc 0\ (`l`a.\psc `a\ s))\ t)         & \square    & []                        & 1 \\
+\tocdc\  & (\wsc 0\ (`l`a.\psc `a\ s))\ t                 & \square    & 0:\square                 & 1 \\
+\tocdc\  & \wsc 0\ (`l`a.\psc `a\ s))\                    & \square\ t & 0:\square                 & 1 \\
+\tocdc\  & (`l`a.\psc `a\ s))(\square t)                  & \square    & \square                   & 1 \\
+\to_{`b} & (\psc `a\ s)[\square t/`a]                     & \square    & \square                   & 1 \\
+\to_{`b} & \psc \square t\ s                              & \square    & \square                   & 1 \\
+\tocdc\  & s                                              & \square    & \square t:\square:\square & 1 \\
+\tocdc\  & s                                              & \square\ t & \square:\square           & 1 \\
+\tocdc\  & st                                             & \square    & \square:\square           & 1 \\
+\end{array}
+\]
+}

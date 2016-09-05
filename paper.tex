@@ -1,4 +1,4 @@
-\documentclass[11pt,a4paper,twoside,draft]{report}
+\documentclass[fleqn,11pt,a4paper,twoside,draft]{report}
 
 \usepackage{scalerel}
 \usepackage{titlesec}
@@ -18,6 +18,8 @@
 \usepackage{float}
 
 \usepackage{macros}
+
+\setbool{@fleqn}{false}
 
 \newcommand{\reporttitle}{Exception Handling in Haskell Using the \ltry-Calculus}
 \newcommand{\name}{William S. Fisher}
@@ -50,14 +52,14 @@
 %
 %\pagenumbering{arabic}
 %\setcounter{page}{1}
-%
-%\include{introduction}
+
+\include{introduction}
 %\include{background}
-\include{interpreter}
+%\include{interpreter}
 %\include{translations}
-%include{implementation}
+%\include{implementation}
 %\include{conclusions}
-%
+
 \newpage
 \bibliographystyle{plain}
 \bibliography{references}

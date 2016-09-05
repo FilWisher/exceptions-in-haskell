@@ -4,9 +4,31 @@ Explanation of problem space: need and motivation demonstrated with examples.
 
 What are exceptions? How are they typed? What have approaches been before?
 
-van Bakel and the \ltry-calculus is different approach. \ltry already compared
+van Bakel and the \ltry-calculus is different approach. \ltry\ already compared
 to the 'classical- cal...
 
-\section{Solution}
+Exceptions have been done but unnamed or dispatch on type.
+\ltry\ introduces exceptions with names.
 
-\section{Contribution}
+Features of computer programs are discovered twice: by logicians and by computer scientists.\cite{Wadler15}
+Exceptions have been mapped to continuations which have been mapped to classical logic.
+What about a calculus that models exceptions directly?
+HOw does it behave?
+
+\section{Solution}
+Use van Bakel's translation of \ltry\ to \lmu.
+Define a translation from \lmu\ to CDC, which closely models Haskell's syntax.
+Write a CDC interpreter for generating derivations that can be transcribed into proofs.
+Investigate properties of \lmu\ translation.
+Use this translation to find a translation from \ltry\ to lmu.
+Implement \ltry\ directly in Haskell by following this.
+
+\section{Contributions}
+This paper makes the following contributions:
+\begin{itemize}
+\item Haskell interpreter for a calculus of delimited continuations, CDC, written by SPJ
+\item Translation of \lmu\ to CDC along with proof of soundness and completeness with respect to mu reduction.
+\item A translation of \ltry\ to CDC.
+\item A proof of concept implementation of \ltry\ in Haskell, based on this translation.
+\item The specification for a language extension for named exceptions in Haskell, based on \ltry.
+\end{itemize}

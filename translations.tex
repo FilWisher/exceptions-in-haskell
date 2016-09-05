@@ -10,8 +10,10 @@ This will then be used as a basis for the implementation of \ltry\ in Haskell.
 
 \section{Interpreting \ltry\ in \lmu}
 
-Steffen van Bakel describes the interpretation of \ltry\ to \lmu:
+van Bakel describes the interpretation of \ltry\ to \lmu:
 
+{
+\relscale{0.9}
 \[
   \begin{array}{rcl}
     \tr{x} &\triangleq& x \\
@@ -25,6 +27,7 @@ Steffen van Bakel describes the interpretation of \ltry\ to \lmu:
     \tr{\throw{n($M$)}} &\triangleq& `l\nonocc.[\text{n}]c_n\tr{M}
   \end{array}
 \]
+}
 
 $\throw{n($M$)}$ terms are modelled using \lmu-abstractions of non-occurring names. This has the effect of removing all terms it is applied to:
 
@@ -84,19 +87,19 @@ the interpretation of \lmu\ terms into CDC proceeds as follows:
     \tr{x}        & \triangleq & x \\
     \tr{`lx.M}    & \triangleq & `lx.\tr{M} \\
     \tr{M N}      & \triangleq & \tr{M} \tr{N} \\
-    \tr{`m`a.M}   & \triangleq & \wsc\ \gp\ `l`a.\pp\ \gp\ \tr{M} \\
+    \tr{`m`a.M}   & \triangleq & \wsc\ \gp\ (`l`a.\pp\ \gp\ \tr{M}) \\
     \tr{[`b]M} & \triangleq & \psc\ `b\ \tr{M}
   \end{array}
   \]
 }
 
-To implement \lmu-abstractions, we capture the subcontinuation until the last occurrence of \gp on the stack.
+To implement $`m$-abstractions, we capture the subcontinuation until the last occurrence of \gp on the stack.
 This subcontinuation is bound to $`a$ which ensures the subcontinuation is distributed to all occurrences of $`a$ in $M$.
 \gp is then pushed back onto the stack before the evaluation of $M$.
 
 To implement named-terms, the subcontinuation $`b$ is pushed into the stack before evaluating $M$.
 This means the reduct of $M$ will be returned to this subcontinuation.
-In effect, this reduces $M$ and passes the result to $`b$.
+In effect, this will reduce $M$ and passes the result to $`b$.
 
 \subsection{Notation}
 To carry out proofs, the full state of the abstract machine is displayed:
@@ -133,7 +136,7 @@ The application of a $`m$ abstraction to multiple variables will consume them al
 \textsc{$`m$-reduction to consume multiple variables}
 \[ 
 \begin{array}{rcl}
-  (`m`a.[`b]M)\mult{N} & \to_{`m} & `m`a.[`b](M[[`a]M'\mult{N}/[`a]M'])
+  (`m`a.[`b]M)\mult{N} & \to_{`m} & `m`a.([`b]M\{[`a]M'\mult{N}/[`a]M'\})
 \end{array}
 \]
 }
@@ -144,7 +147,7 @@ This means that all labelled subterms $[`a]M'$ will be translated to $\psc \squa
 CDC reduces $\psc \square\ \tr{M'}$ to $\tr{M'}$.
 This reduction means we can discard the $`a$ labels after consuming the entire context.
 Given this, we can define the following translation for multiple-variable consumption:
-\definition{
+\definition{\label{def:multiple-variable-consumption}
 \textsc{Translation of multiple variable consumption to CDC}
 \[ 
 \begin{array}{rcl}
@@ -152,13 +155,55 @@ Given this, we can define the following translation for multiple-variable consum
 \end{array}
 \]
 }
-With this translation, the proof that $\tr{`.}$ respects $\to_{`m}$ is easy.
+
+\begin{example}{Example of multiple variable consumption in CDC and \lmu}
+\[
+\begin{array}{lcrr}
+         & (`m`a.[`a](`lx.`ly.xy))st \\
+\to_{`m} & `m`a.([`a](`lx.`ly.xy))\{[`a]Mst/[`a]Mst\}) \\
+\end{array}
+\]
+From here we either can continue with the \lmu\ reduction:
+\[
+\begin{array}{lcrr}
+         & `m`a.([`a](`lx.`ly.xy))\{[`a]Mst/[`a]Mst\}) \\
+\to_{`m} & `m`a.[`a](`lx.`ly.xy)st \\
+\to_{`b} & `m`a.[`a](`ly.sy)t \\
+\to_{`b} & `m`a.[`a]st \\
+\to_{`m} & st & (`a \notin fn(st)) \\
+\end{array}
+\]
+We can also continue by translating to and reducing in CDC:
+{
+\relscale{0.9}
+\[
+\begin{array}{lcrr}
+           & \tr{`m`a.([`a](`lx.`ly.xy))\{[`a]Mst/[`a]Mst)\}} \\
+\triangleq & \wsc \gp (`l`a.\pp \gp \tr{([`a](`lx.`ly.xy))\{[`a]Mst/[`a]Mst\})}) & \square & \gp \\
+\to        & (`l`a.\pp \gp \tr{([`a](`lx.`ly.xy))\{[`a]Mst/[`a]Mst\})})(\square) & \square & [] \\
+\to_{`b}   & (\pp \gp \tr{([`a](`lx.`ly.xy))\{[`a]Mst/[`a]Mst\})})[\square/`a] & \square & [] \\
+\to        & \pp \gp \tr{([`a](`lx.`ly.xy))\{[`a]Mst/[`a]Mst\})}[\square/`a] & \square & [] \\
+\to        & \tr{([`a](`lx.`ly.xy))\{[`a]Mst/[`a]Mst\})}[\square/`a] & \square & \gp \\
+\to        & ((\psc `a (`lx.`ly.xy))[\square st/`a])[\square/`a] & \square & \gp \\
+\to        & (\psc \square st\ (`lx.`ly.xy))[\square/`a] & \square & \gp \\
+\to        & \psc \square st\ (`lx.`ly.xy) & \square & \gp \\
+\to        & (`lx.`ly.xy)   & \square & \square st:\gp \\
+\to        & (`lx.`ly.xy)   & \square st\ & \gp \\
+\to        & (`lx.`ly.xy)st & \square & \gp \\
+\to_{`b}   & (`ly.sy)t & \square & \gp \\
+\to_{`b}   & st & \square & \gp \\
+\end{array}
+\]
+}
+\end{example}
+
+Using the translation in Definition \ref{def:multiple-variable-consumption}, the proof that $\tr{`.}$ respects $\to_{`m}$ follows easily.
 
 \subsection{Properties}
 
 % TODO: Add proofs for completeness and other properties
 \begin{theorem}[Soundness of $\tr{`.}$]\label{theorem:soundness}
-\[ M \to_{`m} N \Rightarrow \exists P.\ \tr{M} \to^{nf} P \land \tr{N} \to^{nf} P \]
+\[ M \to_{`m} N \Rightarrow \exists P.\ \tr{M} \to^{*} P \land \tr{N} \to^{*} P \]
 \end{theorem}
 
 % TODO: remark: mu abstractions can only occur
@@ -166,8 +211,8 @@ With this translation, the proof that $\tr{`.}$ respects $\to_{`m}$ is easy.
 \begin{Proof}
 By induction on the definition of $\rightarrow_{`m}$
 \[
-\begin{array}{@{}llrr}
-  \prooflabel{`m`a.[`a]M \to M} & (`a \notin fv(M)) \\
+\begin{array}{@{}lcrr}
+  \prooflabel{`m`a.[`a]M \to M} & (`a \notin fn(M)) \\
              & \tr{`m`a.[`a]M} \\
   \triangleq & \wsc \gp `l`a.\pp \gp (\psc `a \tr{M}) & D       & \gp \\
   \tocdc\    & (`l`a.\pp \gp (\psc `a \tr{M}))(D)     & \square & []     \\
@@ -175,15 +220,15 @@ By induction on the definition of $\rightarrow_{`m}$
   \tocdc\    & \pp \gp (\psc `a\ \tr{M})[D/`a]        & \square & []     \\
   \tocdc\    & (\psc `a\ \tr{M})[D/`a]                & \square & \gp \\
   \tocdc\    & \psc D\ \tr{M}[D/`a]                   & \square & \gp \\
-  \tocdc\    & \tr{M}[\square/`a]                     & \square & D:\square:\gp \\
-  \tocdc\    & \tr{M}                                 & \square & D:\square:\gp \\
+  \tocdc\    & \tr{M}[\square/`a]                     & \square & D:\gp \\
+  \tocdc\    & \tr{M}                                 & \square & D:\gp \\
   \tocdc\    & \tr{M}                                 & D       & \gp \\
   \triangleq & M                                      & D       & \gp \\
 \end{array}
 \]
 \[
-\begin{array}{@{}llrr}
-  \prooflabel{(`m`a.[`a]M)\mult{N} \to `m`a.[`a]M([`a]M'\mult{N}/[`a]M')\mult{N}} \\
+\begin{array}{@{}lcrr}
+  \prooflabel{(`m`a.[`a]M)\mult{N} \to `m`a.[`a]M\{[`a]M'\mult{N}/[`a]M'\}\mult{N}} & (`a \notin fn(\mult{N})) \\
              & \tr{(`m`a.[`a]M)\mult{N}} \\
   \triangleq & \tr{(`m`a.[`a]M)}\tr{\mult{N}} \\
   \triangleq & (\wsc \gp `l`a.\pp \gp (\psc `a\ \tr{M})) \tr{\mult{N}} & \square                & \gp \\
@@ -193,14 +238,14 @@ By induction on the definition of $\rightarrow_{`m}$
   \tocdc\    & \pp \gp (\psc `a\ \tr{M})[\square \tr{\mult{N}}/`a]     & \square                & [] \\
   \tocdc\    & \pp \gp (\psc \square \tr{\mult{N}}\ \tr{M}[\square \tr{\mult{N}}/`a]) & \square & [] \\
   \tocdc\    & \psc \square \tr{\mult{N}}\ \tr{M}[\square \tr{\mult{N}}/`a] & \square  & \gp \\
-  \tocdc\    & \tr{M}[\square \tr{\mult{N}}/`a] & \square & \square \tr{\mult{N}}:\square:\gp \\
+  \tocdc\    & \tr{M}[\square \tr{\mult{N}}/`a] & \square & \square \tr{\mult{N}}:\gp \\
   \tocdc\    & \tr{M}[\square \tr{\mult{N}}/`a] & \square \tr{\mult{N}} & \gp \\
 \end{array}
 \]
-This final state is $P$. Now we must prove $\tr{N} \to^{nf} P$:
+This final state is $P$. Now we must prove $\tr{N} \to^{*} P$:
 \[
-\begin{array}{llrr}
-             & \tr{`m`a.[`a]M([`a]M'\mult{N}/[`a]M')\mult{N}} \\
+\begin{array}{lcrr}
+             & \tr{`m`a.[`a]M\{[`a]M'\mult{N}/[`a]M'\}\mult{N}} \\
   \triangleq & \wsc \gp `l`a.\pp \gp (\psc `a\ \tr{M[[`a]M'\mult{N}/[`a]M']\mult{N}}) & \square & \gp \\
   \tocdc\    & `l`a.\pp \gp (\psc `a\ \tr{M[[`a]M'\mult{N}/[`a]M']\mult{N}})(\square) & \square & [] \\
   \tocdc\    & (\pp \gp (\psc `a\ \tr{M[[`a]M'\mult{N}/[`a]M']\mult{N}}))[\square/`a] & \square & [] \\
@@ -214,14 +259,11 @@ This final state is $P$. Now we must prove $\tr{N} \to^{nf} P$:
   \tocdc\    & \tr{M}[\square \mult{N}/`a]                                            & \square \tr{\mult{N}} & \gp \\
 \end{array}
 \]
-\begin{remark}
-$`a$ cannot occur in $\mult{N}$ because it has been pulled in from outside the $`m$-abstraction.
-Neither can it occur in $\tr{M}[\square \mult{N}/`a]$ because all occurrences have been substituted for $\square \tr{\mult{N}}$.
-\end{remark}
+In this final reduction step, $`a$ can it occur in $\tr{M}[\square \mult{N}/`a]$ because all occurrences have been substituted for $\square \tr{\mult{N}}$.
 
 \[
-\begin{array}{llrr}
-  \prooflabel{(`m`a.[`b]M)\mult{N} \to `m`a.[`b](M[[`a]M'N/[`a]M'])} \\
+\begin{array}{lcrr}
+  \prooflabel{(`m`a.[`b]M)\mult{N} \to `m`a.[`b](M\{[`a]M'N/[`a]M'\})} & (`a \not= `b) \\
              & \tr{(`m`a.[`b]M)\mult{N}} \\
   \triangleq & \tr{(`m`a.[`b]M)}\tr{\mult{N}} \\
   \triangleq & (\wsc \gp `l`a.\pp \gp (\psc `b\  \tr{M})) \tr{\mult{N}} & \square & \gp \\
@@ -231,24 +273,24 @@ Neither can it occur in $\tr{M}[\square \mult{N}/`a]$ because all occurrences ha
   \tocdc\    & \pp \gp (\psc `b\ \tr{M})[\square \tr{\mult{N}}/`a]     & \square & []   \\
   \tocdc\    & (\psc `b\ \tr{M})[\square \tr{\mult{N}}/`a]             & \square & \gp  \\
   \tocdc\    & \psc `b\ \tr{M}[\square \tr{\mult{N}}/`a]               & \square & \gp  \\
-  \tocdc\    & \tr{M}[\square \tr{\mult{N}}/`a]                        & \square & `b:[]:\gp  \\
+  \tocdc\    & \tr{M}[\square \tr{\mult{N}}/`a]                        & \square & `b:\gp  \\
 \end{array}
 \]
 \[
-\begin{array}{llrr}
-             & \tr{`m`a.[`b](M[[`a]M'N/[`a]M'])} \\
-  \triangleq & \wsc \gp `l`a. \pp \gp (\psc `b \tr{M[[`a]M'N/[`a]M']})   & \square & \gp \\
-  \tocdc\    & (`l`a. \pp \gp (\psc `b \tr{M[[`a]M'N/[`a]M']}))(\square) & \square & [] \\
-  \tocdc\    & (\pp \gp (\psc `b \tr{M[[`a]M'N/[`a]M']}))[\square/`a]    & \square & [] \\
-  \tocdc\    & \pp \gp (\psc `b \tr{M[[`a]M'N/[`a]M']})[\square/`a]      & \square & [] \\
-  \tocdc\    & \psc `b \tr{M[[`a]M'N/[`a]M']}[\square/`a]                & \square & \gp \\
-  \tocdc\    & \tr{M[[`a]M'N/[`a]M']}[\square/`a]                        & \square & `b:[]:\gp \\
-  \tocdc\    & M[\square \tr{N}/`a][\square/`a]                          & \square & `b:[]:\gp \\
-  \tocdc\    & M[\square \tr{N}/`a]                                      & \square & `b:[]:\gp \\
+\begin{array}{lcrr}
+             & \tr{`m`a.[`b](M\{[`a]M'N/[`a]M'\})} \\
+  \triangleq & \wsc \gp `l`a. \pp \gp (\psc `b \tr{M\{[`a]M'N/[`a]M'\}})   & \square & \gp \\
+  \tocdc\    & (`l`a. \pp \gp (\psc `b \tr{M\{[`a]M'N/[`a]M'\}}))(\square) & \square & [] \\
+  \tocdc\    & (\pp \gp (\psc `b \tr{M\{[`a]M'N/[`a]M'\}}))[\square/`a]    & \square & [] \\
+  \tocdc\    & \pp \gp (\psc `b \tr{M\{[`a]M'N/[`a]M'\}})[\square/`a]      & \square & [] \\
+  \tocdc\    & \psc `b \tr{M\{[`a]M'N/[`a]M'\}}[\square/`a]                & \square & \gp \\
+  \tocdc\    & \tr{M\{[`a]M'N/[`a]M'\}}[\square/`a]                        & \square & `b:\gp \\
+  \tocdc\    & M[\square \tr{N}/`a][\square/`a]                          & \square & `b:\gp \\
+  \tocdc\    & M[\square \tr{N}/`a]                                      & \square & `b:\gp \\
 \end{array}
 \]
 \[
-\begin{array}{llrr}
+\begin{array}{lcrr}
   \prooflabel{`m`a.[`b]`m`g.[`d]M \to `m`a[`d]M[`b/`g]} & (`g \not= `d) \\
              & \tr{`m`a.[`b]`m`g.[`d]M} \\
   \triangleq & \wsc \gp `l`a.\pp \gp (\psc `b\ \tr{`m`g.[`d]M})     & \square & \gp        \\
@@ -257,15 +299,15 @@ Neither can it occur in $\tr{M}[\square \mult{N}/`a]$ because all occurrences ha
   \tocdc\    & \pp \gp (\psc `b\ \tr{`m`g.[`d]M})[\square/`a]       & \square & []         \\
   \tocdc\    & (\psc `b\ \tr{`m`g.[`d]M})[\square/`a]               & \square & \gp        \\
   \tocdc\    & \psc `b\ \tr{`m`g.[`d]M}[\square/`a]                 & \square & \gp        \\
-  \tocdc\    & \tr{`m`g.[`d]M}[\square/`a]                          & \square & `b:[]:\gp  \\
-  \triangleq & (\wsc \gp `l`g.\pp \gp (\psc `d \tr{M}))[\square/`a] & \square & `b:[]:\gp  \\
-  \tocdc\    & \wsc \gp `l`g.\pp \gp (\psc `d \tr{M})[\square/`a]   & \square & `b:[]:\gp  \\
+  \tocdc\    & \tr{`m`g.[`d]M}[\square/`a]                          & \square & `b:\gp  \\
+  \triangleq & (\wsc \gp `l`g.\pp \gp (\psc `d \tr{M}))[\square/`a] & \square & `b:\gp  \\
+  \tocdc\    & \wsc \gp `l`g.\pp \gp (\psc `d \tr{M})[\square/`a]   & \square & `b:\gp  \\
   \tocdc\    & (`l`g.\pp \gp (\psc `d \tr{M})[\square/`a])(`b)      & \square & []  \\
   \tocdc\    & (\pp \gp (\psc `d \tr{M})[\square/`a])[`b/`g]        & \square & []  \\
   \tocdc\    & \pp \gp (\psc `d \tr{M})[\square/`a][`b/`g]          & \square & []  \\
   \tocdc\    & (\psc `d \tr{M})[\square/`a][`b/`g]                  & \square & \gp  \\
   \tocdc\    & \psc `d \tr{M}[\square/`a][`b/`g]                    & \square & \gp  \\
-  \tocdc\    & \tr{M}[\square/`a][`b/`g]                            & \square & `d:[]:\gp  \\
+  \tocdc\    & \tr{M}[\square/`a][`b/`g]                            & \square & `d:\gp  \\
 \\
              & \tr{`m`a[`d]M[`b/`g]} \\
   \triangleq & \wsc \gp `l`a.\pp \gp (\psc `d\ \tr{M}[`b/`g])   & \square & \gp       \\
@@ -274,14 +316,15 @@ Neither can it occur in $\tr{M}[\square \mult{N}/`a]$ because all occurrences ha
   \tocdc\     & \pp \gp (\psc `d\ \tr{M}[`b/`g])[\square/`a]     & \square & []        \\
   \tocdc\     & (\psc `d\ \tr{M}[`b/`g])[\square/`a]             & \square & \gp       \\
   \tocdc\     & \psc `d\ \tr{M}[`b/`g][\square/`a]               & \square & \gp       \\
-  \tocdc\     & \tr{M}[`b/`g][\square/`a]                        & \square & `d:[]:\gp \\
+  \tocdc\     & \tr{M}[`b/`g][\square/`a]                        & \square & `d:\gp \\
 \end{array}
 \]
 \begin{remark}
-  The terms $\tr{M}[`b/`g][\square/`a]$ and $\tr{M}[\square/`a][`b/`g]$ are denotationally equivalent if $`a \not= `b \not= `g$.
+  The terms $\tr{M}[`b/`g][\square/`a]$ and $\tr{M}[\square/`a][`b/`g]$ are identical if $`a \not= `b \not= `g$.
 \end{remark}
+
 \[
-\begin{array}{llrr}
+\begin{array}{lcrr}
   \prooflabel{`m`a.[`b]`m`g.[`g]M \to `m`a[`b]M[`b/`g]} \\
              & \tr{`m`a.[`b]`m`g.[`g]M} \\
   \triangleq & \wsc \gp `l`a.\pp \gp (\psc `b\ \tr{`m`g.[`g]M})     & \square & \gp        \\
@@ -290,15 +333,15 @@ Neither can it occur in $\tr{M}[\square \mult{N}/`a]$ because all occurrences ha
   \tocdc\    & \pp \gp (\psc `b\ \tr{`m`g.[`g]M})[\square/`a]       & \square & []         \\
   \tocdc\    & (\psc `b\ \tr{`m`g.[`g]M})[\square/`a]               & \square & \gp        \\
   \tocdc\    & \psc `b\ \tr{`m`g.[`g]M}[\square/`a]                 & \square & \gp        \\
-  \tocdc\    & \tr{`m`g.[`g]M}[\square/`a]                          & \square & `b:[]:\gp  \\
-  \triangleq & (\wsc \gp `l`g.\pp \gp (\psc `g \tr{M}))[\square/`a] & \square & `b:[]:\gp  \\
-  \tocdc\    & \wsc \gp `l`g.\pp \gp (\psc `g \tr{M})[\square/`a]   & \square & `b:[]:\gp  \\
+  \tocdc\    & \tr{`m`g.[`g]M}[\square/`a]                          & \square & `b:\gp  \\
+  \triangleq & (\wsc \gp `l`g.\pp \gp (\psc `g \tr{M}))[\square/`a] & \square & `b:\gp  \\
+  \tocdc\    & \wsc \gp `l`g.\pp \gp (\psc `g \tr{M})[\square/`a]   & \square & `b:\gp  \\
   \tocdc\    & (`l`g.\pp \gp (\psc `g \tr{M})[\square/`a])(`b)      & \square & []  \\
   \tocdc\    & (\pp \gp (\psc `g \tr{M})[\square/`a])[`b/`g]        & \square & []  \\
   \tocdc\    & \pp \gp (\psc `g \tr{M})[\square/`a][`b/`g]          & \square & []  \\
   \tocdc\    & (\psc `g \tr{M})[\square/`a][`b/`g]                  & \square & \gp  \\
   \tocdc\    & \psc `b \tr{M}[\square/`a][`b/`g]                    & \square & \gp  \\
-  \tocdc\    & \tr{M}[\square/`a][`b/`g]                            & \square & `b:[]:\gp  \\
+  \tocdc\    & \tr{M}[\square/`a][`b/`g]                            & \square & `b:\gp  \\
   \\
              & \tr{`m`a[`b]M[`b/`g]} \\
   \triangleq & \wsc \gp `l`a.\pp \gp (\psc `b\ \tr{M}[`b/`g])   & \square & \gp       \\
@@ -307,7 +350,7 @@ Neither can it occur in $\tr{M}[\square \mult{N}/`a]$ because all occurrences ha
   \tocdc\     & \pp \gp (\psc `b\ \tr{M}[`b/`g])[\square/`a]     & \square & []        \\
   \tocdc\     & (\psc `b\ \tr{M}[`b/`g])[\square/`a]             & \square & \gp       \\
   \tocdc\     & \psc `b\ \tr{M}[`b/`g][\square/`a]               & \square & \gp       \\
-  \tocdc\     & \tr{M}[`b/`g][\square/`a]                        & \square & `b:[]:\gp \\
+  \tocdc\     & \tr{M}[`b/`g][\square/`a]                        & \square & `b:\gp \\
 \end{array}
 \]
 \end{Proof}
@@ -356,6 +399,8 @@ And from the translation in \ref{sec:lmu-in-cdc}:
   % TODO: add lines over (catch n(x) = L)
   \definition{
     \textsc{Translation of \ltry\ into CDC}
+    {
+    \relscale{0.9}
     \[
     \begin{array}{rcl}
       \tr{x} & \triangleq & x \\
@@ -378,4 +423,5 @@ And from the translation in \ref{sec:lmu-in-cdc}:
       }
     \end{array} 
     \]
+    }
   }
