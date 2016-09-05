@@ -1,24 +1,23 @@
-\chapter{DCC Interpreter}
+\chapter{CDC Interpreter}
 
-This chapter explores the implementation of an interpreter for DCC. Portions of source code are examined in detail although the full source can be found in the appendix.
+This chapter explores the implementation of an interpreter for CDC. Portions of source code are examined in detail although the full source can be found in the appendix.
 
-\section{Interpreter}
+\section{Implementation}
 
-Although Peyton-Jones \emph{et al.} implement a language-level module for DCC, 
+Although Peyton-Jones \emph{et al.} implement a language-level module for CDC, 
 we are interested in the intermediate term transformations.
 Using the step-by-step transformations produced by this interpreter,
-we can construct and verify the implementations of \ltry\ and \lmu\ into DCC.
+we can construct and verify the implementations of \ltry\ and \lmu\ into CDC.
 Examining transformation steps in full also allows us to derive proofs of soundness and completeness for these translations. 
 For this reason, the interpreter was implemented as a term-rewriting program.
 
-\section{Implementation}
 We follow the operational semantics of the system to provide an implementation.
 This is not necessary and results in an ineffecient implementation.
-It is the simplest approach to implementation and efficiency is not required for the primary purpose of the interpreter: to produce proofs.
+Despite this, it is the simplest approach to implementation and efficiency is not central to producing proofs.
 
 \subsection{Data structures}
-There are two data types for representing DCC terms, \mono{Value} and \mono{Expr}
-(Figure \ref{fig:dcc-data-structures}).
+There are two data types for representing CDC terms, \mono{Value} and \mono{Expr}
+(Figure \ref{fig:cdc-data-structures}).
 Values are not evaluated: when a term has been reduced to a value, 
 it has terminated on that value. 
 An expression (\mono{Expr}) is a term that can be evaluated to another term. 
@@ -26,9 +25,9 @@ The only exception is a \mono{Hole} which can take any position an expression ca
 For this reason, it must be a data constructor for expression types.
 
 The core of the abstract machine is a function from one state to the next. 
-A state is its own data type which corresponds to the tuple from the specification of the semantics of the abstract machine $\langle e,\ D,\ E,\ q\rangle$:
+A state is its own data type which corresponds to the tuple from the specification of the semantics of the abstract machine $\langle e,\ D,\ E,\ q\rangle$.
 
-\begin{figure}[!h]\label{fig:dcc-data-structures}
+\begin{figure}\label{fig:cdc-data-structures}
 \Verbatimcode
 data Value = Var Char
   | Abs Char Expr
@@ -50,11 +49,12 @@ data Expr = Val Value
 data State = State Expr Expr [Expr] Value
   deriving (Show, Eq)
 \end{Verbatim}
+\caption{Data structures for the CDC interpreter}
 \end{figure}
 
 \subsection{Utility Functions}
 Some utility functions are simplify the implementation.
-Informally, these functions behave as follows (see Figure ~\ref{fig:dcc-helper-functions} for implementations details):
+Informally, these functions behave as follows (see Figure ~\ref{fig:cdc-helper-functions} for implementations details):
 
 \begin{itemize}\itemsep0.1cm
 
@@ -74,12 +74,10 @@ This in effect joins the output of each context with the input of the next conte
 
 \item \mono{sub :: Expr -> Expr -> Char -> Expr} returns the first expression with all occurences of the third expression replaced by the second expression. 
 If we name the arguments \mono{sub M V x} then this corresponds to the result of evaluating the substitution notation $M[v/x]$.
-
 \end{itemize}
 
-\begin{figure}[!h]\label{fig:dcc-helper-functions}
+\begin{figure}\label{fig:cdc-helper-functions}
 \Verbatimcode
-
   ret :: Expr -> Expr -> Expr
   ret d e = case d of
     Hole -> e
@@ -118,44 +116,136 @@ If we name the arguments \mono{sub M V x} then this corresponds to the result of
     otherwise -> tail list
     where list = dropWhile (not . promptMatch p) es
 \end{Verbatim}
-\caption{Utility functions for DCC interpreter}
+\caption{Utility functions for CDC interpreter}
 \end{figure}
 
 % TODO: make this section a little more structured
 \subsection{Reduction Rules}
 
 The heavy lifting of the interpreter is done by the function \mono{eval :: State -> State}. 
-\mono{eval} is defined inductively on the structure of DCC terms. 
-Using pattern-matching, each case of \mono{eval} corresponds directly to at least one of the reduction rules of the DCC abstract machine. 
-For the full implementation of \mono{eval}, see Figure \ref{fig:dcc-eval}
+\mono{eval} is defined inductively on the structure of CDC terms. 
+Using pattern-matching, each case of \mono{eval} corresponds directly to at least one of the reduction rules of the CDC abstract machine. 
 
+\subsubsection{Application}
+{
+\relscale{0.9}
+\[
+\begin{array}{lcll}
+\langle e\ e^\prime, D, E, q \rangle &\to &\langle e, D[\square\ e^\prime], E, q \rangle &\text{e non-value} \\
+\langle v\ e, D, E, q \rangle &\to &\langle e, D[v\ \square], E, q \rangle &\text{e non-value} \\
+\langle (`lx.e)\ v, D, E, q \rangle &\to &\langle e[v/x], D, E, q \rangle \\
+\end{array}
+\]
+}
 The \mono{App e e'} case deals with applications:
 if both terms are values and the first term is an abstraction of the form \mono{$`l$x.m}, 
 the dominant term becomes a substitution of \mono{e'} for \mono{x} in \mono{m}. 
 Otherwise, the term that is not a value is made the dominant term and the remainder of the application is added to the current context. 
 If both terms are redexes, the left-most is made the dominant term first. 
 In effect, an application first ensures the left-hand term has been evaluated fully before evaluating the right-hand term.
+\Verbatimcode
+eval (State (App e e') d es q) = case e of
+  Val v -> case e' of 
+    Val _ -> case v of 
+      Abs x m -> State (Sub m e' x) d es q
+      Seq es' -> State (ret (composeContexts es') e') d es q
+      otherwise -> State (App e e') d es q
+    otherwise -> State e' (ret d (App e Hole)) es q
+  otherwise -> State e (ret d (App Hole e')) es q
+\end{Verbatim}
+
+\subsubsection{PushPrompt}
+{
+\relscale{0.9}
+\[
+\begin{array}{lcll}
+\langle pushPrompt\ e\ e^\prime, D, E, q \rangle &\to &\langle e, D[pushPrompt\ \square\ e^\prime], E, q \rangle &\text{e non-value} \\
+\langle pushPrompt\ p\ e, D, E, q \rangle &\to &\langle e, \square, p : D : E, q \rangle \\
+\end{array}
+\]
+}
 
 The \mono{PushPrompt e e'} case ensures the left term is a value.
 It then pushes the first argument (a prompt) and the current context onto the stack and makes the second argument the dominant term. 
+\Verbatimcode
+eval (State (PushPrompt e e') d es q) = case e of
+  Val _ -> State e' Hole (e:d:es) q
+  otherwise -> case d of
+    Hole -> State e (PushPrompt Hole e') es q
+    otherwise -> State e (ret d (PushPrompt Hole e')) es q
+\end{Verbatim}
+
+\subsubsection{WithSubCont}
+{
+\relscale{0.9}
+\[
+\begin{array}{lcll}
+\langle withSubCont\ e\ e^\prime, D, E, q \rangle &\to &\langle e, D[withSubCont\ \square\ e^\prime], E, q \rangle &\text{e non-value} \\
+\langle withSubCont\ p\ e, D, E, q \rangle &\to &\langle e, D[withSubCont\ p\ \square], E, q \rangle &\text{e non-value} \\
+\langle withSubCont \ p\ v, D, E, q \rangle &\to &\langle v (D : E\until{p}, \square, E\from{p}, q \rangle \\
+\end{array}
+\]
+}
 
 The reduction rules for \mono{WithSubCont e e'} ensure that the first argument has been evaluated to a prompt \mono{p} and then that the second argument has been evaluated to an abstraction. 
 Finally, it appends the current continuation to the sequence yielded by splitting the continuation stack at \mono{p}, 
 and creates an application of the second argument to this sequence.
+\Verbatimcode
+eval (State (WithSubCont e e') d es q) = 
+  case e of
+    Val v -> case e' of
+      Val _ -> case v of (Prompt p) -> 
+        State (App e' (seq' (d:beforeP))) Hole afterP q
+          where beforeP = splitBefore p es
+                afterP = splitAfter p es
+      otherwise -> State e' (ret d (WithSubCont e Hole)) es q 
+    otherwise -> State e (ret d (WithSubCont Hole e')) es q 
+\end{Verbatim}
 
+\subsubsection{PushSubCont}
+{
+\relscale{0.9}
+\[
+\begin{array}{lcll}
+\langle pushSubCont\ e\ e^\prime, D, E, q \rangle &\to &\langle e, D[pushSubCont\ \square\ e^\prime], E, q \rangle &\text{e non-value} \\
+\langle pushSubCont E^\prime\ e, D, E, q \rangle &\to &\langle e, \square, E^\prime \app (D : E), q \rangle \\
+\end{array}
+\]
+}
 Reducing \mono{PushSubCont e e'} ensures that the first argument is a sequence.
 Then it pushes the current continuation, followed by this sequence, onto the stack.
 The second argument is promoted to be the dominant term.
 This has the effect of evaluating the dominant term and return the result to the sequence.
+\Verbatimcode
+eval (State (PushSubCont e e') d es q) = 
+  case e of
+    Val (Seq es') -> State e' Hole (es'++(d:es)) q
+    otherwise -> State e (ret d (PushSubCont Hole e')) es q
+\end{Verbatim}
 
-The reduction of \mono{Sub e y x} uses \mono{sub} to recursively substitute the third argument for the second in the first. 
+\subsubsection{Substitution}
+The reduction of \mono{Sub e y x} uses \mono{sub} to recursively substitute the third argument with the second in the first. 
+\Verbatimcode
+eval (State (Sub e y x) d es q) = 
+  State (sub e y x) d es q
+\end{Verbatim}
 
-Evaluating a \mono{Seq} transforms the sequence into an abstraction using \mono{seqToAbs}. This corresponds to the reduction rule we introduced in Figure \ref{fig:sequence-to-abstraction}:
-
-Evaluated a value returns the value to the current continuation if there is one or pulls a continuation off the stack if there is not. If the stack is empty, nothing happens.
-
+\subsubsection{NewPrompt}
+{
+\relscale{0.9}
+\[
+\begin{array}{lcll}
+\langle newPrompt, D, E, q \rangle &\to &\langle q, D, E, q+1 \rangle
+\end{array}
+\]
+}
 Evaluating \mono{NewPrompt} places the value of the current prompt as the dominant term and increments the global prompt counter:
+\Verbatimcode
+eval (State NewPrompt d es (Prompt p)) = 
+  State (Val (Prompt p)) d es (Prompt $ p+1)
+\end{Verbatim}
 
-\input{eval}
+%\input{eval}
 
+%TODO: show example output for a given term
 %TODO: evaluation of different implementation approaches

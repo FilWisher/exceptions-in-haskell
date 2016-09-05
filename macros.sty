@@ -31,7 +31,7 @@
 }{\qed
 \endgroup \endtrivlist}
 
-\newcommand{\Verbatimcode}{\begin{Verbatim}[frame=leftline,framerule=1pt,framesep=0.4cm,rulecolor=\color{pale-gray},samepage=true]}
+\newcommand{\Verbatimcode}{\begin{Verbatim}[frame=leftline,framerule=0pt,framesep=0.4cm,rulecolor=\color{pale-gray},samepage=true,numbers=left,xleftmargin=8mm]}
 
 \newlength\harpoonlngth
 
@@ -71,3 +71,15 @@
 
 \newcommand{\mult}[1]{\overline{#1}}
 \newcommand{\mcatch}{\mult{\catch{n$_i$($x$) = $M_i$}}}
+
+
+\newcommand{\leftmathbegin}{
+\setlength{\oldmathindent}{\mathindent}
+\setlength{\mathindent}{\0pt}
+\[
+}
+
+\newcommand{\leftmathend}{
+\]
+\setlength{\mathindent}{\oldmathindent}
+}
