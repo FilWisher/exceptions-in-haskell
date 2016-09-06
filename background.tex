@@ -994,13 +994,11 @@ These models were later proved to all be equivalent.
   \end{figure}
 
   The terse reduction rule of $iii)$ simply states that the application of a \lmu-abstraction $`m`a.M$ to a term $N$ applies all the sub-terms of $M$ labelled $[`a]$ to $N$ and relabels them with a fresh $`m$ variable.
-  It can be thought of as a \lam-abstraction that can be applied to any number of variables.
+  It can be thought of as a \lam-abstraction that can be applied to any number of variables \cite{Parigot92}.
   If we knew how many variables the term is applied to, we could replace
-  
   \[ `m`a\dots[`a]M \]
   with 
   \[ `lx_1\dots`lx_n\dots Mx_1\dots x_n \]
-  \cite{Parigot92}
   
   \subsection{Computational Significance}
 
@@ -1042,8 +1040,8 @@ These models were later proved to all be equivalent.
 
   All subterms of $M$ labelled $`a$ will now be evaluated in the context 
   $\square N$ and the context will destroyed. For example, let us replace 
-  $M$ with \mbox{$`m\circ.[`a](`ls.fs)$}:
-  \footnote{Following van Bakel, we use $\circ$ to denote a $`m$-variable that does not occur in the body of the \lmu-abstraction.}
+  $M$ with \mbox{$`m\nonocc.[`a](`ls.fs)$}:
+  \footnote{Following van Bakel, we use $\nonocc$ to denote a $`m$-variable that does not occur in the body of the \lmu-abstraction.}
   
   \begin{example}
     \[
@@ -1244,11 +1242,9 @@ The grammar of the \ltry-calculus is as follows:
 
 The grammar for $C$ describes a catch block as series of one or more catch statements. 
 For convenience, we will use the notation 
-
 \[
   \mult{\catch{n$_i$($x$) = $M_i$}}
 \]
-
 to describe a catch block with more than one catch statement. 
 
 The \ltry-calculus adds three new syntactic constructs:

@@ -1,6 +1,6 @@
 \chapter{Translations}\label{chapter:translations}
 
-% TODO: explain nf reduction in background
+% TODO: add initial trasnlation attempt and explain why it went wrong 
 
 In this chapter, we develop a interpretation of \lmu\ in CDC.
 We prove some properties of this interpretation, including \emph{soundness}.
@@ -49,24 +49,6 @@ are in scope for the reduction of the body of the try $M$.
 %       surprisingly did not work. replacing alpha in wsc terms to distribute
 %       context throughout is why new one works
 
-%\begin{figure}[!h]
-%\definition{
-%  \textsc{(Interpretation of \lmu\ into CDC)}
-%  \[
-%  \begin{array}{lcl}
-%    \dbr{x}        & \triangleq & x \\
-%    \dbr{`lx.M}    & \triangleq & `lx.\dbr{M} \\
-%    \dbr{M N}      & \triangleq & \dbr{M} \dbr{N} \\
-%    \dbr{`m`a.M}   & \triangleq & (`lp.\pp\ p\ \\
-%    &&                 \hspace{1cm} ((\wsc\ p\ (`l`a.\dbr{M})) \\ 
-%    &&                 \hspace{1cm} \dbr{N}) \\
-%    &&               )\ \np \\
-%    \dbr{[`b]M} & \triangleq & \psc\ `b\ \dbr{M}
-%  \end{array}
-%  \]
-%}
-%\end{figure}
-
 The translation of \lmu-terms into CDC assumes that there is a single global prompt \gp. 
 It also assumes that this prompt has already been pushed onto the stack.
 This means that the translation of a full \lmu-program $M$ in CDC is:
@@ -80,7 +62,7 @@ It also prepares the stack by pushing \gp immediately.
 With the abstract machine prepared, 
 the interpretation of \lmu\ terms into CDC proceeds as follows:
 
-\definition{
+\definition{\label{def:lmu-in-cdc}
   \textsc{(Interpretation of \lmu\ into CDC)}
   \[
   \begin{array}{lcl}
@@ -357,37 +339,70 @@ In this final reduction step, $`a$ can it occur in $\tr{M}[\square \mult{N}/`a]$
 
 \begin{theorem}[Completeness of $\tr{`.}$]
 \[
-  \tr{M} \to^{nf} Q \Rightarrow \exists N. M \to^{nf} N \land \tr{N} \to^{nf} Q
+  \tr{M} \to^{*} Q \Rightarrow \exists N. M \to^{*} N \land \tr{N} \to^{*} Q
 \]
 \end{theorem}
 \begin{Proof}
 By induction on the definition of $\tr{M}$.
-\prooftitle{$`m`a.[`a]M$}
-From the proof for Theorem \ref{theorem:soundness}, we know that:
 \[
-\begin{array}{rclll}
-\tr{`m`a.[`a]M} & \to^{nf} & \tr{M} & \square & \gp
-\end{array}
-\]
-From the definition of $\to_{`m}$:
-\[
-`m`a.[`a]M \to^{nf} M
-\]
-And from the translation in \ref{sec:lmu-in-cdc}:
-\[
-\begin{array}{rclll}
-\tr{M} \triangleq \tr{M} & \square & \gp 
+\begin{array}{rcllll}
+\prooflabel{`m`a.[`a]M} \\
+  \tr{`m`a.[`a]M} & \to^{nf} & \langle\ \tr{M},\ \square,\ \gp \rangle
+          & \text{(Proof \ref{theorem:soundness})} \\
+  `m`a.[`a]M & \to^{nf} & M 
+          & \text{(Def \ref{def:lmu-in-cdc})} \\
+  \tr{M} & \to^{nf} & \langle\ \tr{M},\ \square,\ \gp \rangle 
+          & \text{(Proof \ref{theorem:soundness})}
 \end{array}
 \]
 
-\prooftitle{$(`m`a.[`a]M)N$}
-\dots
-\prooftitle{$(`m`a.[`b]M)N$ \hspace{1cm} ($`a \not= `b$)}
-\dots
-\prooftitle{$(`m`a.[`b]`m`g.[`d]M)$ \hspace{1cm} ($`g \not= `d$)}
-\dots
-\prooftitle{$(`m`a.[`b]`m`g.[`g]M)$}
-\dots
+\[
+\begin{array}{rclllr}
+\prooflabel{(`m`a.[`a]M)\mult{N}} \\
+  \tr{(`m`a.[`a]M)\mult{N}} & \to^{nf} & \langle\ \tr{M}[\square\tr{\mult{N}}/`a],\ \square\tr{\mult{N}},\ \gp \rangle
+          & \text{(Proof \ref{theorem:soundness})} \\
+  (`m`a.[`a]M)\mult{N} & \to_{`m} & `m`a.[`a]M\{[`a]M'\mult{N}/[`a]M'\}\mult{N} 
+          & \text{(Def \ref{def:lmu-in-cdc})} \\
+  \tr{`m`a.[`a]M\{[`a]M'\mult{N}/[`a]M'\}\mult{N}} & \to^{nf} & \langle\ \tr{M}[\square\tr{\mult{N}}/`a],\ \square\tr{\mult{N}},\ \gp \rangle
+          & \text{(Proof \ref{theorem:soundness})}
+\end{array}
+\]
+
+\[
+\begin{array}{rcllll}
+  \prooflabel{(`m`a.[`b]M)\mult{N}} & (`a \not= `b) \\
+  \tr{(`m`a.[`b]M)\mult{N}} & \to^{nf} & \langle \tr{M}[\square \tr{\mult{N}}/`a],\ \square,\ `b:\gp \rangle
+          & \text{(Proof \ref{theorem:soundness})} \\
+  (`m`a.[`b]M)\mult{N} & \to_{`m} & `m`a.[`b](M\{[`a]M'N/[`a]M'\}
+          & \text{(Def \ref{def:lmu-in-cdc})} \\
+  \tr{`m`a.[`b](M\{[`a]M'N/[`a]M'\})} & \to & \langle\ M[\square \tr{N}/`a],\ \square,\ `b:\gp \rangle
+          & \text{(Proof \ref{theorem:soundness})}
+\end{array}
+\]
+
+\[
+\begin{array}{rcllll}
+\prooflabel{(`m`a.[`b]`m`g.[`d]M)} & (`g \not= `d) \\
+  \tr{`m`a.[`b]`m`g.[`d]M} & \to^{nf} & \langle \tr{M}[\square/`a][`b/`g],\ \square,\ `d:\gp \rangle
+          & \text{(Proof \ref{theorem:soundness})} \\
+  `m`a.[`b]`m`g.[`d]M & \to & `m`a[`d]M[`b/`g]
+          & \text{(Def \ref{def:lmu-in-cdc})} \\
+\tr{`m`a[`d]M[`b/`g]} & \to & \langle \tr{M}[`b/`g][\square/`a],\ \square,\ `d:\gp \rangle
+          & \text{(Proof \ref{theorem:soundness})}
+\end{array}
+\]
+
+\[
+\begin{array}{rcllll}
+\prooflabel{(`m`a.[`b]`m`g.[`g]M)} \\
+  `m`a.[`b]`m`g.[`g]M & \to^{nf} & \langle \tr{M}[\square/`a][`b/`g],\ \square,\ `b:\gp \rangle
+          & \text{(Proof \ref{theorem:soundness})} \\
+  `m`a.[`b]`m`g.[`g]M & \to_{`m} & `m`a[`b]M[`b/`g]
+          & \text{(Def \ref{def:lmu-in-cdc})} \\
+  \tr{`m`a[`b]M[`b/`g]} & \to^{nf} & \langle \tr{M}[`b/`g][\square/`a],\ \square, `b:\gp \rangle
+          & \text{(Proof \ref{theorem:soundness})}
+\end{array}
+\]
 \end{Proof}
 
 

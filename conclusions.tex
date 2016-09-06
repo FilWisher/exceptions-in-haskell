@@ -1,11 +1,79 @@
 \chapter{Conclusion}
 
-\section{Evaluation}
-\section{Conclusion}
+This chapter evaluates parts of the methodology and findings of the project.
+With specific reference to individual components, it examines what should have been done differently.
+It closes with a presentation of suitable directions for future work, 
+especially regarding research questions thrown up and still unanswered by the present work.
 
-\section{Future Work}
+\subsection{Evaluation}
+\subsubsection{Interpreter}
+We often treat terms generically: we are not specifically interested in the form of the term.
+For example the $M$ and $N$ in the term $M[N/x]$ are generic.
+Generic terms like this were used extensively in the soundness and completeness proofs for the \lmu\ translation.
+A minor extension to the interpreter would be to extend it with the constants.
+Like a value, the evaluation of a constant would leave the constant the same. 
+This extension would allow the expression of these generic terms.
+In this way, the output of the interpreter could have been used to produce proofs without requiring amendments.
+Additionally, 
+the interpreter could have output \LaTeX\ by writing an appropriate function of type \mono{State -> String} to pass into the evaluation engine.
+
+\subsubsection{Choice of Calculus}
+CDC was not the correct choice of calculus to facilitate a translation from \ltry\ to Haskell.  
+It was chosen because it easily facilitated a translation to Haskell: 
+the syntax of CDC was intentionally close to Haskell
+and a CDC library had been implemented in Haskell by the authors of the calculus.
+However there is an impedance mismatch between CDC and \lmu.
+The translation does not use most of the expressive power of CDC.
+For example, 
+CDC is capable of generating multiple prompts of different names.
+Only a single prompt is used by the translation of the \lmu-calculus. 
+We do not need a continuation stack or multiple named prompts, we just need a single delimiter.
+We could get away with a map from prompts to contexts in place of a stack.
+This would have greatly simplified the translation although it would also require reimplementing the CDC operators.
+We believe this would be useful to develop in follow up work.
+
+\subsubsection{Direct Translation}
+There is possible a more direct translation of \ltry\ to CDC that is not mediated by a translation to \lmu.
+More importantly, there is likely to be a more direct implementation of \ltry\ to Haskell.
+By translating through two other calculi, we have left this possibility unexamined.
+Although we still would want a direct implementation of \ltry\ in Haskell that does not use CDC,
+we have demonstrated that an implementation is possible and laid down the ground work for this to be done.
+
+%\subsubsection{Types}
+%We did not investigate whether types were preserved by the translation.
+%
+%The typing of CDC terms is left to Haskell.
+%A formal treatment would have been better.
+
+\subsubsection{Translation and Soundness}
+The embedding of the \lmu-calculus in CDC is not as close to the \lmu-calculus as it could be.
+There are some reduction steps in the destination language that are not reflected by the source language.
+Specifically, the soundness property we proved was
+\[
+  M \to_{`m} N \Rightarrow \exists P. \tr{M} \to^{*} P \land \tr{N} \to^{*} P
+\]
+This says that the translation of $M$ and the translation of the $`m$-reduction of $M$ reduce to the same term.
+By defining the substitition of terms explicitly, as in \cite{Bakel14}, we may have proved
+\[
+  M \to_{`m}^{*} N \Rightarrow \tr{M} \to^{*} \tr{N}
+\]
+This says that the translation of $M$ reduces to the translation of $N$.
+With this property, the correspondence between the source language and the target language would have be closer.
+
+\subsection{Conclusion}
+We defined an interpreter for CDC which we used to experiment with translations from the \lmu-calculus.
+The output of the interpreter was transliterated into derivations that we used to prove the soundness and completeness of our translation.
+Using this translation, along with van Bakel's \ltry-to-\lmu\ translation, we defined a translation from \ltry\ to CDC.
+This was used as the basis for some proof-of-concept \ltry\ implementations in Haskell.
+This project presents a clear demonstration that named exceptions, as introduced by the \ltry-calculus, are implementable in Haskell.
+Apart from a minor syntactic extension,
+the implementation would not require any machinery currently unavailable to Haskell.
+    
+\subsubsection{Future Work}
+Finally, we present a list of suitable directions for future work.
 \begin{itemize}
-  \item \emph{Type preservation} -- check whether types are preserved across the translations
-  \item \emph{Haskell extensio} -- write a general purpose, language-level extension for named exceptions in Haskell
-  \item \emph{Reimplement DCC without stack} -- The implementation of \lmu\ in DCC only ever uses a single prompt: DCC is overengineered for the purposes of a \lmu-translation. Rewrite DCC using a mapping from prompts to contexts.
+  \item \emph{Type preservation} -- Both \ltry\ and \lmu\ have type assignment systems. We did not explore whether the types are preserved under the translations we defined. Doing this is will give additional insight into how the \ltry\ calculus relates to delimited continuations and how it can be implemented in Haskell without using CDC.
+  \item \emph{Haskell extension} -- Proof-of-concept Haskell libraries are presented and a language extension is proposed but the language extension is not implemented. Given the state of the present work, this will be trivial. By exposing the functionality in a language pragma, we will extend the parser with additional grammar rules.
+  \item \emph{Reimplement CDC without stack} -- The implementation of \lmu\ in CDC only ever uses a single prompt: CDC is overengineered for the purposes of a \lmu-translation. We will rewrite CDC to replace the context and prompt stack with a mapping from prompts to contexts. Using this, a simpler translation of \lmu\ to CDC should be found.
+  \item \emph{Translate \ltry\ directly into Haskell} -- The current methodology helped expand our understanding of the relation of \ltry\ to Haskell. Using this, we can write a direct implementation of \ltry\ into Haskell that bypasses CDC entirely.
 \end{itemize}
