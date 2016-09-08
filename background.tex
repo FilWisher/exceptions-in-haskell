@@ -18,7 +18,7 @@ It outlines the context on which the rest of this project is built.
 Formal systems are sets of rules for writing and manipulating
 formul\ae. Formul\ae are constructed from a set of characters called the
 \emph{alphabet} by following some formul\ae-construction rules called
-the \emph{grammar}. The only formul\ae considered \emph{well-formed} in
+the \emph{grammar}. The only formul\ae considered \emph{well formed} in
 a system are those constructed according to the grammar of a system.
 Formal systems are used to model domains of knowledge to help better
 and more formally understand those domains.
@@ -26,11 +26,11 @@ and more formally understand those domains.
 \subsection{Syntax and Grammars}
 
 The grammar of a formal system describes the system's syntax. Grammars are 
-rules for constructing formul\ae that are well-formed. Formul\ae
-produced according to the grammar of a system are well-formed according to 
+rules for constructing formul\ae that are well formed. Formul\ae
+produced according to the grammar of a system are well formed according to 
 the syntax of that system.
 
-We defined grammars using Backus-Naur Form or BNF:
+Grammars are normally defined by using Backus-Naur Form or BNF:
 
 \[
   M ::= t\ \mid\ f
@@ -62,9 +62,9 @@ This grammar describes formul\ae containing any number of occurrences of the let
 \]
 
 \subsection{Derivation Rules}
-Whereas a grammar describes the rules for producing well-formed formul\ae,
+Whereas a grammar describes the rules for producing well formed formul\ae,
 the derivation rules describe rules for transforming formul\ae of a particular form into new formul\ae. 
-Using the grammar from Figure \ref{fig:tf-grammar}, we add derivation rules:
+Using the grammar from Figure \ref{fig:tf-grammar}, we add derivation (rewriting) rules:
 
 \[
 \begin{array}{lcl}
@@ -81,7 +81,7 @@ Using the grammar from Figure \ref{fig:tf-grammar}, we add derivation rules:
 \]
 
 These rules describe that if a formula matches the pattern on the 
-left-hand side, where $M$ represents a well-formed formula, it can be
+left-hand side, where $M$ represents a well formed formula, it can be
 replaced by the formula on the right-hand side.
 
 \subsection{Domain Modelling}
@@ -91,10 +91,9 @@ some domain. This isomorphism between the domain and the formal system
 means we can attempt to discover truths about the domain through studying
 the formal system.
 
-For example, take the $tf$-system described above. Without
-understanding the domain, we are able to manipulate formul\ae of the
-system to create new formul\ae. The $tf$-system is isomorphic to
-Boolean algebra:
+For example, take the $tf$-system described above. 
+Without understanding the domain, we are able to manipulate formul\ae of the system to create new formul\ae. 
+Without going into detail, it is easy to verify that the $tf$-system is isomorphic to Boolean algebra:
 
 \[
 \begin{array}{cc}
@@ -175,17 +174,15 @@ derivation strategies are strategies \emph{about} the system: methods for choosi
 \section{\lam-Calculus}
 
 In response to Hilbert's \emph{Entscheidungsproblem}, Alonzo Church defined the \lam-calculus \cite{ChurchEnt36}. 
-It is a formal system capable of expressing the set of effectively-computible algorithms. 
-Ontop of this, he built his proof that not all algorithms are decidable. 
+It is a formal system capable of expressing the set of effectively-computible algorithms.
 Shortly after, Godel and Turing created their own models of effective computibility.
 \footnote{General recursive functions and Turing machines, respectively} 
-These models were later proved to all be equivalent.
+These models were later proved to be equivalent.
 
 \subsection{Syntax}
   
-  \lam-variables are represented by $x,y,z$, etc. Variables denote an arbitrary value: 
-  they do not describe what the value is but that any two occurrences of the same variable represent the same value. 
-  The grammar for constructing well-formed \lam-terms is:
+  \lam-variables are taken from an infinite set and are written $x,y,z$, etc. Variables are open positions in a term that can be filled by other terms.
+  The grammar for constructing well formed \lam-terms is:
 
   \begin{figure}[!h]
   \definition{ 
@@ -201,7 +198,7 @@ These models were later proved to all be equivalent.
   }
   \end{figure}
 
-  \lam-abstractions are represented by $`lx.M$ where $x$ is a parameter and $M$ is the body of the abstraction. 
+  \lam-abstractions are anonymous functions and are represented by $`lx.M$ where $x$ is a parameter and $M$ is the body of the abstraction. 
   The same idea is expressed by more conventional notation as a mathematical function $f(x) = M$. 
   The $`l$ annotates the beginning of an abstraction and the $.$ separates the parameter from the body of the abstraction.
   This grammar is recursive, meaning the body of an abstraction is just another term constructed according to the grammar. 
@@ -280,11 +277,11 @@ These models were later proved to all be equivalent.
   }
   \end{figure}
  
-  \lam-variables and \lam-abstactions are \emph{values}: they do not reduce
-  to other terms. If a formula is a value, the reduction terminates on that 
-  value. Only applications reduce to other terms. This means that an 
-  application is a reducible expression or a \emph{redex}. Reducing a 
-  redex models the computing of a function. 
+  \lam-variables and \lam-abstactions are \emph{values}: they do not reduce to other terms. 
+  If a formula is a value, the reduction terminates on that value. 
+  Only applications reduce to other terms. 
+  This means that an application whose left-hand side is an an abstraction is a reducible expression or a \emph{redex}. 
+  Reducing a redex models the computing of a function. 
 
 % TODO: define free variables and bound variables
 \subsubsection{$`a$-reduction}
@@ -332,9 +329,9 @@ These models were later proved to all be equivalent.
   occur to all occurrences of $x$? From the initial term, it is clear that
   this would be incorrect. The \lam-calculus introduces $`a$-reduction to
   solve this:
-  
-  \begin{figure}[!h]\label{def:alpha-reduction}
+  \begin{figure}[H]
   \definition{ 
+    \label{def:alpha-reduction}
     \textsc{($`a$-reduction for \lam-calculus)}
   \[
     \begin{array}{rl}
@@ -343,14 +340,21 @@ These models were later proved to all be equivalent.
   \]
   }
   \end{figure}
- 
   This means we can rename the lead variable of an abstraction $M$ on the 
   conditions that: 
   \begin{enumerate}
     \item All variables bound by that abstraction are renamed the same 
     \item The variable it is changed to does not already appear in $M$ 
   \end{enumerate}
-  
+  Returning to the term above, we can use the $`a$-reduction rule to reduce ambiguity:
+  \[
+  \begin{array}{rll}
+             & (`ly.`lx.xy)(`lx.x) \\
+    \to_{`a} & (`ly.`lx.xy)(`lz.z) & (z \not= x \land z \not= y) \\
+    \to_{`b} & `lx.x(`lz.z)
+  \end{array}
+  \]
+  Using $`a$-reduction, we can ensure that the binding of every variable in a term is unambiguous.
   
   \subsection{Normal Forms}
  
@@ -386,14 +390,14 @@ These models were later proved to all be equivalent.
   In natural deduction, there are \emph{introduction} and \emph{elimination} rules for each logical connective.
   These are presented as \emph{inference rules}.
   Logical inference rules describe that if some statement $A$ is true,
-  we can take for granted that some other statement $B$ is true.
+  then it follows that some other statement $B$ is true.
   This is denoted by:
   
   \[
     \Inf{A}{B} 
   \]
   
-  Using this notation, we can now describe the inference rules for $\to$.
+  Using this notation, we can now describe the inference rules for logical implication, $\to$.
   For our purposes, this is the only logical connective we are interested in.
   The reason for this will become clear.
   
@@ -412,8 +416,8 @@ These models were later proved to all be equivalent.
   \]
   }
   
-  The $\to\mathcal{E}$ rule says that given the statement $A \to B$ and the statement $A$,
-  we can conclude $B$.
+  The $\to\mathcal{E}$ rule says that assuming the statement $A \to B$ and the statement $A$ are true,
+  we can conclude that $B$ is the case. The rule is read as an implication.
   For instance, consider 
  
   \[
@@ -427,7 +431,7 @@ These models were later proved to all be equivalent.
   clearly we can take for granted ``it is wet outside''.
   
   The $\to\mathcal{I}$ rule says that if we assume $A$ and from that assumption we deduce $B$,
-  we can conclude that $A \to B$.
+  we can conclude that $A$ implies $B$.
   Let us assume (where $[A]$ denotes that we assume $A$ is true): 
   \[
     [A] = \textit{Turing did not see Church's work} 
@@ -455,11 +459,11 @@ These models were later proved to all be equivalent.
   Sequent calculus manipulates \emph{sequents} where a sequent is denoted by:
   
     \[
-      `G \vdash T
+      `G \vdash `D
     \]
     
   On the left-hand side, the $`G$ represents a sequence of statements called the \emph{antecedent}.
-  On the right-hand side of the $\vdash$, $T$ represents a different sequence of statements called the \emph{succedent}.
+  On the right-hand side of the $\vdash$, $`D$ represents a different sequence of statements called the \emph{succedent}.
   The whole sequent denotes that the conjunction of the statements in the antecedent imply the disjunction of the statements in the succedent.
   That is to say, if all the statements on the left are true then at least one of the statements on the right is true:
   
@@ -557,7 +561,9 @@ These models were later proved to all be equivalent.
   Type assignment rules for the \emph{typed} \lam-calculus are:
 
   \[
-    \begin{array}{c@{\quad\quad\quad}c}
+  \begin{array}{c@{\quad\quad}c@{\quad\quad\quad}c}
+    \Inf{ `G,x:A \vdash x : A }
+    &
     \Inf{
       `G \vdash M : A \to B \hspace{20pt} N:A 
     }{
@@ -574,11 +580,12 @@ These models were later proved to all be equivalent.
   \]
   Similarly to the sequent calculus, 
   the letter $`G$ represents a sequence of type assignment statements.
+  In $`G$, each variable can only have one type.
   The form of these rules denote that the typing judgement on the right-hand side of the $\vdash$ are a consequence of the sequence of type assignment statements in $`G$.
   The first rule states that the application of a term of type $A \to B$ to
   a term of type $A$ has type $B$. 
   The second rule says a term of type $B$ in a context where $x:A$ is the same as an abstraction of type $A \to B$ in a context without $x:A$. 
-  These rules add restrictions on what constitutes a well-formed term.
+  These rules add restrictions on what constitutes a well formed term.
   These restrictions prevent the formation of terms with undesirable properties.  
   
   \begin{example}[Type-assignment restricts set of valid terms]
@@ -599,7 +606,7 @@ These models were later proved to all be equivalent.
  
   \subsection{Curry-Howard Isomophism}
   
-  The Curry-Howard isomorphism states that their is a true isomorphism between the type of a term and a logical proposition. 
+  The Curry-Howard isomorphism states that there is a true isomorphism between the type of a term and a logical proposition. 
   The type of a term is a logical proposition and the term itself its a proof of that proposition.
   The simplification of a proof maps to the evaluation of the corresponding program \cite{Wadler15}.
   
@@ -701,7 +708,7 @@ These models were later proved to all be equivalent.
   They provide restrictions on the construction of invalid terms. 
   For instance if we have a function of type \mono{String -> Integer}, 
   we cannot apply it to a term of type \mono{Boolean}. 
-  The type-checker will throw an error before any value-level computation is initiated.
+  The type checker will throw an error before any value-level computation is initiated.
  
   % TODO: better description needed
   The value level is the level on which data is constructed and manipulated.
@@ -740,7 +747,7 @@ These models were later proved to all be equivalent.
 \section{Continuations}
  
   As in the example in Figure \ref{fig:decomposing}, 
-  compound \lam-terms can be decomposed into a dominant term and a context:
+  compound \lam-terms can be evaluated into a dominant term and a context:
   \begin{figure}[H]\label{fig:decomposing-lambda}
     \hspace{1cm}Assume that $M \rightarrow_{`b} M^\prime$
     \[
@@ -814,12 +821,10 @@ These models were later proved to all be equivalent.
 
   \subsection{Continuation-Passing Style}
  
-  By rewriting \lam-terms, a term's continuation can be made explicit. All
-  terms must be turned into \lam-abstractions of some variable $k$
-  where $k$ is the continuation of a term. $k$ is then called on the
-  result of the term, triggering the continuation to take control.
-  This style of writing \lam-terms is called continuation-passing
-  style or CPS.
+  By rewriting \lam-terms, a term's continuation can be made explicit. 
+  All terms must be turned into \lam-abstractions of some variable $k$ where $k$ is the continuation of a term. 
+  $k$ is then called on the result of the term, triggering the continuation to take control.
+  This style of writing \lam-terms is called continuation-passing style or CPS \cite{Sussman98}.
   
   \definition{
     \textsc{(Translation of standard \lam-terms into CPS)}
@@ -980,17 +985,18 @@ These models were later proved to all be equivalent.
   \definition{ 
     \textsc{(Reduction rules for \lmu-calculus)}
     \[
-    \begin{array}{lrcll}
+    \begin{array}{rrcll}
     i) & (`lx.M) N & \to_{`b} & M[N/x] \\
-    ii) & (`m`a.[`b]M) N & \to{`m} & (`m`a.[`b]M[[`g]M^\prime N/[`a]M^\prime]) \\
+    ii) & (`m`a.[`b]M) N & \to{`m} & `m`a.[`b](M\{[`g]M^\prime N/[`a]M^\prime\}) & (`b \not= `a)\\
+        & (`m`a.[`b]M) N & \to{`m} & `m`a.[`g](M\{[`g]M^\prime N/[`a]M^\prime\})N & (`b = `a) \\
     iii) & `m`a.[`a]M & \to{`m} & M & (`a \notin fn(M)) \\
-    iv) & `m`d.[`b](`m`g.[`a]M) & \to{`m} & `m`d.[`a]M[`b/`g] \\
+    iv) & `m`d.[`b](`m`g.[`a]M) & \to{`m} & `m`d.([`a]M)[`b/`g] \\
     \end{array}
     \]
   }
   \end{figure}
 
-  The terse reduction rule of $iii)$ simply states that the application of a \lmu-abstraction $`m`a.M$ to a term $N$ applies all the sub-terms of $M$ labelled $[`a]$ to $N$ and relabels them with a fresh $`m$ variable.
+  The terse reduction rule of $ii)$ simply states that the application of a $`m$-abstraction $`m`a.M$ to a term $N$ applies all the sub-terms of $M$ labelled $[`a]$ to $N$ and relabels them with a fresh $`m$ variable.
   It can be thought of as a \lam-abstraction that can be applied to any number of variables \cite{Parigot92}.
   If we knew how many variables the term is applied to, we could replace
   \[ `m`a\dots[`a]M \]
@@ -1035,7 +1041,7 @@ These models were later proved to all be equivalent.
   \]
   \end{example}
 
-  All subterms of $M$ labelled $`a$ will now be evaluated in the context $\square N$ after which the context will destroyed. 
+  All subterms of $M$ labelled $`a$ will now be evaluated in the context $\square N$ after which the context will be destroyed. 
   For example, let us replace $M$ with \mbox{$`m\nonocc.[`a](`ls.fs)$}:
   \footnote{Following van Bakel, we use $\nonocc$ to denote a $`m$-variable that does not occur in the body of the \lmu-abstraction.}
   
@@ -1075,7 +1081,8 @@ These models were later proved to all be equivalent.
   The type assignment rules for the typed \lmu-calculus are as follows:
   
   \definition{
-  \textsc{Typing rules for the typed \lmu-calculus}
+  \textsc{Typing rules for the typed \lmu-calculus} \\
+  The three type-assignment rules from the \lam-calculus are still valid. In addition:
   \[
   \begin{array}{c@{\quad\quad}c}
     \Inf{`G \vdash M : B\ |\  `a : A, `b : B, `D}
@@ -1136,9 +1143,9 @@ These models were later proved to all be equivalent.
   the reduction rules are able to make the control of terms and their continuations more explicit.
   
   The abstract machine also introduces some Haskell-style notation for dealing with sequences. An empty sequence is represented by $[]$. 
-  A value added to the head of a list is represented by $:$ for instance $D:[]$. $\app$ represents two lists appended together. 
-  $E\until{p}$ and $E\from{p}$ denote the subsequence of $E$ \emph{until} prompt $p$ and \emph{from} prompt $p$, respectively. 
-  Neither of these subsequences contain $p$.
+  A value added to the head of a list is represented by the symbol $:$, for instance $D:[]$. $\app$ represents two lists appended together. 
+  $E\until{p}$ and $E\from{p}$ denote the subsequence of $E$ \emph{until} prompt $p$ and \emph{from} prompt $p$, respectively; 
+  neither of these subsequences contain $p$.
 
   \begin{figure}[!h]\label{fig:cdc-abstract-machine}
   \relscale{0.9}

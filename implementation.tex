@@ -20,14 +20,14 @@ It does not present a high level of abstraction:
 
 \Verbatimcode
   try :: Prompt ans b 
-         -> ((t -> CC ans a) -> CC ans a1) -> (t -> CC ans a1) 
-         -> CC ans a1
+      -> ((t -> CC ans a) -> CC ans a1) -> (t -> CC ans a1) 
+      -> CC ans a1
   try p0 m handler = withSubCont p0 (\n ->
       pushPrompt p0 (pushSubCont n (m $ \x -> throw p0 n handler x)))
   
   throw :: Prompt ans b 
-           -> SubCont ans a1 b -> (t -> CC ans a1) -> t 
-           -> CC ans a
+        -> SubCont ans a1 b -> (t -> CC ans a1) -> t 
+        -> CC ans a
   throw p0 n c m = withSubCont p0 (\_ ->
     pushPrompt p0 (pushSubCont n (c m)))
 \end{Verbatim}
@@ -58,11 +58,13 @@ This prompt should either be created and pushed at the beginning of a \mono{try}
 
 This implementation also means we cannot have a variadic number of handlers.
 Instead, we need to define \mono{try}, \mono{try2}, \dots\ for each case:
-% TODO: FIX ME: INCORRECT IMPLEMENTATION
 \Verbatimcode
-  try2 p0 m h1 h2 = withSubCont p0 (\n ->
-      pushPrompt p0 (pushSubCont n (m (\x -> throw p0 n h1 x)
-                                      (\x -> throw p0 n h2 x))))
+try2 :: ((a -> CC ans a1) -> (a3 -> CC ans a4) -> CC ans a2)
+     -> (a3 -> a2) -> (a -> a2) -> CC ans a2
+try2 m h1 h2 =
+  try (\t1 ->
+    try (\t2 -> m t1 t2) h1)
+  h2
 \end{Verbatim}
 
 Naming the handlers takes place in the names of the parameters of the abstraction in the body of \mono{try}:
@@ -100,10 +102,10 @@ With a global prompt defined,
 the implementations of \mono{try} and \mono{throw} are much closer to the syntax of the \ltry-calculus and to the CDC translation defined in the previous chapter.
 
 \Verbatimcode
-try :: ((a -> CC ans b) -> CC ans r) -> (a -> r) -> CC ans r
+try :: ((t -> CC ans c) -> CC ans a) -> (t -> CC ans a) -> CC ans a
 try m handler =
   withSubCont p0 (\n -> pushPrompt p0 
-    (pushSubCont n (m $ \x -> throw n $ return $ handler x)))
+    (pushSubCont n (m $ \x -> throw n $ handler x)))
  
 throw :: SubCont ans a b -> CC ans a -> CC ans c
 throw n v =
@@ -115,12 +117,24 @@ In order bind the correct throw to the correct handler,
 throw is still wrapped in a \lam-abstraction in the definition of try.
 This also means that we still require separate definitions for multiple handlers:
 
-% TODO: INCORRECT IMPLEMENTATION AGAIN
 \Verbatimcode
 try2 m h1 h2 =
-  withSubCont p0 (\n -> pushPrompt p0 
-    (pushSubCont n (m (\x -> throw n $ return $ h1 x)
-                      (\x -> throw n $ return $ h2 x))))
+  try (\t -> 
+    try (m t) h2) 
+  h1
+  
+try3 :: ((t -> CC ans a) 
+     -> (t' -> CC ans a) -> (t'' -> CC ans a) -> CC ans a)
+     -> (t -> CC ans a) 
+     -> (t' -> CC ans a) 
+     -> (t'' -> CC ans a)
+     -> CC ans a
+try3 m h1 h2 h3 =
+  try (\t1 -> 
+    try (\t2 -> 
+      try (\t3 -> m t1 t2 t3) h3) 
+    h2) 
+  h1
 \end{Verbatim}
 
 If we look at the type signatures, we can see the same important restrictions from the naive implementation.
@@ -129,9 +143,10 @@ This will also be the type of running \mono{runCC} on the returned \mono{CC} val
 
 As a simple example:
 \Verbatimcode
-runTry $ try2 (\thr1 -> \thr2 -> thr1 randomNumber) 
-              (\x -> x + 100) -- first handler
-              (\x -> x + 1000) -- second handler
+runTry $ 
+  try2 (\t1 -> \t2 -> return randomNumber) 
+    (\x -> return $ x + 100)
+    (\x -> return $ x + 1000)
 \end{Verbatim}
 
 From this example, we can see we still have the same problem with injecting \lam-abstractions to correctly bind names.
