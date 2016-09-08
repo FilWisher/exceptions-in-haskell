@@ -45,19 +45,17 @@ Grammars can be recursive which allows much more expressive construction rules:
     M,N&::=&t&\textcolor{pale-gray}{(1)} \\
       &|&f&\textcolor{pale-gray}{(2)} \\
       &|&M\ a\ N&\textcolor{pale-gray}{(3)} \\
-      &|&M\ o\ N&\textcolor{pale-gray}{(4)}
   \end{array}
 \]
-\caption{Grammar for producing the letters $t$ or $f$ connected by the letters $a$ or $o$}
+\caption{Grammar for producing the letters $t$ or $f$ connected by the letter $a$}
 \end{figure}
 
-This grammar describes formul\ae containing any number of occurrences of the letters $t$ or $f$ separated by either an $a$ or an $o$.
-
+This grammar describes formul\ae\ containing any number of occurrences of the letters $t$ or $f$ separated by an $a$. 
 \[
 \begin{array}{lr}
   \by{t}{1} \\
-  \by{t\ o\ f}{2 \& 4} \\
-  \by{t\ o\ f\ a\ t}{1 \& 3}
+  \by{t\ a\ f}{2 \& 3} \\
+  \by{t\ a\ f\ a\ t}{1 \& 3}
 \end{array}
 \]
 
@@ -72,11 +70,6 @@ Using the grammar from Figure \ref{fig:tf-grammar}, we add derivation (rewriting
   M\ a\ t &\to& M \\
   f\ a\ M &\to& f \\
   M\ a\ f &\to& f \\
-  \\
-  M\ o\ t &\to& t \\ 
-  t\ o\ M &\to& t \\
-  M\ o\ f &\to& M \\
-  f\ o\ M &\to& M \\
 \end{array}
 \]
 
@@ -93,7 +86,7 @@ the formal system.
 
 For example, take the $tf$-system described above. 
 Without understanding the domain, we are able to manipulate formul\ae of the system to create new formul\ae. 
-Without going into detail, it is easy to verify that the $tf$-system is isomorphic to Boolean algebra:
+Without going into detail, it is easy to verify that the $tf$-system is isomorphic to a subset of Boolean algebra:
 
 \[
 \begin{array}{cc}
@@ -101,7 +94,6 @@ Without going into detail, it is easy to verify that the $tf$-system is isomorph
 t & 1 \\
 f & 0 \\
 a & \wedge \\
-o & \vee 
 \end{array}
 \]
 
@@ -115,7 +107,7 @@ different perspectives and thereby learn novel truths about them.
 When applying derivation rules to compound terms, we can imagine the 
 compound term being decomposed into simpler terms until one of the 
 derivation rules applies. When we decompose a term, we separate it into a
-dominant term and a context:
+dominant term and a context.
 
 \begin{figure}[!h]\label{fig:decomposing}
 \[
@@ -128,28 +120,35 @@ dominant term and a context:
 
 The left-hand side is the dominant term and the right-hand side is the context. 
 The $\square$ in the context denotes a hole that needs to be filled to create a full term.
-
 Once we have a term that we can apply a derivation rule to, 
-we apply the derivation rule and recombine the context with the resulting term:
-
+we apply the derivation rule and recombine the context with the resulting term. 
+For example, we start with the term:
 \[
-\begin{array}{rlcr}
-      & t\ o\ f\ && \square\ a\ t  \\
-  \to & t && \square\ a\ t  \\
-  \textit{recombine} & t\ a\ t 
-\end{array}
+  t\ a\ f\ a\ t
 \]
-However the the term $t\ o\ f\ a\ t$ can be decomposed in two ways:
+This term is decomposed into a dominant term (on the left) and a context (on the right):
+\[
+  t\ a\ f \quad\quad \square\ a\ t
+\]
+Using the derivation rules from above, we can rewrite the dominant term $t\ a\ f$ as $f$:
+\[
+  f \quad\quad \square\ a\ t
+\]
+Finally, once the dominant term cannot be reduced further, we recombine it with the context to get:
+\[
+  f\ a\ t
+\]
+
+However the the term $t\ a\ f\ a\ t$ can be decomposed in two ways:
 \[
 \begin{array}{rlr}
-  1. & t\ o\ f\ & \square\ a\ t  \\
-  2. & f\ a\ t & t\ o\ \square  \\
+  1. & t\ a\ f\ & \square\ a\ t  \\
+  2. & f\ a\ t & t\ a\ \square  \\
 \end{array}
 \]
-
 When we have more than one way derivation rules can be applied to a term,
 we can use \emph{derivation strategies} to determine which rule we apply.
-The derivation strategy we use decides how our compound terms are decomposed.
+For compound terms, derivation strategies decides which derivation rule to applied tj which subterm.
 In our $tf$-system, there are two obvious derivation strategies:
 either apply derivations starting from the left or starting from the right.
 
@@ -191,8 +190,8 @@ These models were later proved to be equivalent.
     \[
     \begin{array}{rcll}
     M,N & ::= & x         & \text{(Variable)} \\
-        & \mid\ & `lx.M\  & \text{(Abstraction)} \\ 
-        & \mid\ & M\ N    & \text{(Application)} \\ 
+        & \mid\ & `lx.M & \text{(Abstraction)} \\ 
+        & \mid\ & (M\ N)   & \text{(Application)} \\ 
     \end{array}
     \]
   }
@@ -218,18 +217,17 @@ These models were later proved to be equivalent.
   Applications are represented by any two terms, 
     both constructed according to the grammar, 
   placed alongside one another. 
-  Application gives highest precedence to the left-most terms. 
-  Bracketing can be introduced to enforce 
-  alternative application order for example $xyz$ is implicitly read as 
-    $(xy)z$ 
-  but can be written as 
-    $x(yz)$ 
-  to describe that the application of $yz$ should come first. 
+  We assume the convention that application gives highest precedence to the left-most application. 
+  This means we can drop brackets where our convention will prevent ambiguity.
+  Note that this means that if the term is an application, the outermost brackets can always be dropped.
+  For example, we can drop the outermost, leftmost brackets from the term $((xy)z)$ and instead write $xyz$.
+  To ensure the application of terms in any other order, we must leave the brackets explicit.
+  For example the brackets in the term $x(yz)$ cannot be removed without changing the meaning of the term.
   Examples of applications are:
     \begin{figure}[!h]
       \[
         \begin{array}{l}
-        xy \\
+        (xy) \\
         xyz \\
         x(yz) \\
         (`lx.x)y
@@ -268,19 +266,21 @@ These models were later proved to be equivalent.
   is defined for the application of two terms:
   \begin{figure}[!h]\label{def:beta-reduction}
   \definition{ 
-    \textsc{($`b$-reduction for \lam-calculus)}
+    \textsc{($`b$-reduction for \lam-calculus)} \\
+    $i)$ $\to_{`b}$ is defined as the compatible closure of the rule:
     \[
     \begin{array}{rcl}
     (`lx.M) N & \rightarrow_{`b} & M[N/x]
     \end{array}
     \]
+    $ii)$ $\to_{`b}^{*}$ is defined as the transitive closure of $\to_{`b}$
   }
   \end{figure}
  
   \lam-variables and \lam-abstactions are \emph{values}: they do not reduce to other terms. 
-  If a formula is a value, the reduction terminates on that value. 
+  If a term is a value, the reduction cannot be applied to that term: it has \emph{terminated} on that value. 
   Only applications reduce to other terms. 
-  This means that an application whose left-hand side is an an abstraction is a reducible expression or a \emph{redex}. 
+  This means that an application whose left-hand side is an abstraction is a reducible expression or a \emph{redex}. 
   Reducing a redex models the computing of a function. 
 
 % TODO: define free variables and bound variables
@@ -356,7 +356,7 @@ These models were later proved to be equivalent.
   \]
   Using $`a$-reduction, we can ensure that the binding of every variable in a term is unambiguous.
   
-  \subsection{Normal Forms}
+  \subsection{Reduction Strategies}
  
   A term is in normal form for a reduction strategy if, 
     following that reduction strategy,
@@ -364,6 +364,27 @@ These models were later proved to be equivalent.
   For instance, a term that can no longer be \bta-reduced is in \bta-normal form.
   We use $\to_{`b}^{nf}$ to denote a term in \bta-normal form.
   Again, we can omit the \bta\ subscript if it is clear from context.
+  
+  Lazy reduction is a reduction strategy that restricts the reduction of subterms of a term.
+  \definition{
+  \textsc{Lazy reduction of \lam-terms}\\
+  $i)$ The outermost, leftmost term is reduced first \\
+  $ii)$ No reductions can take place underneath an abstraction \\
+  $iii)$ We use $\to^{L}$ to denote lazy reduction
+  }
+  \\  
+  \\
+  For example, let us begin \bta-reducing $(`lx.`ly.xy)(`lz.z)$: 
+  \[
+  \begin{array}{rll}
+            & (`lx.`ly.xy)(`lz.z) \\
+    \to_{`b}& `ly.(`lz.z)y
+  \end{array}
+  \]
+  Whereas \bta-reduction would continue and reduce the inner redex $(`lz.z)y$,
+  lazy reduction does not reduce beneath \lam-abstractions.
+  This is term is in normal form for lazy reduction.
+  % TODO: LAZY REDUCTION HERE
 
 \section{Logic and Types}
 
@@ -447,14 +468,18 @@ These models were later proved to be equivalent.
  
   Note the removal of the assumption ([\ ]) from $A$.
   By restricting ourselves to these rules, we are working within \emph{Implicative Intuitionistic Logic} (IIL).
-  \footnote{Importantly, IIL also rejects the law of excluded middle which says for every $P$, $P \lor \neg P$.
+  IIL is a restricted form of logic.
+  For example Pierce's law, which says $((P \to Q) \to P) \to P$, is not applicable to IIL.
+  \footnote{IIL also rejects the law of excluded middle which says for every $P$, $P \lor \neg P$.
   According to intuitionistic logic, unless we have a \emph{constructive} proof for which of $P$ or $\neg P$ is true, the statement is false}
+  
+  
   
   \subsection{Sequent Calculus}
   
   Gentzen explored natural deduction through the sequent calculus \cite{Wadler15}.
   We have followed Girard \emph{et al.}'s observation that the syntax of the sequent calculus is overcomplicated for the purpose of natural deduction \cite{Girard89}.
-  However it is useful for both classical logic and type assignment systems (see Sections \ref{sec:classical-logic} and \ref{sec:type-assignment} respectively).
+  However it is useful for both classical natural deduction and type assignment systems (see Sections \ref{sec:classical-logic} and \ref{sec:type-assignment} respectively).
   
   Sequent calculus manipulates \emph{sequents} where a sequent is denoted by:
   
@@ -462,8 +487,8 @@ These models were later proved to be equivalent.
       `G \vdash `D
     \]
     
-  On the left-hand side, the $`G$ represents a sequence of statements called the \emph{antecedent}.
-  On the right-hand side of the $\vdash$, $`D$ represents a different sequence of statements called the \emph{succedent}.
+  On the left-hand side, the $`G$ represents a sequence of zero or more statements called the \emph{antecedent}.
+  On the right-hand side of the $\vdash$, $`D$ represents a different sequence of zero or more statements called the \emph{succedent}.
   The whole sequent denotes that the conjunction of the statements in the antecedent imply the disjunction of the statements in the succedent.
   That is to say, if all the statements on the left are true then at least one of the statements on the right is true:
   
@@ -475,45 +500,45 @@ These models were later proved to be equivalent.
     \end{array}
   \]
 
-  \subsection{Classical Logic}\label{sec:classical-logic}
+  \subsection{Classical Natural Deduction}\label{sec:classical-logic}
   
-  Gentzen's classical natural deduction used the sequent calculus and introduced a set structural rules for manipulating sequents:
+  Gentzen's classical natural deduction used the sequent calculus and introduced a set structural rules for manipulating sequents \cite{Groote94}.
   
   \definition{
-  \textsc{Structural rules of the sequent calculus} 
+  \textsc{Structural rules of classical natural deduction} 
   \[
   \begin{array}{c@{\quad\quad}c}
   
-    \Inf{A,C,D,A' \vdash B}
-       {A,D,C,A' \vdash B}
+    \Inf{`G,C,D,`G' \vdash `D}
+       {`G,D,C,`G' \vdash `D}
        {\hspace{5pt}\mathcal{L}X}
     &
-    \Inf{A \vdash B,C,D,B'}
-       {A \vdash B,D,C,B'}
+    \Inf{`G \vdash `D,C,D,`D'}
+       {`G \vdash `D,D,C,`D'}
        {\hspace{5pt}\mathcal{R}X}
     \\
     \\
-    \Inf{A \vdash B}
-       {A,C \vdash B}
+    \Inf{`G \vdash `D}
+       {`G,C \vdash `D}
        {\hspace{5pt}\mathcal{L}W}
     &
-    \Inf{A \vdash B}
-       {A \vdash B,C}
+    \Inf{`G \vdash `D}
+       {`G \vdash `D,C}
        {\hspace{5pt}\mathcal{R}W}
    \\
    \\
-   \Inf{A,C,C \vdash B}
-       {A,C \vdash B}
+   \Inf{`G,C,C \vdash `D}
+       {`G,C \vdash `D}
        {\hspace{5pt}\mathcal{L}C}
     &
-    \Inf{A \vdash C,C,B}
-       {A \vdash C,B}
+    \Inf{`G \vdash C,C,`D}
+       {`G \vdash C,`D}
        {\hspace{5pt}\mathcal{R}C}
    \\
    \\
    \multicolumn{2}{c}{
-    \Inf{A \vdash B \hspace{10pt} A',B \vdash C}
-        {A,A' \vdash C}
+    \Inf{`G \vdash `D,A \hspace{10pt} A,`G' \vdash `D'}
+        {`G,`G' \vdash `D,`D'}
         {\hspace{5pt}\textbf{Cut}}
    }
   \end{array} 
@@ -526,8 +551,34 @@ These models were later proved to be equivalent.
   The contraction rules, $\mathcal{LC}$ and $\mathcal{RC}$, allow the contraction of multiple occurrences of a formula into a single occurrence. 
   The cut rule allows us to replace assumptions of formul\ae with their concrete proofs, if we have proved them somewhere else.
   
-  In addition to these, the system maintains the standard introduction/elimination rules from natural deduction.
-  The introduction/elimination rules have variants for manipulating the right sequence or the left sequence of statements.
+  In addition to these, the system has a set of logical rules which relate closely to natural deduction.
+  Although rules for all the logical connectives exist, we again choose to highlight just the cases important to this project:
+  \definition{
+  \textsc{Logical rules of classical natural deduction} \cite{Groote94}
+  \[
+  \begin{array}{c@{\quad\quad}c}
+    \Inf{`G \vdash C,`D \hspace{10pt} `G',D \vdash `D'}
+        {`G,`G',C \to D \vdash `D,`D'}
+        {\hspace{5pt}\mathcal{L}\to}
+    &
+    \Inf{`G,C \vdash D,`D}
+        {`G \vdash C \to D,`D}
+        {\hspace{5pt}\mathcal{R}\to}
+    \\
+    \\
+    \Inf{`G \vdash C,`D}
+        {`G,\neg C \vdash `D}
+        {\hspace{5pt}\mathcal{L}\neg}
+    &
+    \Inf{`G,C \vdash `D}
+        {`G \vdash \neg C,`D}
+        {\hspace{5pt}\mathcal{R}\neg}
+  \end{array}
+  \]
+  }
+  Moving a statement from the left-hand sequent to the right negates that statement.
+  The same is true moving a statement from the right-hand sequent to the left.
+  The implication rules allow the introduction of $\to$ in either the left or right sequent.
   
   \subsection{Type Assignment}\label{sec:type-assignment}
   
@@ -760,11 +811,25 @@ These models were later proved to be equivalent.
     \]
   \caption{Decomposing a term into a dominant term and a context}
   \end{figure}
-  The reduction strategy will define how the term will be decomposed.
-  When $M$ has \bta-reduced to a value, $M^\prime$, then the hole of the context $\square N$ is filled to form $M^\prime N$. 
-  When the hole of a context is filled, the reduction of the compound term $M'N$ continues.
-  This means the context contains the remaining terms to be reduced: it represents how reduction will continue. 
-  Thus a context is also called a \emph{continuation}.
+  
+  Contexts are partial terms that remain to be reduced after the reduction of the dominant term.
+  After the dominant term has reduced to a value,
+  that value will fill the hole ($\square$) of the context to form a new term. 
+  For example, consider the term 
+  \[
+    (`lx.`ly.xy)(`lz.z)t
+  \]
+  According to our bracketing convention, the leftmost redex is reduced first:
+  \[
+    (`lx.`ly.xy)(`lz.z) 
+  \]
+  After this term has reduced, the reduct will be applied to $t$:
+  \[
+    \square t 
+  \]
+  In this way, the context $\square t$ holds information about the \emph{rest} of the reduction steps.
+  The context of a term is the future computation of that term: what will happen to the term after it has been reduced.
+  For this reason, the context is also called a \emph{continuation}.
  
   \subsection{Undelimited Continuations} 
  
@@ -947,7 +1012,7 @@ These models were later proved to be equivalent.
 
 \section{\lmu-Calculus}
   
-  Michel Parigot defined the \lmu-calculus as a system with an isomorphism to classical logic.
+  Michel Parigot defined the \lmu-calculus as a system with an isomorphism to classical natural deduction.
   It is an extension of the \lam-calculus. 
   This means that the grammar and reduction rules of the \lmu-calculus are a superset of those of the \lam-calculus.
   
@@ -986,17 +1051,17 @@ These models were later proved to be equivalent.
     \textsc{(Reduction rules for \lmu-calculus)}
     \[
     \begin{array}{rrcll}
-    i) & (`lx.M) N & \to_{`b} & M[N/x] \\
-    ii) & (`m`a.[`b]M) N & \to{`m} & `m`a.[`b](M\{[`g]M^\prime N/[`a]M^\prime\}) & (`b \not= `a)\\
+    \text{(logical)} & (`lx.M) N & \to_{`b} & M[N/x] \\
+    \text{(structural)} & (`m`a.[`b]M) N & \to{`m} & `m`a.[`b](M\{[`g]M^\prime N/[`a]M^\prime\}) & (`b \not= `a)\\
         & (`m`a.[`b]M) N & \to{`m} & `m`a.[`g](M\{[`g]M^\prime N/[`a]M^\prime\})N & (`b = `a) \\
-    iii) & `m`a.[`a]M & \to{`m} & M & (`a \notin fn(M)) \\
-    iv) & `m`d.[`b](`m`g.[`a]M) & \to{`m} & `m`d.([`a]M)[`b/`g] \\
+    \text{($`m`h$)} & `m`a.[`a]M & \to{`m} & M & (`a \notin fn(M)) \\
+    \text{(renaming)} & `m`d.[`b](`m`g.[`a]M) & \to{`m} & `m`d.([`a]M)[`b/`g] \\
     \end{array}
     \]
   }
   \end{figure}
 
-  The terse reduction rule of $ii)$ simply states that the application of a $`m$-abstraction $`m`a.M$ to a term $N$ applies all the sub-terms of $M$ labelled $[`a]$ to $N$ and relabels them with a fresh $`m$ variable.
+  The structural reduction rule simply states that the application of a $`m$-abstraction $`m`a.M$ to a term $N$ applies all the sub-terms of $M$ labelled $[`a]$ to $N$ and relabels them with a fresh $`m$ variable.
   It can be thought of as a \lam-abstraction that can be applied to any number of variables \cite{Parigot92}.
   If we knew how many variables the term is applied to, we could replace
   \[ `m`a\dots[`a]M \]
@@ -1097,14 +1162,19 @@ These models were later proved to be equivalent.
   These rules correspond to the structural rules of classical natural deduction.
   The original presentation of Parigot's type assignment makes the isomorphism clearer.
   Our presentation here makes it easier to understand the role of the operators.
-  % TODO: this is thin, it needs better explanations
+  
+  \subsection{Lazy Reduction}
+  We define lazy-reduction for the \lmu-calculus similarly to \lam-calculus.
+  The outermost, leftmost reduction takes place first. 
+  If no reductions can take place on the outermost level, the the term is in lazy normal form.
+  For instance, consider the $`m$-term:
+  \[
+    `m`a.[`b]((`lx.x)z)
+  \]
+  This term is in lazy normal form: the only redex, $(`lx.x)z$, is beneath a $`m$-abstraction.
+  The term cannot be reduced any further.
 
 \section{Calculus of Delimited Continuations}
-
-  % TODO: explain motivation behind DCC: \lmu requires
-  %       delimited continuations and DCC formalizes delimited
-  %       continuations in haskell so useful guide for implementing
-  %       exceptions in haskell
 
   Simon Peyton-Jones \textit{et al.}\ extended the \lam-calculus with additional operators in order create a framework for implementing delimited continuations \cite{JonesDS07}. 
   This calculus will be referred to as the calculus of delimited-continuations or \emph{CDC}. 

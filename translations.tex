@@ -10,7 +10,7 @@ This will then be used as a basis for the implementation of \ltry\ in Haskell.
 
 \section{Interpreting \ltry\ in \lmu}
 
-van Bakel describes the interpretation of \ltry\ to \lmu:
+van Bakel describes the interpretation of \ltry\ to \lmu \cite{Bakel15}:
 
 {
 \[
@@ -23,7 +23,7 @@ van Bakel describes the interpretation of \ltry\ to \lmu:
     &\multicolumn{2}{l}{ (`lc_m.`m\text{m}.[\text{m}]\tr{\try M;\ \mcatch})(`lx.\tr{L})} \\
     
     \tr{\try M;\ \catch{m($x$) = $L$}} & \triangleq & (`lc_m.`m\text{m}.[\text{m}]\tr{M})(`lx.\tr{L}) \\
-    \tr{\throw{n($M$)}} &\triangleq& `l\nonocc.[\text{n}]c_n\tr{M}
+    \tr{\throw{n($M$)}} &\triangleq& `m\nonocc.[\text{n}]c_n\tr{M}
   \end{array}
 \]
 }
@@ -38,6 +38,10 @@ The contents of the $`m$-abstraction calls $c_n$.
 This \lam-variable is bound by the translation of \textbf{try} terms.
 This binding means that the exception handlers, represented by $`lx.\tr{L}$,
 are in scope for the reduction of the body of the try $M$.
+
+The translation defined by van Bakel in \cite{Bakel15} are from \ltry\ into \lmu\ restricted to \emph{lazy} reduction.
+Without lazy reduction, any occurrence of a throw in the body of a try-block -- even within an abstraction -- would begin executing.
+Lazy reduction prevents this undesirable internal reduction. 
 
 % TODO: explain translation ?
 
@@ -82,6 +86,9 @@ To implement named-terms, the subcontinuation $`b$ is pushed into the stack befo
 This means the reduct of $M$ will be returned to this subcontinuation.
 In effect, this will reduce $M$ and passes the result to $`b$.
 
+Once translated, the CDC terms reduce only the outermost redex.
+This translation is of a lazy \lmu-calculus to CDC.
+
 \subsection{Notation}
 To carry out proofs, the full state of the abstract machine is displayed:
 \[
@@ -113,7 +120,7 @@ we will instead write
 \subsection{Additional Translations}
 We alter $`m$-reduction to consume multiple variables.
 We use $\mult{N}$ to denote a series of one or more terms.
-The application of a $`m$ abstraction to multiple variables will consume them all at once:
+The application of a $`m$-abstraction to multiple variables will consume them all at once:
 \definition{
 \textsc{$`m$-reduction to consume multiple variables}
 \[ 
@@ -125,8 +132,8 @@ The application of a $`m$ abstraction to multiple variables will consume them al
 This does not change the behaviour of $`m$-reduction but condenses the reduction steps.
 The entire applicative context is consumed.
 Therefore the remaining $`m$-abstraction will point $`a$ to $\square$.
-This means that all labelled subterms $[`a]M'$ will be translated to $\psc \square\ \tr{M'}$.
-CDC reduces $\psc \square\ \tr{M'}$ to $\tr{M'}$.
+This means that all labelled subterms $[`a]M'$ will be translated to $\langle\ \psc \square\ \tr{M'}\ \rangle$.
+CDC reduces $\langle\ \psc \square\ \tr{M'}\ \rangle$ to $\tr{M'}$.
 This reduction means we can discard the $`a$ labels after consuming the entire context.
 Given this, we can define the following translation for multiple-variable consumption:
 \definition{\label{def:multiple-variable-consumption}
@@ -185,7 +192,7 @@ Using the translation in Definition \ref{def:multiple-variable-consumption}, the
 
 % TODO: Add proofs for completeness and other properties
 \begin{theorem}[Soundness of $\tr{`.}$]\label{theorem:soundness}
-\[ M \to_{`m} N \Rightarrow \exists P.\ \tr{M} \to^{*} P \land \tr{N} \to^{*} P \]
+\[ M \to_{`m}^{L} N \Rightarrow \exists P.\ \tr{M} \to^{L*} P \land \tr{N} \to^{L*} P \]
 \end{theorem}
 
 % TODO: remark: mu abstractions can only occur
@@ -339,7 +346,7 @@ In this final reduction step, $`a$ can not occur in $\tr{M}[\square \mult{N}/`a]
 
 \begin{theorem}[Completeness of $\tr{`.}$]
 \[
-  \tr{M} \to^{*} Q \Rightarrow \exists N. M \to^{*} N \land \tr{N} \to^{*} Q
+  \tr{M} \to^{L*} Q \Rightarrow \exists N. M \to^{L*} N \land \tr{N} \to^{L*} Q
 \]
 \end{theorem}
 \begin{Proof}
