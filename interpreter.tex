@@ -1,19 +1,24 @@
 \chapter{CDC Interpreter}\label{chapter:interpreter}
 
-This chapter explores the implementation of an interpreter for CDC. Portions of source code are examined in detail although the full source can be found in the appendix.
+\textit{
+This chapter explores the implementation of an interpreter for CDC.
+It compares portions of source code with reduction cases from the abstract machine.
+Finally, 
+it provides an example of the interpreter's output and the transliteration to a true CDC derivation. 
+}
 
 \section{Implementation}
 
-Although Peyton-Jones \emph{et al.} implement a language-level module for CDC, 
+Although Peyton-Jones \emph{et al.} implement a language-level module for CDC \cite{JonesDS07}, 
 we are interested in the intermediate term transformations.
 Using the step-by-step transformations produced by this interpreter,
-we can construct and verify the implementations of \ltry\ and \lmu\ into CDC.
+we can construct and verify the implementations of \ltry\ and \lmu\ in CDC.
 Examining transformation steps in full also allows us to derive proofs of soundness and completeness for these translations. 
 For this reason, the interpreter was implemented as a term-rewriting program.
 
 We follow the operational semantics of the system to provide an implementation.
 This is not necessary and results in an ineffecient implementation.
-Despite this, it is the simplest approach to implementation and efficiency is not central to producing proofs.
+Despite this, it is the simplest approach to implementation and efficiency is not central in producing proofs.
 
 \subsection{Data structures}
 There are two data types for representing CDC terms, \mono{Value} and \mono{Expr}
@@ -42,7 +47,6 @@ data Expr = Val Value
   | PushSubCont Expr Expr
   | WithSubCont Expr Expr
   | NewPrompt
-  
   | Sub Expr Expr Char
   deriving (Show, Eq)
 
@@ -53,7 +57,7 @@ data State = State Expr Expr [Expr] Value
 \end{figure}
 
 \subsection{Utility Functions}
-Some utility functions are simplify the implementation.
+We define some utility functions to simplify the implementation.
 Informally, these functions behave as follows (see Figure ~\ref{fig:cdc-helper-functions} for implementations details):
 
 \begin{itemize}\itemsep0.1cm
@@ -66,7 +70,7 @@ Informally, these functions behave as follows (see Figure ~\ref{fig:cdc-helper-f
 fills the hole of each expression with the previous expression. 
 This in effect joins the output of each context with the input of the next context.
 
-\item \mono{promptMatch :: Int -> Expr -> Bool} returns true if the second argument is a Prompt with the same value as the first argument
+\item \mono{promptMatch :: Int -> Expr -> Bool} returns true if the second argument is a \mono{Prompt} with the same value as the first argument
 
 \item \mono{splitBefore :: [Expr] -> Int -> [Expr]} returns the sequence of expressions up until (but not including) the prompt matching the second argument.
 
@@ -170,9 +174,7 @@ It then pushes the first argument (a prompt) and the current context onto the st
 \Verbatimcode
 eval (State (PushPrompt e e') d es q) = case e of
   Val _ -> State e' Hole (e:d:es) q
-  otherwise -> case d of
-    Hole -> State e (PushPrompt Hole e') es q
-    otherwise -> State e (ret d (PushPrompt Hole e')) es q
+  otherwise -> State e (ret d (PushPrompt Hole e')) es q
 \end{Verbatim}
 
 \subsubsection{WithSubCont}
@@ -247,7 +249,7 @@ eval (State NewPrompt d es (Prompt p)) =
 
 \subsection{Example}
 
-The terms $pushPrompt$, $newPrompt$, $withSubCont$, and $pushSubCont$ are too long to work with easily.
+The terms $pushPrompt$, $newPrompt$, $withSubCont$, and $pushSubCont$ are too long and clutter lengthy derivations.
 We define the following aliases for convenience:
 \definition{
 \textsc{CDC aliases for operators}
@@ -302,6 +304,7 @@ term = App
 Passing this state into our evaluator with \mono{prettifyState}, we get the following:
 
 \begin{Verbatim}
+> evalFull prettifyState term
 (((\p.(pp p ((wsc p (\a.(psc a s)))t))) np), _, [], 0)
 ( np, ((\p.(pp p ((wsc p (\a.(psc a s)))t)))_), [], 0)
 (0, ((\p.(pp p ((wsc p (\a.(psc a s)))t)))_), [], 1)
@@ -340,3 +343,4 @@ From this, which we can translate to the following derivation:
 \end{array}
 \]
 }
+Using the output of this interpreter, then, we can generate derivations to help us verify the translation from \lmu to CDC.

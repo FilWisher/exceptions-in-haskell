@@ -2,7 +2,11 @@
 
 \chapter{Background}\label{chapter:background}
 
-This chapter explores what \emph{formal systems} are and what they are useful for. It looks at a number of related formal systems and their relation to computation. It outlines the context ontop of which the rest of this project is built.
+\textit{
+This chapter explores what \emph{formal systems} are and what they are useful for. 
+It looks at a number of related formal systems and their relation to computation. 
+It outlines the context on which the rest of this project is built.
+}
 
 % TODO: explain that ideas will become clearer as they are
 %       used and we see how they interact with other concepts
@@ -11,10 +15,10 @@ This chapter explores what \emph{formal systems} are and what they are useful fo
 
 \section{Formal Systems}
 
-Formal systems are a set of rules for writing and manipulating
-formulae. Formulae are constructed from a set of characters called the
-\emph{alphabet} by following a some formula-construction rules called
-the \emph{grammar}. The only formulae considered \emph{well-formed} in
+Formal systems are sets of rules for writing and manipulating
+formul\ae. Formul\ae are constructed from a set of characters called the
+\emph{alphabet} by following some formul\ae-construction rules called
+the \emph{grammar}. The only formul\ae considered \emph{well-formed} in
 a system are those constructed according to the grammar of a system.
 Formal systems are used to model domains of knowledge to help better
 and more formally understand those domains.
@@ -22,7 +26,7 @@ and more formally understand those domains.
 \subsection{Syntax and Grammars}
 
 The grammar of a formal system describes the system's syntax. Grammars are 
-rules for constructing formulae that are well-formed. Formulae
+rules for constructing formul\ae that are well-formed. Formul\ae
 produced according to the grammar of a system are well-formed according to 
 the syntax of that system.
 
@@ -32,9 +36,8 @@ We defined grammars using Backus-Naur Form or BNF:
   M ::= t\ \mid\ f
 \]
 
-This grammar describes that syntactically-valid constructs are either
-the letter $t$ or the letter $f$. Grammars can be recursive
-which allows much more expressive construction rules:
+This grammar describes that syntactically-valid constructs are either the letter $t$ or the letter $f$. 
+Grammars can be recursive which allows much more expressive construction rules:
 
 \begin{figure}[!h]\label{fig:tf-grammar}
 \[
@@ -48,8 +51,7 @@ which allows much more expressive construction rules:
 \caption{Grammar for producing the letters $t$ or $f$ connected by the letters $a$ or $o$}
 \end{figure}
 
-This grammar describes formulae containing the any number of occurrences of
-the letters $t$ or $f$ separated by either an $a$ or an $o$.
+This grammar describes formul\ae containing any number of occurrences of the letters $t$ or $f$ separated by either an $a$ or an $o$.
 
 \[
 \begin{array}{lr}
@@ -60,10 +62,9 @@ the letters $t$ or $f$ separated by either an $a$ or an $o$.
 \]
 
 \subsection{Derivation Rules}
-Whereas a grammar describes the rules for producing well-formed formulae,
-the derivation rules describe rules for transforming formulae of a
-particular form into a new formula. Using the grammar from Figure 
-\ref{fig:tf-grammar}, we add derivation rules:
+Whereas a grammar describes the rules for producing well-formed formul\ae,
+the derivation rules describe rules for transforming formul\ae of a particular form into new formul\ae. 
+Using the grammar from Figure \ref{fig:tf-grammar}, we add derivation rules:
 
 \[
 \begin{array}{lcl}
@@ -74,7 +75,8 @@ particular form into a new formula. Using the grammar from Figure
   \\
   M\ o\ t &\to& t \\ 
   t\ o\ M &\to& t \\
-  f\ o\ f &\to& f \\
+  M\ o\ f &\to& M \\
+  f\ o\ M &\to& M \\
 \end{array}
 \]
 
@@ -90,8 +92,8 @@ means we can attempt to discover truths about the domain through studying
 the formal system.
 
 For example, take the $tf$-system described above. Without
-understanding the domain, we are able to manipulate formulae of the
-system to create new formulae. The $tf$-system is isomorphic to
+understanding the domain, we are able to manipulate formul\ae of the
+system to create new formul\ae. The $tf$-system is isomorphic to
 Boolean algebra:
 
 \[
@@ -138,9 +140,7 @@ we apply the derivation rule and recombine the context with the resulting term:
   \textit{recombine} & t\ a\ t 
 \end{array}
 \]
-
-The term $t\ o\ f\ a\ t$ can be decomposed in two ways:
-
+However the the term $t\ o\ f\ a\ t$ can be decomposed in two ways:
 \[
 \begin{array}{rlr}
   1. & t\ o\ f\ & \square\ a\ t  \\
@@ -170,24 +170,22 @@ either apply derivations starting from the left or starting from the right.
 \end{array}
 \]
 Whereas derivation rules are defined in the system, 
-derivation strategies are methods of choosing which derivation rule to apply when given a choice. 
+derivation strategies are strategies \emph{about} the system: methods for choosing which derivation rule to apply when given a choice. 
 
 \section{\lam-Calculus}
 
-In response to Hilbert's \emph{Entscheidungsproblem}, Alonzo Church
-defined the \lam-calculus. It is a formal system capable of expressing
-the set of effectively-computible algorithms. Ontop of this, he built
-his proof that not all algorithms are decidable. Shortly after, Godel
-and Turing created their own models of effective computibility.
+In response to Hilbert's \emph{Entscheidungsproblem}, Alonzo Church defined the \lam-calculus \cite{ChurchEnt36}. 
+It is a formal system capable of expressing the set of effectively-computible algorithms. 
+Ontop of this, he built his proof that not all algorithms are decidable. 
+Shortly after, Godel and Turing created their own models of effective computibility.
 \footnote{General recursive functions and Turing machines, respectively} 
 These models were later proved to all be equivalent.
 
 \subsection{Syntax}
   
-  \lam-variables are represented by $x,y,z,etc$. Variables denote an
-  arbitrary value: they do not describe what the value is but that any
-  two occurrences of the same variable represent the same value. The
-  grammar for constructing well-formed \lam-terms is:
+  \lam-variables are represented by $x,y,z$, etc. Variables denote an arbitrary value: 
+  they do not describe what the value is but that any two occurrences of the same variable represent the same value. 
+  The grammar for constructing well-formed \lam-terms is:
 
   \begin{figure}[!h]
   \definition{ 
@@ -203,14 +201,11 @@ These models were later proved to all be equivalent.
   }
   \end{figure}
 
-  \lam-abstractions are represented by $`lx.M$ where $x$ is a
-  parameter and $M$ is the body of the abstraction. The same idea is
-  expressed by more conventional notation as a mathematical function
-  $f(x) = M$. The $`l$ annotates the beginning of an abstraction and
-  the $.$ separates the parameter from the body of the abstraction.
-  This grammar is recursive meaning the body of an abstraction is just
-  another term constructed according to the grammar. Some examples of
-  abstractions are:
+  \lam-abstractions are represented by $`lx.M$ where $x$ is a parameter and $M$ is the body of the abstraction. 
+  The same idea is expressed by more conventional notation as a mathematical function $f(x) = M$. 
+  The $`l$ annotates the beginning of an abstraction and the $.$ separates the parameter from the body of the abstraction.
+  This grammar is recursive, meaning the body of an abstraction is just another term constructed according to the grammar. 
+  Some examples of abstractions are:
   
   \begin{figure}[!h]
     \[
@@ -223,12 +218,17 @@ These models were later proved to all be equivalent.
   \caption{Examples of valid \lam-abstractions}
   \end{figure}
   
-  Applications are represented by any two terms, constructed according to
-  the grammar, placed alongside one another. Application gives highest
-  precedence to the left-most terms. Bracketing can be introduced to enforce 
+  Applications are represented by any two terms, 
+    both constructed according to the grammar, 
+  placed alongside one another. 
+  Application gives highest precedence to the left-most terms. 
+  Bracketing can be introduced to enforce 
   alternative application order for example $xyz$ is implicitly read as 
-  $(xy)z$ but can be written as $x(yz)$ to describe that the application of 
-  $yz$ should come first. Examples of applications are:
+    $(xy)z$ 
+  but can be written as 
+    $x(yz)$ 
+  to describe that the application of $yz$ should come first. 
+  Examples of applications are:
     \begin{figure}[!h]
       \[
         \begin{array}{l}
@@ -242,7 +242,10 @@ These models were later proved to all be equivalent.
     \end{figure}
 
 \subsection{Reduction Rules}
-
+  
+  The reduction rules for the \lam-calculus are like the derivation rules from formal systems.
+  They determine how terms of a particular can be transformed into new terms.
+  
   First we will introduce the substitution notation $M[N/x]$. This denotes 
   the term M with all occurrences of x replaced by N. The substitution 
   notation is defined inductively as:
@@ -293,7 +296,7 @@ These models were later proved to all be equivalent.
   \textsc{Bound variables $bv$ of \lam-terms}
   \cite{Bakel15}
   \[
-  \begin{array}{rcl}
+  \begin{array}{lcl}
     bv(x)     & = & \varnothing \\
     bv(`lx.M) & = & bv(M) \cup \{x\} \\
     bv(MN) & = & bv(M) \cup bv(N) \\
@@ -302,6 +305,7 @@ These models were later proved to all be equivalent.
   }
   \definition{
   \textsc{Free variables $fv$ of \lam-terms}
+  \cite{Bakel15}
   \\
   The free variables of a term $M$ are variables that occur in $M$ that are not bound.
   \\
@@ -344,17 +348,16 @@ These models were later proved to all be equivalent.
   conditions that: 
   \begin{enumerate}
     \item All variables bound by that abstraction are renamed the same 
-    \item The variable it is changed to is not currently in use in $M$ 
+    \item The variable it is changed to does not already appear in $M$ 
   \end{enumerate}
   
   
   \subsection{Normal Forms}
  
-  A term is a in normal form for a reduction strategy if, 
-  following that reduction strategy,
+  A term is in normal form for a reduction strategy if, 
+    following that reduction strategy,
   no more reductions can take place.
   For instance, a term that can no longer be \bta-reduced is in \bta-normal form.
-  We can define \bta-normal form on \lam-terms with the following BNF grammar:
   We use $\to_{`b}^{nf}$ to denote a term in \bta-normal form.
   Again, we can omit the \bta\ subscript if it is clear from context.
 
@@ -378,7 +381,8 @@ These models were later proved to all be equivalent.
   The symbol $\to$ represents implication: whenever $M$ is true, $N$ is true.
   
   \subsection{Natural Deduction}
-  
+ 
+  Natural deduction is a system of logic.
   In natural deduction, there are \emph{introduction} and \emph{elimination} rules for each logical connective.
   These are presented as \emph{inference rules}.
   Logical inference rules describe that if some statement $A$ is true,
@@ -397,13 +401,13 @@ These models were later proved to all be equivalent.
   \textsc{$\to$ introduction and elimination rules} 
   \[
   \begin{array}{rl@{\quad\quad}rl}
-    ( \to \mathcal{E} ) &
     \Inf { A \to B \hspace{0.5cm} A }
         {B}
+        {\hspace{0.2cm} \to \mathcal{E} }
     &
-    ( \to \mathcal{I} ) &
     \Inf { \infer*{B}{[A]} }
         { A \to B}
+        {\hspace{0.2cm} \to \mathcal{I} }
   \end{array}
   \]
   }
@@ -436,15 +440,17 @@ These models were later proved to all be equivalent.
   \[
     A \to B = \textit{If Turing did not see Church's work, he could not have stolen it}
   \]
-
+ 
+  Note the removal of the assumption ([\ ]) from $A$.
   By restricting ourselves to these rules, we are working within \emph{Implicative Intuitionistic Logic} (IIL).
   \footnote{Importantly, IIL also rejects the law of excluded middle which says for every $P$, $P \lor \neg P$.
   According to intuitionistic logic, unless we have a \emph{constructive} proof for which of $P$ or $\neg P$ is true, the statement is false}
   
   \subsection{Sequent Calculus}
   
-  Gentzen explored natural deduction through the sequent calculus as well. 
-  We have followed Girard \emph{et al.}'s observation that the syntax of the sequent calculus is overcomplicated for the purpose of natural deduction.\cite{Girard89}
+  Gentzen explored natural deduction through the sequent calculus \cite{Wadler15}.
+  We have followed Girard \emph{et al.}'s observation that the syntax of the sequent calculus is overcomplicated for the purpose of natural deduction \cite{Girard89}.
+  However it is useful for both classical logic and type assignment systems (see Sections \ref{sec:classical-logic} and \ref{sec:type-assignment} respectively).
   
   Sequent calculus manipulates \emph{sequents} where a sequent is denoted by:
   
@@ -465,7 +471,7 @@ These models were later proved to all be equivalent.
     \end{array}
   \]
 
-  \subsection{Classical Logic}
+  \subsection{Classical Logic}\label{sec:classical-logic}
   
   Gentzen's classical natural deduction used the sequent calculus and introduced a set structural rules for manipulating sequents:
   
@@ -510,32 +516,31 @@ These models were later proved to all be equivalent.
   \]
   }
   
-  The first set of rules are left and right exchange rules. 
+  The first set of rules, $\mathcal{LX}$ and $\mathcal{RX}$, are left and right exchange rules. 
   They express the commutativity of statements in the left and right sequences.
-  The second set of rules, weakening rules, allows the introduction of new formula either the left or right sequences.
-  The third set of rules, contraction rules, allow the contraction of multiple occurrences of a formula into a single occurrence. 
-  The cut rule allows us to replace assumptions of formulae with their concrete proofs, if we have proved them somewhere else.
+  The weakening rules, $\mathcal{LW}$ and $\mathcal{RW}$, allow the introduction of new formul\ae on either the left or right sequences.
+  The contraction rules, $\mathcal{LC}$ and $\mathcal{RC}$, allow the contraction of multiple occurrences of a formula into a single occurrence. 
+  The cut rule allows us to replace assumptions of formul\ae with their concrete proofs, if we have proved them somewhere else.
   
   In addition to these, the system maintains the standard introduction/elimination rules from natural deduction.
   The introduction/elimination rules have variants for manipulating the right sequence or the left sequence of statements.
   
-  \subsection{Type Assignment}
+  \subsection{Type Assignment}\label{sec:type-assignment}
   
-  Type assignment introduces additional grammar and restrictions on
-  the reduction rules of a system. These extensions prevent logically
-  inconsistent terms from being constructed. A type assignment has the
-  form:
+  There are many type assignment different systems.
+  Systems of type assignment introduce additional grammar and restrictions on the reduction rules of a formal system. 
+  These extensions prevent logically inconsistent terms from being constructed. 
+  A type assignment has the form:
   \[
     M : `a 
   \]
-  which states that term $M$ has the type $`a$. Like variables, type 
-  variables are abstract: they do not describe anything more about a 
-  type than its identity. That is to say $x: A$ and $y : A$ have the
-  same type but we cannot say any more about what that type is.
+  which states that term $M$ has the type $`a$. 
+  Like variables, type variables are abstract: 
+  they do not describe anything more about a type than its identity. 
+  That is to say $x: A$ and $y : A$ have the same type but we cannot say any more about what that type is.
  
-  A type is either some uppercase Latin letter or it is two valid types
-  connected by a $\rightarrow$. This is described by the following
-  BNF grammar:
+  A type is either some uppercase Latin letter or it is two valid types connected by a $\rightarrow$. 
+  This is described by the following BNF grammar:
   
   \definition{
     \textsc{(Grammar for constructing types)} 
@@ -548,31 +553,33 @@ These models were later proved to all be equivalent.
   \subsection{Typed \lam-Calculus}
   The typed \lam-calculus is an extension of the \lam-calculus with types assigned to \lam-terms.
   \lam-abstractions have arrow types: $A \to B$.
-  This describes that the abstraction can be applied to a value of type $A$ and returns one of type $B$.
+  This describes that the abstraction can only be applied to a value of type $A$ and returns one of type $B$.
   Type assignment rules for the \emph{typed} \lam-calculus are:
 
   \[
-    \begin{array}{c}
+    \begin{array}{c@{\quad\quad\quad}c}
     \Inf{
       `G \vdash M : A \to B \hspace{20pt} N:A 
     }{
       `G \vdash M N : B 
     }
-    \\
-    \\
+    &
     \Inf{
       `G,x:A \vdash M : B
     }{
       `G \vdash `lx.M : A \to B 
     }
+    \vspace{5pt}
     \end{array}
   \]
-
+  Similarly to the sequent calculus, 
+  the letter $`G$ represents a sequence of type assignment statements.
+  The form of these rules denote that the typing judgement on the right-hand side of the $\vdash$ are a consequence of the sequence of type assignment statements in $`G$.
   The first rule states that the application of a term of type $A \to B$ to
   a term of type $A$ has type $B$. 
   The second rule says a term of type $B$ in a context where $x:A$ is the same as an abstraction of type $A \to B$ in a context without $x:A$. 
   These rules add restrictions on what constitutes a well-formed term.
-  These restrictions prevent the formation of terms sometimes undesirable properties.  
+  These restrictions prevent the formation of terms with undesirable properties.  
   
   \begin{example}[Type-assignment restricts set of valid terms]
   \[  
@@ -586,17 +593,17 @@ These models were later proved to all be equivalent.
   The variable $x$ is applied to a term so it must have type $A \to B$.
   The term it is applied to must have type $A$.
   However $x$ is applied to itself so it must have type $A$ and $A \to B$.
-  This means the term $`lx.xx$ is untypable:
-  it is disallowed by the rules of the typed \lam-calculus.
+  This means the term $`lx.xx$ is untypable according to this simple type assignment system:
+  the conflicting types for $x$ mean the term is disallowed by the rules of the typed \lam-calculus.
   \end{example}
  
   \subsection{Curry-Howard Isomophism}
   
   The Curry-Howard isomorphism states that their is a true isomorphism between the type of a term and a logical proposition. 
   The type of a term is a logical proposition and the term itself its a proof of that proposition.
-  The simplification of a proof maps to the evaluation of the corresponding program.\cite{Wadler15}
+  The simplification of a proof maps to the evaluation of the corresponding program \cite{Wadler15}.
   
-  Looking again at the rules of the typed \lam-calculus and IIL,
+  Looking again at the type assignment rules of the typed \lam-calculus and the inference rules of IIL,
   the correspondence is clear:
   
   \[
@@ -624,7 +631,7 @@ These models were later proved to all be equivalent.
     \end{array}
   \]
  
-  The correspondence between logic and programs is not limited to IIL and the typed lambda-calculus.
+  The correspondence between logic and programs is not limited to IIL and the typed \lam-calculus.
   There are many features of computer programs that have counter-parts in logical systems.
   % TODO: add more - examples and demonstration
 
@@ -682,10 +689,9 @@ These models were later proved to all be equivalent.
     type Name = String 
   \end{Verbatim}
   
-  Again, we introduce a type constructor \mono{Name} but this time we
-  name another type, in this case \mono{String}, as its inhabitant. This
-  means that the type \mono{Name} is a type alias for \mono{String} and
-  will share the same data constructors. 
+  Again, we introduce a type constructor \mono{Name} but this time we name another type in place of a data constructor, 
+  in this case \mono{String}.
+  This means that the type \mono{Name} is a type alias for \mono{String} and will share the same data constructors. 
  
   \subsection{Type Level/Value Level}
   
@@ -718,16 +724,13 @@ These models were later proved to all be equivalent.
   that an instance of a class must implement.
   
   For example, we can create instances of the \mono{Addable} class:
-  
   \Verbatimcode
     data Number = One | Two | ThreeOrMore
     
     instance Addable Number where
       add One One = Two 
-      add One Two = ThreeOrMore 
-      add Two One = ThreeOrMore 
+      add _ _     = ThreeOrMore 
   \end{Verbatim}    
-  
   To declare an instance of a type class, we must supply the bodies for functions in the class specification.
   The \mono{Addable} class, for instance, requires that the body of the \mono{add} function is defined.
   When declaring an instance, we have to ensure the type specification of each function is respected.
@@ -738,8 +741,7 @@ These models were later proved to all be equivalent.
  
   As in the example in Figure \ref{fig:decomposing}, 
   compound \lam-terms can be decomposed into a dominant term and a context:
-  
-  \begin{figure}[!h]
+  \begin{figure}[H]\label{fig:decomposing-lambda}
     \hspace{1cm}Assume that $M \rightarrow_{`b} M^\prime$
     \[
     \begin{array}{lrcl}
@@ -751,19 +753,17 @@ These models were later proved to all be equivalent.
     \]
   \caption{Decomposing a term into a dominant term and a context}
   \end{figure}
-  
   The reduction strategy will define how the term will be decomposed.
   When $M$ has \bta-reduced to a value, $M^\prime$, then the hole of the context $\square N$ is filled to form $M^\prime N$. 
-  When the hole of a context is filled, the reduction of the compound term continues.
+  When the hole of a context is filled, the reduction of the compound term $M'N$ continues.
   This means the context contains the remaining terms to be reduced: it represents how reduction will continue. 
   Thus a context is also called a \emph{continuation}.
  
   \subsection{Undelimited Continuations} 
  
-  For more complex terms, the waiting context will grow as the dominant
-  term gets further decomposed:
+  For more complex terms, the waiting context will grow as the dominant term gets further decomposed:
   
-  \begin{figure}[!h]
+  \begin{figure}[H]
     \[
     \begin{array}{ll}
       (MM^\prime) M^{\prime\prime} \\
@@ -774,21 +774,20 @@ These models were later proved to all be equivalent.
   \caption{Decomposing a term into multiple contexts}
   \end{figure}
 
-  By amalgamating continuations into one big continuation we only have
-  two components at point during the reduction: the current dominant term
-  and the \emph{current continuation}. 
+  By amalgamating continuations into one big continuation we only have two components at any point during the reduction: 
+  the current dominant term and the \emph{current continuation}. 
  
   By adding additional operators to a language, the continuations of terms can be exposed.
   This provides programmers with the ability to control continuations.
   Control operators that only allow manipulation of the entire remaining continuation are \textbf{undelimited continuations}. 
   For example, Scheme's \mono{call/cc} operator aborts the entire remaining continuation.
 
-  \subsection{Delimited-Continuations}
+  \subsection{Delimited Continuations}
 
-  Instead, if we maintain a stack of continuations when
-  decomposing complex terms, we can keep continuations separated:
+  Instead, if we maintain continuations in a stack when decomposing complex terms, 
+  we can keep the continuations separated:
   
-  \begin{figure}[!h]
+  \begin{figure}[H]
     \[
     \begin{array}{lll}
       (MM^\prime) M^{\prime\prime} \\
@@ -809,9 +808,9 @@ These models were later proved to all be equivalent.
   If the control operators of a language allow manipulation of portions of the continuation stack,
   the continuations are \textbf{delimited}.
   To manipulate portions of the stack, these operators need a control delimiter.
-  These are commonly called \emph{prompts}, after Felleisen first introduced them as such.
+  These are commonly called \emph{prompts}, after Felleisen first introduced them as such \cite{Felleisen88}.
   By allowing prompts to be pushed onto the stack, we can recall portions of the stack up until a prompt.
-  This gives the operators a finer grain of control.
+  This gives the operators a finer grain of control over continuations.
 
   \subsection{Continuation-Passing Style}
  
@@ -823,7 +822,8 @@ These models were later proved to all be equivalent.
   style or CPS.
   
   \definition{
-    \textsc{(Translation of standard \lam-terms into CPS)} 
+    \textsc{(Translation of standard \lam-terms into CPS)}
+    \cite{Groote94}
     \[
     \begin{array}{lcl}
       \tr{x}     & = & `lk.kx      \\
@@ -839,8 +839,7 @@ These models were later proved to all be equivalent.
   function $`lx.x$ or a display operation $`lx.\textsc{display }x$ to
   display the results of the program.
 
-  \begin{figure}[!h]
-  \caption{Extracting the final value from a terminated CPS program}
+  \begin{example}{Extracting the final value from a terminated CPS program}
   \[
   \begin{array}{ll}
                 & (`lk.kM)(`lx.x) \\
@@ -848,7 +847,7 @@ These models were later proved to all be equivalent.
     \rightarrow & M
   \end{array}
   \]
-  \end{figure}
+  \end{example}
  
   The translation of standard \lam-terms into CPS similarly transforms the 
   \emph{types} of \lam-terms. For example, a term $x : A$ becomes 
@@ -857,7 +856,7 @@ These models were later proved to all be equivalent.
   In order to resume the computation, the term must be applied to a 
   continuation.
   
-  As an example, take the term M where
+  As an example, take the term $M$ where
   
   \[
     M = `lk.kx
@@ -868,7 +867,7 @@ These models were later proved to all be equivalent.
   
   \[
   \begin{array}{rl}
-      (`lk.kx)(`lm.N) \\
+      & (`lk.kx)(`lm.N) \\
       \to & (`lm.N)x \\
       \to & N[x/m]
   \end{array}
@@ -878,7 +877,7 @@ These models were later proved to all be equivalent.
   So we can think about $M$ as a suspended computation that, when applied
   to a continuation, applies the continuation to $x$. Looking at
   the type $(A \to B) \to B$ again, it is clear that $A$ is the type
-  of the term passed to the continuation of a CPS-term:
+  of the term passed to the continuation of the CPS-term:
   
   \[
   \begin{array}{l}
@@ -902,14 +901,12 @@ These models were later proved to all be equivalent.
     M(`lm.M^\prime(`lm^\prime.N))
   \]
   
-  This is a common operation so we define a utility operator \mono{>>=}
-  that binds the first suspended computation to a continuation which 
-  returns another suspended computation\footnote{ \mono{(>>=)} is pronounced 'bind'.}:
- 
+  This is a common operation so we define a utility operator \mono{>>=} 
+    (read: 'bind') 
+  that binds the first suspended computation to a continuation which returns another suspended computation:
   \[
     \mono{>>=} : ((A \to B) \to B) \to (A \to ((B \to C) \to C)) \to ((B \to C) \to C)
   \]
- 
   The type $(A \to B) \to B$ that represents a suspended computation returning
   a value of type $A$ to its continuation we will call an $A$-computation or
   $Comp\ A$. We can rewrite the type signature of \mono{>>=}:
@@ -945,7 +942,7 @@ These models were later proved to all be equivalent.
 
 \section{\lmu-Calculus}
   
-  Michel Parigot wrote the \lmu-calculus as a system with an isomorphism to classical logic.
+  Michel Parigot defined the \lmu-calculus as a system with an isomorphism to classical logic.
   It is an extension of the \lam-calculus. 
   This means that the grammar and reduction rules of the \lmu-calculus are a superset of those of the \lam-calculus.
   
@@ -964,7 +961,7 @@ These models were later proved to all be equivalent.
   A named term consists of a name of the form $[`a]$ followed by an unnamed 
   term. 
 
-  \begin{figure}[!h]
+  \begin{figure}[H]
   \definition{ 
     \textsc{(Grammar for \lmu-calculus)}
     \item $`l$-variables are denoted by $x, y,\dots$ and $`m$-variables are denoted by $`a, `b,\dots$ \\
@@ -979,7 +976,7 @@ These models were later proved to all be equivalent.
   \end{figure}
   
   \subsection{Reduction Rules}
-  \begin{figure}[!h]
+  \begin{figure}[H]
   \definition{ 
     \textsc{(Reduction rules for \lmu-calculus)}
     \[
@@ -1002,9 +999,9 @@ These models were later proved to all be equivalent.
   
   \subsection{Computational Significance}
 
-  The \lmu-calculus makes use of \emph{applicative contexts}:
-  An \lmu-abstraction applied to some term $N$ points the $`m$-variable to the context $\square N$.
+  A \lmu-abstraction applied to some term $N$ points the $`m$-variable to the context $\square N$.
   In this sense, the \lmu-abstraction captures contexts where the contexts are supplied by application.
+  For this reason, \lmu-calculus is described as using \emph{applicative} contexts.
   When an unnamed term is labelled with a \lmu-variable, it is evaluated in that context. 
   For instance the named term $[`a]M$ has the effect of evaluating $M$ in the context pointed to by $`a$.
   
@@ -1022,25 +1019,24 @@ These models were later proved to all be equivalent.
   A named term applies the term to the name, effectively running the term in the continuation.
   
   To make this more concrete, consider the compound term $(`m`a.[`b]M)\ N$. 
-  First we decompose the term into a dominant term $(`m`a.[`b]M)$ and a 
-  context $\square N$. Informally, we can imagine that the variable at the head of the $`m$-abstraction now maps to this context $\{`a \Rightarrow \square N\}$:
+  First we decompose the term into a dominant term $`m`a.[`b]M$ and a context $\square N$. 
+  The dominant term is now a $`m$-abstraction so we can think about the variable at the head of the $`m$-abstraction now mapping to the context $\{`a \Rightarrow \square N\}$:
   
   % TODO: reform to get rid of context mapping:
   %   keep mu abstraction in dominant and consult context for
   %   what to apply named-terms to
   \begin{example}[]
-    \[
-    \begin{array}{lc}
+  \[
+  \begin{array}{lc}
     \textbf{Dominant} & \textbf{Context} \\
     (`m`a.[`b]M) N \\
     `m`a.[`b]M & \square N \\
-    \end{array}
-    \]
+  \end{array}
+  \]
   \end{example}
 
-  All subterms of $M$ labelled $`a$ will now be evaluated in the context 
-  $\square N$ and the context will destroyed. For example, let us replace 
-  $M$ with \mbox{$`m\nonocc.[`a](`ls.fs)$}:
+  All subterms of $M$ labelled $`a$ will now be evaluated in the context $\square N$ after which the context will destroyed. 
+  For example, let us replace $M$ with \mbox{$`m\nonocc.[`a](`ls.fs)$}:
   \footnote{Following van Bakel, we use $\nonocc$ to denote a $`m$-variable that does not occur in the body of the \lmu-abstraction.}
   
   \begin{example}
@@ -1083,7 +1079,7 @@ These models were later proved to all be equivalent.
   \[
   \begin{array}{c@{\quad\quad}c}
     \Inf{`G \vdash M : B\ |\  `a : A, `b : B, `D}
-        {`G \vdash `m`a.[`b]M : A |\ `b : B, `D}
+        {`G \vdash `m`a.[`b]M : A\ |\ `b : B, `D}
     &
     \Inf{`G \vdash M : A\ |\ `a : A, `D}
         {`G \vdash `m`a.[`a]M : A\ |\ `D}
@@ -1094,8 +1090,9 @@ These models were later proved to all be equivalent.
   These rules correspond to the structural rules of classical natural deduction.
   The original presentation of Parigot's type assignment makes the isomorphism clearer.
   Our presentation here makes it easier to understand the role of the operators.
+  % TODO: this is thin, it needs better explanations
 
-\section{Calculus of Delimited-Continuations}
+\section{Calculus of Delimited Continuations}
 
   % TODO: explain motivation behind DCC: \lmu requires
   %       delimited continuations and DCC formalizes delimited
@@ -1105,8 +1102,8 @@ These models were later proved to all be equivalent.
   Simon Peyton-Jones \textit{et al.}\ extended the \lam-calculus with additional operators in order create a framework for implementing delimited continuations \cite{JonesDS07}. 
   This calculus will be referred to as the calculus of delimited-continuations or \emph{CDC}. 
   Many calculi have been devised with control mechanisms for manipulating continuations, like the \lmu-calculus.
-  These control mechanisms manipulate either delimited and undelimited continuations. 
-  CDC provides a set of operations that are capable of expressing many of the common control mechanisms found in the literature.
+  These control mechanisms manipulate either delimited or undelimited continuations. 
+  CDC provides a set of operators that are capable of expressing many of the common control mechanisms found in the literature.
 
   \subsection{Syntax}
   The grammar of CDC is an extension of the standard \lam-calculus:
@@ -1127,7 +1124,7 @@ These models were later proved to all be equivalent.
 
   \subsection{Reduction Rules}
   
-  The operational semantics can be understood through an abstract machine that transforms tuple of the form $\langle e,\ D,\ E,\ q \rangle$.
+  The operational semantics can be understood through an abstract machine that transforms tuples of the form $\langle e,\ D,\ E,\ q \rangle$.
   The tuple consists of:
     \begin{itemize}
       \item $e$ - the current dominant term
@@ -1181,21 +1178,22 @@ These models were later proved to all be equivalent.
   \item \op{pushSubCont} pushes the current continuation and then its first argument (a subcontinuation) onto the continuation stack before evaluating its second argument.
   \end{itemize}
   
-  The abstract machine defined in Figure \ref{fig:cdc-abstract-machine} also encodes the reduction strategy.
-  The first block of rules define in what order redexes are reducted.
+  The abstract machine defined in Figure \ref{fig:cdc-abstract-machine} also encodes the reduction strategy:
+  the first block of rules define in what order redexes are reducted.
  
 \section{\ltry-Calculus}
 
-Steffen van Bakel extended the \lam-calculus with operators for modelling exceptions.
-Unlike previous systems, the \ltry-calculus uses named exceptions.
+\ltry\ is a system defined by van Bakel in \cite{Bakel15} for modelling exceptions.
+It is an syntactic and semantic extension of the \lam-calculus.
+Unlike previous systems, the \ltry-calculus introduces the idea of named exceptions.
 
 \subsection{Exceptions}
 
-Exceptions in programming languages are indications that control flow cannot continue.
+\emph{Exceptions} in programming languages are indications that control flow cannot continue.
 For example, if you attempt to open a non-existent file,
 the operation might throw an exception.
 If an exception occurs without being caught, a program will exit with an error.
-Exceptions can be caught and attempts at recovery can be made by exception handlers.
+Exceptions can be caught and attempts at recovery can be made by \emph{exception handlers}.
 
 The common syntax for introducing exception handlers is in try-catch blocks.
 An exception that occurs in a try-catch block will be handled by a corresponding handler.
@@ -1212,7 +1210,7 @@ For example, see the Javascript syntax for this:
 The \mono{catch (e) \{ ... \}} introduces a single exception handler.
 This exception handler will be called if an exception is thrown inside the try block.
 If we want to introduce multiple exception handlers,
-we need a mechanism for deciding which handler will be called.
+we need a mechanism for deciding which handler will be called for which exception.
 Java solves this by registering different exception handlers based on their type:
 
 \begin{Verbatim}
@@ -1240,12 +1238,12 @@ The grammar of the \ltry-calculus is as follows:
 \]
 }
 
-The grammar for $C$ describes a catch block as series of one or more catch statements. 
+The grammar for $C$ describes a catch block as a series of one or more catch statements. 
 For convenience, we will use the notation 
 \[
   \mult{\catch{n$_i$($x$) = $M_i$}}
 \]
-to describe a catch block with more than one catch statement. 
+to describe a catch block with one or more catch statements. 
 
 The \ltry-calculus adds three new syntactic constructs:
 \begin{itemize}
@@ -1259,7 +1257,7 @@ In conjunction with the additional syntactic constructions,
 the \ltry-calculus introduces some reduction rules:
 
 \definition{
-\textsc{(\ltry\ reduction rules)}
+\textsc{(\ltry\ reduction rules)}\cite{Bakel15}
 \[
 \begin{array}{rlcl}
   \text{($`b$):}      & (`lx.M)N &\to& M[N/x] \\
