@@ -10,7 +10,7 @@ This will then be used as a basis for the implementation of \ltry\ in Haskell.
 
 \section{Interpreting \ltry\ in \lmu}
 
-van Bakel describes the interpretation of \ltry\ to \lmu \cite{Bakel15}:
+van Bakel describes the interpretation of \ltry\ to \lmu\ \cite{Bakel15}:
 
 {
 \[
@@ -152,7 +152,7 @@ Given this, we can define the following translation for multiple-variable consum
 \to_{`m} & `m`a.([`a](`lx.`ly.xy))\{[`a]Mst/[`a]Mst\}) \\
 \end{array}
 \]
-From here we either can continue with the $`m$-reduction:
+From here we can continue with the $`b`m$-reduction:
 \[
 \begin{array}{lcrr}
          & `m`a.([`a](`lx.`ly.xy))\{[`a]Mst/[`a]Mst\}) \\
@@ -192,13 +192,13 @@ Using the translation in Definition \ref{def:multiple-variable-consumption}, the
 
 % TODO: Add proofs for completeness and other properties
 \begin{theorem}[Soundness of $\tr{`.}$]\label{theorem:soundness}
-\[ M \to_{`m}^{L} N \Rightarrow \exists P.\ \tr{M} \to^{L*} P \land \tr{N} \to^{L*} P \]
+\[ M \to_{`m}^{L} N \Rightarrow \exists P.\ \tr{M} \to^{*} P \land \tr{N} \to^{*} P \]
 \end{theorem}
 
 % TODO: remark: mu abstractions can only occur
 % TODO: separate D and E in CDC proofs 
 \begin{Proof}
-By induction on the definition of $\rightarrow_{`m}$
+By induction on the definition of $\rightarrow_{`m}^{L}$
 \[
 \begin{array}{@{}lcrr}
   \prooflabel{`m`a.[`a]M \to M} & (`a \notin fn(M)) \\
@@ -346,7 +346,7 @@ In this final reduction step, $`a$ can not occur in $\tr{M}[\square \mult{N}/`a]
 
 \begin{theorem}[Completeness of $\tr{`.}$]
 \[
-  \tr{M} \to^{L*} Q \Rightarrow \exists N. M \to^{L*} N \land \tr{N} \to^{L*} Q
+  \tr{M} \to^{*} Q \Rightarrow \exists N. M \to_{`m}^{L*} N \land \tr{N} \to^{*} Q
 \]
 \end{theorem}
 \begin{Proof}
@@ -354,11 +354,11 @@ By induction on the definition of $\tr{M}$.
 \[
 \begin{array}{rcllll}
 \prooflabel{`m`a.[`a]M} \\
-  \tr{`m`a.[`a]M} & \to^{nf} & \langle\ \tr{M},\ \square,\ \gp \rangle
+  \tr{`m`a.[`a]M} & \to^{*} & \langle\ \tr{M},\ \square,\ \gp \rangle
           & \text{(Proof \ref{theorem:soundness})} \\
-  `m`a.[`a]M & \to^{nf} & M 
+  `m`a.[`a]M & \to_{`m} & M 
           & \text{(Def \ref{def:lmu-in-cdc})} \\
-  \tr{M} & \to^{nf} & \langle\ \tr{M},\ \square,\ \gp \rangle 
+  \tr{M} & \to^{*} & \langle\ \tr{M},\ \square,\ \gp \rangle 
           & \text{(Proof \ref{theorem:soundness})}
 \end{array}
 \]
@@ -366,11 +366,11 @@ By induction on the definition of $\tr{M}$.
 \[
 \begin{array}{rclllr}
 \prooflabel{(`m`a.[`a]M)\mult{N}} \\
-  \tr{(`m`a.[`a]M)\mult{N}} & \to^{nf} & \langle\ \tr{M}[\square\tr{\mult{N}}/`a],\ \square\tr{\mult{N}},\ \gp \rangle
+  \tr{(`m`a.[`a]M)\mult{N}} & \to^{*} & \langle\ \tr{M}[\square\tr{\mult{N}}/`a],\ \square\tr{\mult{N}},\ \gp \rangle
           & \text{(Proof \ref{theorem:soundness})} \\
   (`m`a.[`a]M)\mult{N} & \to_{`m} & `m`a.[`a]M\{[`a]M'\mult{N}/[`a]M'\}\mult{N} 
           & \text{(Def \ref{def:lmu-in-cdc})} \\
-  \tr{`m`a.[`a]M\{[`a]M'\mult{N}/[`a]M'\}\mult{N}} & \to^{nf} & \langle\ \tr{M}[\square\tr{\mult{N}}/`a],\ \square\tr{\mult{N}},\ \gp \rangle
+  \tr{`m`a.[`a]M\{[`a]M'\mult{N}/[`a]M'\}\mult{N}} & \to^{*} & \langle\ \tr{M}[\square\tr{\mult{N}}/`a],\ \square\tr{\mult{N}},\ \gp \rangle
           & \text{(Proof \ref{theorem:soundness})}
 \end{array}
 \]
@@ -378,11 +378,11 @@ By induction on the definition of $\tr{M}$.
 \[
 \begin{array}{rcllll}
   \prooflabel{(`m`a.[`b]M)\mult{N}} & (`a \not= `b) \\
-  \tr{(`m`a.[`b]M)\mult{N}} & \to^{nf} & \langle \tr{M}[\square \tr{\mult{N}}/`a],\ \square,\ `b:\gp \rangle
+  \tr{(`m`a.[`b]M)\mult{N}} & \to^{*} & \langle \tr{M}[\square \tr{\mult{N}}/`a],\ \square,\ `b:\gp \rangle
           & \text{(Proof \ref{theorem:soundness})} \\
   (`m`a.[`b]M)\mult{N} & \to_{`m} & `m`a.[`b](M\{[`a]M'N/[`a]M'\}
           & \text{(Def \ref{def:lmu-in-cdc})} \\
-  \tr{`m`a.[`b](M\{[`a]M'N/[`a]M'\})} & \to & \langle\ M[\square \tr{N}/`a],\ \square,\ `b:\gp \rangle
+  \tr{`m`a.[`b](M\{[`a]M'N/[`a]M'\})} & \to^{*} & \langle\ M[\square \tr{N}/`a],\ \square,\ `b:\gp \rangle
           & \text{(Proof \ref{theorem:soundness})}
 \end{array}
 \]
@@ -390,11 +390,11 @@ By induction on the definition of $\tr{M}$.
 \[
 \begin{array}{rcllll}
 \prooflabel{(`m`a.[`b]`m`g.[`d]M)} & (`g \not= `d) \\
-  \tr{`m`a.[`b]`m`g.[`d]M} & \to^{nf} & \langle \tr{M}[\square/`a][`b/`g],\ \square,\ `d:\gp \rangle
+  \tr{`m`a.[`b]`m`g.[`d]M} & \to^{*} & \langle \tr{M}[\square/`a][`b/`g],\ \square,\ `d:\gp \rangle
           & \text{(Proof \ref{theorem:soundness})} \\
-  `m`a.[`b]`m`g.[`d]M & \to & `m`a[`d]M[`b/`g]
+  `m`a.[`b]`m`g.[`d]M & \to_{`m} & `m`a[`d]M[`b/`g]
           & \text{(Def \ref{def:lmu-in-cdc})} \\
-\tr{`m`a[`d]M[`b/`g]} & \to & \langle \tr{M}[`b/`g][\square/`a],\ \square,\ `d:\gp \rangle
+\tr{`m`a[`d]M[`b/`g]} & \to^{*} & \langle \tr{M}[`b/`g][\square/`a],\ \square,\ `d:\gp \rangle
           & \text{(Proof \ref{theorem:soundness})}
 \end{array}
 \]
@@ -402,11 +402,11 @@ By induction on the definition of $\tr{M}$.
 \[
 \begin{array}{rcllll}
 \prooflabel{(`m`a.[`b]`m`g.[`g]M)} \\
-  `m`a.[`b]`m`g.[`g]M & \to^{nf} & \langle \tr{M}[\square/`a][`b/`g],\ \square,\ `b:\gp \rangle
+  `m`a.[`b]`m`g.[`g]M & \to^{*} & \langle \tr{M}[\square/`a][`b/`g],\ \square,\ `b:\gp \rangle
           & \text{(Proof \ref{theorem:soundness})} \\
   `m`a.[`b]`m`g.[`g]M & \to_{`m} & `m`a[`b]M[`b/`g]
           & \text{(Def \ref{def:lmu-in-cdc})} \\
-  \tr{`m`a[`b]M[`b/`g]} & \to^{nf} & \langle \tr{M}[`b/`g][\square/`a],\ \square, `b:\gp \rangle
+  \tr{`m`a[`b]M[`b/`g]} & \to^{*} & \langle \tr{M}[`b/`g][\square/`a],\ \square, `b:\gp \rangle
           & \text{(Proof \ref{theorem:soundness})}
 \end{array}
 \]

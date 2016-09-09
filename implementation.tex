@@ -9,8 +9,35 @@ Finally, it explores the possibility of a language extension to Haskell.
 }
 
 \section{CDC Library}
-% TODO: explain the CDC library, w/ type signatures
-% TODO: src in appendix or inline?
+
+Jones \emph{et al.} defined a Haskell library for CDC in \cite{JonesDS07}.
+We informally present here the interface of their library. 
+For full implementation details, see \cite{JonesDS07}.
+
+\Verbatimcode
+  data CC ans a
+  data Prompt ans a
+  data SubCont ans a
+  
+  instance Monad (CC ans)
+\end{Verbatim}
+The type \mono{CC} represents a term in continuation-passing style.
+\mono{SubCont} represents a series of continuations: functions from a value to a CPS term.
+\mono{Prompt} represents a prompt for delimiting the control operators.
+
+The type interface for the control operators are:
+\Verbatimcode
+  runCC :: (forall ans. CC ans a) -> a
+  newPrompt :: CC Ans (Prompt ans a)
+  pushPrompt :: Prompt ans a -> CC ans a -> CC ans a
+  withSubCont :: Prompt ans b -> (SubCont ans a b -> CC ans b)
+                 -> CC ans a
+  pushSubCont :: SubCont ans a b -> CC ans a -> CC ans b
+\end{Verbatim}
+The control operators behave as described in Section \ref{cdc-explanation}.
+The only additional operator is \mono{runCC}.
+\mono{runCC} takes a \mono{CC} term and runs it to return the value it contains.
+This is like passed the identity function $`lx.x$ to a CPS term to extract its final value.
 
 \section{Naive Implementation}
 

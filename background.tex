@@ -16,9 +16,9 @@ It outlines the context on which the rest of this project is built.
 \section{Formal Systems}
 
 Formal systems are sets of rules for writing and manipulating
-formul\ae. Formul\ae are constructed from a set of characters called the
+formul\ae. Formul\ae\ are constructed from a set of characters called the
 \emph{alphabet} by following some formul\ae-construction rules called
-the \emph{grammar}. The only formul\ae considered \emph{well formed} in
+the \emph{grammar}. The only formul\ae\ considered \emph{well formed} in
 a system are those constructed according to the grammar of a system.
 Formal systems are used to model domains of knowledge to help better
 and more formally understand those domains.
@@ -26,7 +26,7 @@ and more formally understand those domains.
 \subsection{Syntax and Grammars}
 
 The grammar of a formal system describes the system's syntax. Grammars are 
-rules for constructing formul\ae that are well formed. Formul\ae
+rules for constructing formul\ae\ that are well formed. Formul\ae\
 produced according to the grammar of a system are well formed according to 
 the syntax of that system.
 
@@ -52,7 +52,7 @@ Grammars can be recursive which allows much more expressive construction rules:
 
 This grammar describes formul\ae\ containing any number of occurrences of the letters $t$ or $f$ separated by an $a$. 
 \[
-\begin{array}{lr}
+\begin{array}{ll}
   \by{t}{1} \\
   \by{t\ a\ f}{2 \& 3} \\
   \by{t\ a\ f\ a\ t}{1 \& 3}
@@ -60,8 +60,8 @@ This grammar describes formul\ae\ containing any number of occurrences of the le
 \]
 
 \subsection{Derivation Rules}
-Whereas a grammar describes the rules for producing well formed formul\ae,
-the derivation rules describe rules for transforming formul\ae of a particular form into new formul\ae. 
+Whereas a grammar describes the rules for producing well-formed formul\ae,
+the derivation rules describe rules for transforming formul\ae\ of a particular form into new formul\ae. 
 Using the grammar from Figure \ref{fig:tf-grammar}, we add derivation (rewriting) rules:
 
 \[
@@ -74,7 +74,7 @@ Using the grammar from Figure \ref{fig:tf-grammar}, we add derivation (rewriting
 \]
 
 These rules describe that if a formula matches the pattern on the 
-left-hand side, where $M$ represents a well formed formula, it can be
+left-hand side, where $M$ represents a well-formed formula, it can be
 replaced by the formula on the right-hand side.
 
 \subsection{Domain Modelling}
@@ -85,7 +85,7 @@ means we can attempt to discover truths about the domain through studying
 the formal system.
 
 For example, take the $tf$-system described above. 
-Without understanding the domain, we are able to manipulate formul\ae of the system to create new formul\ae. 
+Without understanding the domain, we are able to manipulate formul\ae\ of the system to create new formul\ae. 
 Without going into detail, it is easy to verify that the $tf$-system is isomorphic to a subset of Boolean algebra:
 
 \[
@@ -148,22 +148,22 @@ However the the term $t\ a\ f\ a\ t$ can be decomposed in two ways:
 \]
 When we have more than one way derivation rules can be applied to a term,
 we can use \emph{derivation strategies} to determine which rule we apply.
-For compound terms, derivation strategies decides which derivation rule to applied tj which subterm.
+For compound terms, derivation strategies decide which derivation rule to applied to which subterm.
 In our $tf$-system, there are two obvious derivation strategies:
 either apply derivations starting from the left or starting from the right.
 
 \[
 \begin{array}{rcl}
   
-  \textbf{(left)} & t\ o\ f\ a\ t \\
-  \to                & t\ o\ f & \square\ a\ t \\
-  \to                & t       & \square\ a\ t \\
-  \textit{recombine} & t\ a\ t & \\
+  \textbf{(left)} & t\ a\ f\ a\ t \\
+  \to                & t\ a\ f & \square\ a\ t \\
+  \to                & f       & \square\ a\ t \\
+  \textit{recombine} & f\ a\ t & \\
   \\
-  \textbf{(right)}   & t\ o\ f\ a\ t \\
-  \to                & f\ a\ t & t\ o\ \square \\
-  \to                & f       & t\ o\ \square \\
-  \textit{recombine} & t\ o\ f & \\
+  \textbf{(right)}   & t\ a\ f\ a\ t \\
+  \to                & f\ a\ t & t\ a\ \square \\
+  \to                & f       & t\ a\ \square \\
+  \textit{recombine} & t\ a\ f & \\
   
 \end{array}
 \]
@@ -174,14 +174,14 @@ derivation strategies are strategies \emph{about} the system: methods for choosi
 
 In response to Hilbert's \emph{Entscheidungsproblem}, Alonzo Church defined the \lam-calculus \cite{ChurchEnt36}. 
 It is a formal system capable of expressing the set of effectively-computible algorithms.
-Shortly after, Godel and Turing created their own models of effective computibility.
+Shortly after, G{\"o}del and Turing created their own models of effective computibility.
 \footnote{General recursive functions and Turing machines, respectively} 
 These models were later proved to be equivalent.
 
 \subsection{Syntax}
   
   \lam-variables are taken from an infinite set and are written $x,y,z$, etc. Variables are open positions in a term that can be filled by other terms.
-  The grammar for constructing well formed \lam-terms is:
+  The grammar for constructing well-formed \lam-terms is:
 
   \begin{figure}[!h]
   \definition{ 
@@ -239,7 +239,7 @@ These models were later proved to be equivalent.
 \subsection{Reduction Rules}
   
   The reduction rules for the \lam-calculus are like the derivation rules from formal systems.
-  They determine how terms of a particular can be transformed into new terms.
+  They determine how terms of a particular form can be transformed into new terms.
   
   First we will introduce the substitution notation $M[N/x]$. This denotes 
   the term M with all occurrences of x replaced by N. The substitution 
@@ -266,7 +266,9 @@ These models were later proved to be equivalent.
   is defined for the application of two terms:
   \begin{figure}[!h]\label{def:beta-reduction}
   \definition{ 
-    \textsc{($`b$-reduction for \lam-calculus)} \\
+    \textsc{($`b$-reduction for \lam-calculus)} 
+    \cite{Bakel15}
+    \\
     $i)$ $\to_{`b}$ is defined as the compatible closure of the rule:
     \[
     \begin{array}{rcl}
@@ -279,8 +281,8 @@ These models were later proved to be equivalent.
  
   \lam-variables and \lam-abstactions are \emph{values}: they do not reduce to other terms. 
   If a term is a value, the reduction cannot be applied to that term: it has \emph{terminated} on that value. 
-  Only applications reduce to other terms. 
-  This means that an application whose left-hand side is an abstraction is a reducible expression or a \emph{redex}. 
+  Only applications whose left-hand side is an abstraction can reduce to other terms. 
+  This means that an application of this form is called a reducible expression or a \emph{redex}. 
   Reducing a redex models the computing of a function. 
 
 % TODO: define free variables and bound variables
@@ -313,17 +315,13 @@ These models were later proved to be equivalent.
   Variable names are arbitrary and chosen just to denote identity:
   all occurrences of $x$ are the same. This can become a problem
   in the following case:
-  
   \[
     (`ly.`lx.xy)(`lx.x)
   \]
- 
   After the application is reduced, we have the term:
-  
   \[
     `lx.x(`lx.x) 
   \]
-  
   In this case, it is ambiguous which \lam-abstraction the right-most $x$
   is bound by. When this term is applied to another, will the substitution
   occur to all occurrences of $x$? From the initial term, it is clear that
@@ -346,7 +344,7 @@ These models were later proved to be equivalent.
     \item All variables bound by that abstraction are renamed the same 
     \item The variable it is changed to does not already appear in $M$ 
   \end{enumerate}
-  Returning to the term above, we can use the $`a$-reduction rule to reduce ambiguity:
+  Returning to the term above, we can $`a$-reduce the right-hand term to reduce ambiguity before $`b$-reducing the whole term:
   \[
   \begin{array}{rll}
              & (`ly.`lx.xy)(`lx.x) \\
@@ -365,11 +363,12 @@ These models were later proved to be equivalent.
   We use $\to_{`b}^{nf}$ to denote a term in \bta-normal form.
   Again, we can omit the \bta\ subscript if it is clear from context.
   
-  Lazy reduction is a reduction strategy that restricts the reduction of subterms of a term.
+  Lazy reduction is a reduction strategy that restricts the reduction to the outermost, leftmost redex.
+  Any other subterms that are redexes cannot be reduced.
   \definition{
   \textsc{Lazy reduction of \lam-terms}\\
-  $i)$ The outermost, leftmost term is reduced first \\
-  $ii)$ No reductions can take place underneath an abstraction \\
+  $i)$ The outermost, leftmost term is the only one that can be reduced \\
+  $ii)$ No other reductions can take place, including underneath an abstraction \\
   $iii)$ We use $\to^{L}$ to denote lazy reduction
   }
   \\  
@@ -383,8 +382,7 @@ These models were later proved to be equivalent.
   \]
   Whereas \bta-reduction would continue and reduce the inner redex $(`lz.z)y$,
   lazy reduction does not reduce beneath \lam-abstractions.
-  This is term is in normal form for lazy reduction.
-  % TODO: LAZY REDUCTION HERE
+  This term is in normal form for lazy reduction.
 
 \section{Logic and Types}
 
@@ -547,9 +545,9 @@ These models were later proved to be equivalent.
   
   The first set of rules, $\mathcal{LX}$ and $\mathcal{RX}$, are left and right exchange rules. 
   They express the commutativity of statements in the left and right sequences.
-  The weakening rules, $\mathcal{LW}$ and $\mathcal{RW}$, allow the introduction of new formul\ae on either the left or right sequences.
+  The weakening rules, $\mathcal{LW}$ and $\mathcal{RW}$, allow the introduction of new formul\ae\ on either the left or right sequences.
   The contraction rules, $\mathcal{LC}$ and $\mathcal{RC}$, allow the contraction of multiple occurrences of a formula into a single occurrence. 
-  The cut rule allows us to replace assumptions of formul\ae with their concrete proofs, if we have proved them somewhere else.
+  The cut rule allows us to replace assumptions of formul\ae\ with their concrete proofs, if we have proved them somewhere else.
   
   In addition to these, the system has a set of logical rules which relate closely to natural deduction.
   Although rules for all the logical connectives exist, we again choose to highlight just the cases important to this project:
@@ -596,7 +594,7 @@ These models were later proved to be equivalent.
  
   A type is either some uppercase Latin letter or it is two valid types connected by a $\rightarrow$. 
   This is described by the following BNF grammar:
-  
+ \\ 
   \definition{
     \textsc{(Grammar for constructing types)} 
     \item Type variables are represented by the lower-case greek alphabet $`a,`b,`g,...$
@@ -636,7 +634,7 @@ These models were later proved to be equivalent.
   The first rule states that the application of a term of type $A \to B$ to
   a term of type $A$ has type $B$. 
   The second rule says a term of type $B$ in a context where $x:A$ is the same as an abstraction of type $A \to B$ in a context without $x:A$. 
-  These rules add restrictions on what constitutes a well formed term.
+  These rules add restrictions on what constitutes a well-formed term.
   These restrictions prevent the formation of terms with undesirable properties.  
   
   \begin{example}[Type-assignment restricts set of valid terms]
@@ -717,7 +715,6 @@ These models were later proved to be equivalent.
     > let hector = Cat
     > :t hector
     hector :: Animal a
-    
     > let topaz = Dog "foo"
     > :t topaz
     topaz :: Animal String
@@ -728,15 +725,13 @@ These models were later proved to be equivalent.
   \mono{Dog} data constructor with a string makes the type \mono{Animal
   String} rather than the more general \mono{Animal a}.
   
-  The second method for introducing new data types is the \mono{newtype}
-  keyword. The key difference between \mono{data} and \mono{newtype} is
-  that \mono{newtype} can only have one data constructor. Informally,
-  this implies a kind of isomorphism:
+  The second method for introducing new data types is the \mono{newtype} keyword. 
+  The key difference between \mono{data} and \mono{newtype} is that \mono{newtype} can only have one data constructor and this data constructor can only have a single argument
+  Informally, this implies a kind of isomorphism:
 
   \Verbatimcode
     newtype Foo a = Foo (a -> Integer)
   \end{Verbatim}
-  
   The type constructor can take type parameters which will be constrained
   by the inhabitants of the data constructor. This data type expresses
   an isomorphism between \mono{Foo a} and functions from \mono{a} to
@@ -800,7 +795,7 @@ These models were later proved to be equivalent.
   As in the example in Figure \ref{fig:decomposing}, 
   compound \lam-terms can be evaluated into a dominant term and a context:
   \begin{figure}[H]\label{fig:decomposing-lambda}
-    \hspace{1cm}Assume that $M \rightarrow_{`b} M^\prime$
+    \hspace{1cm}Assume that $M \rightarrow^{*}_{`b} M^\prime$
     \[
     \begin{array}{lrcl}
     \textit{(Compound term)}&& MN \\
@@ -879,9 +874,10 @@ These models were later proved to be equivalent.
 
   If the control operators of a language allow manipulation of portions of the continuation stack,
   the continuations are \textbf{delimited}.
-  To manipulate portions of the stack, these operators need a control delimiter.
-  These are commonly called \emph{prompts}, after Felleisen first introduced them as such \cite{Felleisen88}.
-  By allowing prompts to be pushed onto the stack, we can recall portions of the stack up until a prompt.
+  To manipulate portions of the stack, these operators need a \emph{control delimiter}.
+  A control delimiter marks a point on the stack that delimits how far the operators can control.
+  These delimiters commonly called \emph{prompts}, after Felleisen first introduced them as such \cite{Felleisen88}.
+  By allowing prompts to be pushed onto the stack, we can recall portions of the stack \emph{up until} a prompt.
   This gives the operators a finer grain of control over continuations.
 
   \subsection{Continuation-Passing Style}
@@ -1048,7 +1044,9 @@ These models were later proved to be equivalent.
   \subsection{Reduction Rules}
   \begin{figure}[H]
   \definition{ 
-    \textsc{(Reduction rules for \lmu-calculus)}
+    \textsc{(Reduction rules for \lmu-calculus)}\\
+    $i)$ $\to_{`b`m}$ is defined as the compatible closure of rules:
+    \\ 
     \[
     \begin{array}{rrcll}
     \text{(logical)} & (`lx.M) N & \to_{`b} & M[N/x] \\
@@ -1058,6 +1056,7 @@ These models were later proved to be equivalent.
     \text{(renaming)} & `m`d.[`b](`m`g.[`a]M) & \to{`m} & `m`d.([`a]M)[`b/`g] \\
     \end{array}
     \]
+    $ii)$ $\to_{`b`m}^{*}$ is defined as the transitive closure of $\to_{`b`m}$.
   }
   \end{figure}
 
@@ -1067,6 +1066,7 @@ These models were later proved to be equivalent.
   \[ `m`a\dots[`a]M \]
   with 
   \[ `lx_1\dots`lx_n\dots Mx_1\dots x_n \]
+  where $n$ is the number of variables the term is applied to.
   
   \subsection{Computational Significance}
 
@@ -1166,7 +1166,7 @@ These models were later proved to be equivalent.
   \subsection{Lazy Reduction}
   We define lazy-reduction for the \lmu-calculus similarly to \lam-calculus.
   The outermost, leftmost reduction takes place first. 
-  If no reductions can take place on the outermost level, the the term is in lazy normal form.
+  If no reductions can take place on the outermost level, then the term is in lazy normal form.
   For instance, consider the $`m$-term:
   \[
     `m`a.[`b]((`lx.x)z)
@@ -1244,7 +1244,7 @@ These models were later proved to be equivalent.
   }
   \end{figure}
   
-  \subsection{Significance}
+  \subsection{Significance}\label{cdc-explanation}
 
   % TODO: ensure prompts and continuation stack has been explained before reaching this point
   The additional terms behave as follows:
